@@ -1,0 +1,250 @@
+* {
+    font-family: Verdana, Geneva, Tahoma, sans-serif;
+  }
+  
+  /* Login background */
+  .login-body {
+    background: #fff;
+    height: 100vh;
+  }
+  
+  /* Login main card */
+  .login-mainBox {
+    margin-top: auto;
+    margin-bottom: auto;
+    width: /* 30% */ /* 330px */ 70vh;
+    height: /* 90% */ /* 420px */ 90vh;
+    flex-shrink: 0;
+    border-radius: 20px;
+    background: linear-gradient(180deg, #1d154e 0%, #26037c 100%);
+  }
+  
+  /* login title */
+  .login-title {
+    width: 100%;
+    color: #fff;
+    text-align: center;
+    font-family: Verdana, Geneva, Tahoma, sans-serif;
+    font-size: 32px;
+    font-style: normal;
+    font-weight: 700;
+    line-height: normal;
+    letter-spacing: 1.5px;
+    margin-top: 20px;
+  }
+  
+  /* User name and Password title */
+  .login-fieldTitle {
+    width: 188px;
+    color: #fff;
+    font-family: Verdana, Geneva, Tahoma, sans-serif;
+    font-size: 20px;
+    font-style: normal;
+    font-weight: lighter;
+    line-height: normal;
+    letter-spacing: 1.28px;
+    margin-left: 40px;
+  }
+  .login-nameFildTitl {
+    margin-top: 40px;
+  }
+  .passFildTitl {
+    margin-top: 20px;
+  }
+  
+  /* User name and Password field */
+  .login-field {
+    width: 80%;
+    height: 40px;
+    flex-shrink: 0;
+    border-radius: 50px;
+    border: 3px solid rgba(249, 223, 46, 0.5);
+    background: none;
+    padding-left: 30px;
+    color: #fff;
+    font-size: 15px;
+    text-align: left center;
+  }
+  
+  /* User name and Password field placeholder */
+  .login-input::placeholder {
+    color: rgba(255, 255, 255, 0.6);
+    font-size: 15px;
+    text-align: left center;
+  }
+  
+  /* User name and Password field hover */
+  .login-input:hover {
+    border-radius: 50px;
+    border: 3px solid #b8a31f;
+  }
+  
+  /* User name and Password field transition boder colour*/
+  .login-input {
+    transition: border-color 0.3s ease;
+  }
+  
+  /* User name and Password field after clicked background */
+  .login-input:focus {
+    border-color: #f9df2e;
+    outline: none;
+  }
+  
+  
+  
+  .login-forgotpass-back {
+    display: flex;
+    width: 148px;
+    height: 20px;
+    justify-content: center;
+    align-items: center;
+    flex-shrink: 0;
+    margin-top: 10px;
+    margin-left: 265px;
+  }
+  .login-forgotpass {
+    width: 148px;
+    flex-shrink: 0;
+    color: #fff;
+    /* font-family: Quicksand; */
+    font-size: 12px;
+    font-style: normal;
+    font-weight: 500;
+    line-height: normal;
+    letter-spacing: 0.32px;
+    text-decoration-line: underline;
+    text-align: center right;
+  }
+  /* .login-special{
+    display: flex;
+  } */
+  
+  /* Login button */
+  .login-submit {
+    /* margin-left: 30%; */
+    margin-top: 7%;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+  }
+  .login-submitBtn {
+    display: flex;
+    width: 150px;
+    height: 40px;
+    padding: 10px;
+    justify-content: center;
+    align-items: center;
+    gap: 10px;
+    flex-shrink: 0;
+    border-radius: 50px;
+    border: 3px solid #f9df2e;
+    background: var(--secondary, #f5da22);
+    color: #fff;
+    text-align: center;
+    font-family: Verdana, Geneva, Tahoma, sans-serif;
+    font-size: 20px;
+    font-style: normal;
+    font-weight: 700;
+    line-height: normal;
+    letter-spacing: 1.28px;
+  }
+  
+  /* Forget Password */
+  .login-fogotPass {
+    color: #fff;
+    font-family: Verdana, Geneva, Tahoma, sans-serif;
+    font-size: 12px;
+    font-style: normal;
+    font-weight: 500;
+    line-height: normal;
+    letter-spacing: 0.3px;
+    text-align: center;
+    margin-top: 25px;
+  }
+  .login-fogotPass span {
+    width: 114px;
+    height: 19px;
+    justify-content: center;
+    align-items: center;
+    flex-shrink: 0;
+  }
+  
+  /* Request admin */
+  .login-requestAdmin {
+    width: 114px;
+    flex-shrink: 0;
+    color: #f9df2e;
+    font-family: Verdana, Geneva, Tahoma, sans-serif;
+    font-size: 12px;
+    font-style: normal;
+    font-weight: 500;
+    line-height: normal;
+    letter-spacing: 0.3px;
+    text-decoration-line: underline;
+    cursor: pointer;
+  }
+  
+  /* OR Title */
+  .login-ORTitleBack {
+    height: 32px;
+    flex-shrink: 0;
+    color: #ffffff;
+    font-family: Verdana, Geneva, Tahoma, sans-serif;
+    font-size: 18px;
+    font-style: normal;
+    font-weight: 500;
+    line-height: normal;
+    letter-spacing: 0.52px;
+    text-align: center;
+    margin-top: 20px;
+  }
+  
+  /* sign in with google Title */
+  .login-signInTitle {
+    height: 24px;
+    flex-shrink: 0;
+    color: #fff;
+    font-family: Verdana, Geneva, Tahoma, sans-serif;
+    font-size: 12px;
+    font-style: normal;
+    font-weight: 500;
+    line-height: normal;
+    letter-spacing: 0.36px;
+    text-align: center;
+  }
+  
+  /* sign in with google button */
+  .login-googleLogin a {
+    display: flex;
+    justify-content: center !important;
+    align-items: center !important;
+    text-align: center !important;
+    text-decoration: none;
+  }
+  .login-googleLogin button {
+    display: flex;
+    width: 250px;
+    height: 55px;
+    flex-shrink: 0;
+    border-radius: 45px;
+    border: 1px solid rgba(27, 27, 27, 0.9);
+    background: #fff;
+    justify-content: center;
+    align-items: center;
+    /* margin-left: 75px; */
+    color: #000;
+    font-family: Verdana, Geneva, Tahoma, sans-serif;
+    font-size: 12px;
+    font-style: normal;
+    font-weight: 600;
+    line-height: normal;
+    /* letter-spacing: 0.36px; */
+  }
+  .googleLoginLogo {
+    width: 40.172px;
+    height: 41px;
+    flex-shrink: 0;
+    background: url(googleLogo.png);
+    margin-right: 10px;
+  }
+  
