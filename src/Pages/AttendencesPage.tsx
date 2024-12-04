@@ -120,12 +120,7 @@ export default function AttendencesPage() {
           setLoading(true);
           if (filterOptions.start_date) {
             const startDate = new Date(filterOptions.start_date);
-            const data = await api.get("api/attendence", {
-              params: {
-                month: startDate.getMonth() + 1,
-                year: startDate.getFullYear(),
-              },
-            });
+
             const [attendencesResponse, workingDaysResponse] = await Promise.all([
               api.get("api/attendence", {
                 params: {
@@ -135,9 +130,8 @@ export default function AttendencesPage() {
               }),
               api.get(`api/calender/${startDate.getFullYear()}/${startDate.getMonth() + 1}`),
             ]);
-            console.log(data.data);
             setWorkingDays(workingDaysResponse.data);
-            setTrainees(data.data);
+            setTrainees(attendencesResponse.data);
           }
           setLoading(false);
         };
