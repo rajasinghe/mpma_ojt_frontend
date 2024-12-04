@@ -22,6 +22,8 @@ import UploadAttendenceSheet from "./Pages/UploadAttendenceSheet.tsx";
 import CalenderPage from "./Pages/CalenderPage.tsx";
 import { holidaysLoader } from "./loaders/HolidaysLoader.ts";
 import LoginPage from "./Pages/LoginPage.tsx";
+import AttendencesPage from "./Pages/AttendencesPage.tsx";
+import { viewAttendenceLoader } from "./loaders/AttendenceLoader.ts";
 const router = createBrowserRouter([
   {
     path: "/",
@@ -61,8 +63,13 @@ const router = createBrowserRouter([
         element: <UpdateTraineeDetails />,
       },
       {
-        path: "attendence",
+        path: "attendence/new",
         element: <UploadAttendenceSheet />,
+      },
+      {
+        path: "attendences",
+        element: <AttendencesPage />,
+        loader: viewAttendenceLoader,
       },
       {
         path: "calender",

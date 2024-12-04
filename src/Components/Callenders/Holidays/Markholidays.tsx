@@ -68,7 +68,7 @@ export default function Markholidays({ className, events }: props) {
     const newEvent = args.event;
     console.log(newEvent);
     try {
-      const response = await api.post("/api/holidays", {
+      const response = await api.post("api/calender/event", {
         description: newEvent.title,
         startDate: newEvent.startStr,
         endDate: newEvent.endStr,
@@ -90,7 +90,7 @@ export default function Markholidays({ className, events }: props) {
     const event = args.event;
     console.log(event);
     try {
-      const response = await api.delete("/api/holidays", {
+      const response = await api.delete("/api/calender/event", {
         params: {
           start_date: event.startStr,
           end_date: event.endStr,

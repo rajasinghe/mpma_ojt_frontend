@@ -74,10 +74,12 @@ export default function MainNav() {
               <li className="nav-item">
                 <Link
                   className="nav-link active navbar_text txt d-flex flex-column align-items-center"
-                  to="/Trainee/attendence"
+                  to="/Trainee/attendence/new"
                 >
                   <div
-                    className={`navLinkBody ${pathname == "/Trainee/attendence" ? "active" : ""}`}
+                    className={`navLinkBody ${
+                      pathname == "/Trainee/attendence/new" ? "active" : ""
+                    }`}
                   >
                     Attendence Sheet
                   </div>
