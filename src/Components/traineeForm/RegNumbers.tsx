@@ -1,5 +1,5 @@
 import { zodResolver } from "@hookform/resolvers/zod";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { Controller, useForm } from "react-hook-form";
 import Select from "react-select";
 import { z } from "zod";
@@ -17,6 +17,7 @@ interface formProps {
   attNoState: [number | null, React.Dispatch<React.SetStateAction<number | null>>];
   setProgram: React.Dispatch<React.SetStateAction<number | null>>;
   setInstitute: React.Dispatch<React.SetStateAction<number | null>>;
+  trainee?: any;
 }
 
 const schema = z.object({
@@ -28,11 +29,7 @@ const schema = z.object({
     label: z.string(),
     value: z.coerce.number(),
   }),
-  code_generation_pattern: z.enum([
-    "include_institute_code",
-    "include_program_code",
-    "include_institute_code_and_program_code",
-  ]),
+  code_generation_pattern: z.enum(["normal", "naita", "cinec"]),
 });
 
 type formValues = z.infer<typeof schema>;
@@ -45,26 +42,123 @@ export default function RegNumbers({
   attNoState,
   setProgram,
   setInstitute,
+  trainee,
 }: formProps) {
   const [disable, setDisable] = disabledState;
+  const [disableCodeGenrationPattern, setdisableCodeGenrationPattern] = useState(false);
+  const [instituteDisable, setInstituteDisable] = useState<boolean>(false);
   const instituteModalState = useState<boolean>(false);
   const programModalState = useState<boolean>(false);
   const setInstiteModalVisiblity = instituteModalState[1];
   const setprogramModalVisibility = programModalState[1];
   const [institutes, setInstitutes] = useState<any[]>(initialInstitutes);
   const [programs, setprograms] = useState<any[]>(initialPrograms);
+  const [matchingPrograms, setMatchingprograms] = useState<any[]>(initialPrograms);
   const [regNo, setRegNO] = regNoState;
   const [attNo, setAttNo] = attNoState;
+
+  useEffect(() => {
+    if (trainee) {
+      console.log(trainee.regNoViolation);
+
+      const defaultInstitute = institutes.find((institute) => institute.id == trainee.institute_id);
+      const defaultProgram = programs.find((program) => program.id == trainee.training_program_id);
+      setValue("program", {
+        label: defaultProgram.name,
+        value: defaultProgram.id,
+      });
+
+      if (trainee.regNoViolation) {
+        setdisableCodeGenrationPattern(true);
+      }
+
+      setValue("institute", {
+        label: defaultInstitute.name,
+        value: defaultInstitute.id,
+      });
+      checkAndSetCodeGenerationPattern();
+    } else {
+      setValue("code_generation_pattern", "normal");
+    }
+  }, []);
+
+  const checkAndSetCodeGenerationPattern = () => {
+    const regPattern = trainee.REG_NO.split("/");
+    console.log("reg pattern", regPattern[0], regPattern[1]);
+    if (regPattern[0] == "CINEC") {
+      setValue("code_generation_pattern", "cinec");
+    } else if (regPattern[1] == "NAITA") {
+      setValue("code_generation_pattern", "naita");
+    } else {
+      setValue("code_generation_pattern", "normal");
+    }
+  };
 
   const {
     handleSubmit,
     control,
+    watch,
+    setValue,
     register,
     formState: { errors },
   } = useForm<formValues>({ resolver: zodResolver(schema) });
 
+  const code_generation_pattern = watch("code_generation_pattern");
+
+  const reInvokePrograms = (programs: any[]) => {
+    setprograms(programs);
+    setRerun(!reRun);
+  };
+  const [reRun, setRerun] = useState<boolean>(false);
+
+  useEffect(() => {
+    let matchingProgrammes = programs;
+    console.log(code_generation_pattern);
+    if (code_generation_pattern == "naita") {
+      const institute = institutes.find((institute) => institute.name == "NAITA");
+      console.log(institute);
+      setInstitute(institute.id);
+      setValue("institute", {
+        value: institute.id,
+        label: institute.name,
+      });
+      matchingProgrammes = programs.filter((program) => program.special_code != null);
+      setInstituteDisable(true);
+    } else if (code_generation_pattern == "cinec") {
+      const institute = institutes.find((institute) => institute.name == "CINEC Campus");
+      console.log(institute);
+      setValue("institute", {
+        value: institute.id,
+        label: institute.name,
+      });
+      setInstitute(institute.id);
+      setInstituteDisable(true);
+      matchingProgrammes = programs.filter((program) => program.special_code == null);
+    } else {
+      //if()
+      if (trainee && trainee.regNoViolation) {
+        setDisableSubmitting(true);
+        const regPattern = trainee.REG_NO.split("/");
+        matchingProgrammes = programs.filter(
+          (program) => program.special_code == null && program.code == regPattern[0]
+        );
+      } else {
+        matchingProgrammes = programs.filter((program) => program.special_code == null);
+      }
+      setInstituteDisable(false);
+    }
+    console.log(matchingProgrammes);
+    setMatchingprograms(matchingProgrammes);
+  }, [code_generation_pattern, reRun]);
+
+  const [disableSubmiting, setDisableSubmitting] = useState<boolean>(false);
+
   const onSubmit = async (data: formValues) => {
     console.log(data);
+    console.log(disableSubmiting);
+    if (trainee && trainee.regNoViolation) {
+    } else {
+    }
     try {
       const response = await api.get("api/trainee/genearateIndexes", {
         params: {
@@ -106,6 +200,43 @@ export default function RegNumbers({
     <>
       <div className="border border-dark p-2 rounded-2">
         <div className="mb-3">
+          <label className="form-label">Type</label>
+          <div className="form-check">
+            <input
+              disabled={disable || disableCodeGenrationPattern}
+              value={"normal"}
+              {...register("code_generation_pattern")}
+              className="form-check-input"
+              type="radio"
+            />
+            <label className="form-check-label">Normal</label>
+          </div>
+          <div className="form-check me-3">
+            <input
+              disabled={disable || disableCodeGenrationPattern}
+              value={"cinec"}
+              {...register("code_generation_pattern")}
+              className="form-check-input"
+              type="radio"
+            />
+            <label className="form-check-label">CINEC Special</label>
+          </div>
+
+          <div className="form-check ">
+            <input
+              disabled={disable || disableCodeGenrationPattern}
+              {...register("code_generation_pattern")}
+              value={"naita"}
+              className="form-check-input"
+              type="radio"
+            />
+            <label className="form-check-label">NAITA Craftsman</label>
+          </div>
+          {errors.code_generation_pattern && (
+            <p className="text-danger m-0">{errors.code_generation_pattern.message}</p>
+          )}
+        </div>
+        <div className="mb-4">
           <label className="form-label">University/Institute</label>
 
           <Controller
@@ -114,8 +245,17 @@ export default function RegNumbers({
             render={({ field }) => {
               return (
                 <Select
-                  isDisabled={disable}
+                  isDisabled={instituteDisable || disable}
                   {...field}
+                  onChange={(e) => {
+                    if (e) {
+                      setInstitute(e.value);
+                      setValue("institute", {
+                        value: e.value,
+                        label: e.label,
+                      });
+                    }
+                  }}
                   options={institutes.map((institute: any) => {
                     return {
                       label: institute.name,
@@ -133,7 +273,8 @@ export default function RegNumbers({
               onClick={() => {
                 setInstiteModalVisiblity(true);
               }}
-              disabled={disable}
+              type="button"
+              disabled={instituteDisable || disable}
               className="mt-1 link d-inline badge btn text-dark btn-outline-primary border-3 btn-sm "
             >
               Add Institute to the list
@@ -150,9 +291,18 @@ export default function RegNumbers({
               return (
                 <Select
                   {...field}
+                  onChange={(e) => {
+                    if (e) {
+                      setProgram(e.value);
+                      setValue("program", {
+                        value: e.value,
+                        label: e.label,
+                      });
+                    }
+                  }}
                   isDisabled={disable}
                   placeholder="Select a program"
-                  options={programs.map((program: any) => {
+                  options={matchingPrograms.map((program: any) => {
                     return {
                       label: program.name,
                       value: program.id,
@@ -166,6 +316,7 @@ export default function RegNumbers({
           <div className="">
             <button
               disabled={disable}
+              type="button"
               onClick={() => {
                 setprogramModalVisibility(true);
               }}
@@ -175,44 +326,10 @@ export default function RegNumbers({
             </button>
           </div>
         </div>
-        <div className="">
-          <div className="form-check me-3">
-            <input
-              disabled={disable}
-              {...register("code_generation_pattern")}
-              value={"include_institute_code"}
-              className="form-check-input"
-              type="radio"
-            />
-            <label className="form-check-label">Include Institute Code</label>
-          </div>
-          <div className="form-check">
-            <input
-              disabled={disable}
-              value={"include_program_code"}
-              {...register("code_generation_pattern")}
-              className="form-check-input"
-              type="radio"
-            />
-            <label className="form-check-label">Include Program Code</label>
-          </div>
-          <div className="form-check ">
-            <input
-              disabled={disable}
-              value={"include_institute_code_and_program_code"}
-              {...register("code_generation_pattern")}
-              className="form-check-input"
-              type="radio"
-            />
-            <label className="form-check-label">Include Program Code and Institute Code</label>
-          </div>
-          {errors.code_generation_pattern && (
-            <p className="text-danger m-0">{errors.code_generation_pattern.message}</p>
-          )}
-        </div>
+
         <div className=" d-flex">
           <button
-            disabled={disable}
+            disabled={disable || disableCodeGenrationPattern}
             className="btn btn-sm btn-success ms-auto"
             type="button"
             onClick={handleSubmit(onSubmit)}
@@ -235,7 +352,11 @@ export default function RegNumbers({
         </div>
       </div>
       <AddInstituteModal setInstitutes={setInstitutes} visibilityState={instituteModalState} />
-      <AddProgramModal setPrograms={setprograms} visibilityState={programModalState} />
+      <AddProgramModal
+        type={code_generation_pattern}
+        setPrograms={reInvokePrograms}
+        visibilityState={programModalState}
+      />
     </>
   );
 }

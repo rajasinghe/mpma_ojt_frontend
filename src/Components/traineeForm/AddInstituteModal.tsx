@@ -12,15 +12,6 @@ interface props {
 
 const schema = z.object({
   name: z.string().min(1, { message: "Name is required" }),
-  code: z.union([
-    z
-      .string()
-      .regex(/^[a-zA-Z]+$/, { message: "cannot contain any spaces,numbers or special charachters" })
-      .toUpperCase()
-      .min(2, { message: "code must contain letters in the range of 2-10" })
-      .max(10),
-    z.string().length(0),
-  ]),
   government: z.boolean(),
 });
 
@@ -120,24 +111,27 @@ export default function AddInstituteModal({ visibilityState, setInstitutes }: pr
         <Modal.Title>ADD NEW INSTITUTES</Modal.Title>
       </Modal.Header>
       <Modal.Body>
-        <form onSubmit={handleSubmit(onSubmit)}>
+        <form>
           <div className="mb-3">
             <label className="form-label">Institute Name</label>
             <input {...register("name")} className="form-control" type="text" />
             {errors.name && <p className="text-danger m-0">{errors.name.message}</p>}
           </div>
 
-          <div className="mb-3">
-            <label className="form-label">Institute Code</label>
-            <input {...register("code")} className="form-control" type="text" />
-            {errors.code && <p className="text-danger m-0">{errors.code.message}</p>}
-          </div>
           <div className="form-check">
             <input className="form-check-input" type="checkbox" {...register("government")} />
             <label className="form-check-label">Government</label>
           </div>
           <div className="d-flex">
-            <button disabled={isSubmitting} className="btn btn-primary ms-auto">
+            <button
+              type="button"
+              onClick={() => {
+                let submission = handleSubmit(onSubmit);
+                submission();
+              }}
+              disabled={isSubmitting}
+              className="btn btn-primary ms-auto"
+            >
               {isSubmitting ? "Submiting..." : "Submit"}
             </button>
           </div>

@@ -1,5 +1,5 @@
-import { Link, useLoaderData, useNavigate, useNavigation } from "react-router-dom";
-import { Button, Modal } from "react-bootstrap";
+import { Link, useLoaderData, useNavigation, useSearchParams } from "react-router-dom";
+import { Modal } from "react-bootstrap";
 import { useEffect, useState } from "react";
 import Fuse from "fuse.js";
 import optionsIcon from "../assets/icons8-options-48.png";
@@ -19,6 +19,8 @@ interface loaderProps {
   departments: [];
   programs: [];
   institutes: [];
+  summary: [];
+  trainee: any;
 }
 
 const filterSchema = z.object({
@@ -29,7 +31,8 @@ const filterSchema = z.object({
         label: z.string(),
       })
     )
-    .nullable(),
+    .nullable()
+    .optional(),
   programmes: z
     .array(
       z.object({
@@ -37,7 +40,8 @@ const filterSchema = z.object({
         label: z.string(),
       })
     )
-    .nullable(),
+    .nullable()
+    .optional(),
   institutes: z
     .array(
       z.object({
@@ -45,25 +49,34 @@ const filterSchema = z.object({
         label: z.string(),
       })
     )
-    .nullable(),
-  start_date: z.date().nullable(),
-  end_date: z.date().nullable(),
+    .nullable()
+    .optional(),
+  month: z.object({
+    value: z.string(),
+    label: z.string(),
+  }),
+  year: z.object({
+    value: z.string(),
+    label: z.string(),
+  }),
+  traineeId: z.coerce.number().optional(),
 });
 
 type filterFormValues = z.infer<typeof filterSchema>;
 
 export default function AttendencesPage() {
+ 
   const loaderData = useLoaderData() as loaderProps;
   /* here the trainees means a object which has the attendences related to each trainee */
   const [trainees, setTrainees] = useState(loaderData.trainees);
-
+  const [trainee, setTrainee] = useState<any | null>(null);
   const [matchingTrainees, setMatchingTrainees] = useState<any>(loaderData.trainees);
-
+  //const [trainee_id, setTraineeId] = useState<null | number>(null);
   const [keyword, setKeyword] = useState<string>("");
 
   const [workingDays, setWorkingDays] = useState<string[]>(loaderData.workingDays);
 
-  const [show, setShow] = useState(false);
+  //const [show, setShow] = useState(false);
 
   const [filterVisible, setFilterVisible] = useState(false);
 
@@ -72,20 +85,60 @@ export default function AttendencesPage() {
   const [searchCount, setSearchCount] = useState<number | null>(null);
 
   const [loading, setLoading] = useState<boolean>(false);
+  const [params] = useSearchParams();
 
   const {
-    register,
     formState: { errors },
     setError,
     control,
     reset,
+    setValue,
+    watch,
     handleSubmit,
   } = useForm<filterFormValues>();
   const { state } = useNavigation();
 
   useEffect(() => {
+    const month = params.get("month");
+    const year = params.get("year");
+    const id = params.get("id");
+
+    const schema = z.object({
+      month: z.coerce.number().gt(0).lt(13),
+      year: z.coerce.number().gt(2000),
+      id: z.coerce.number(),
+    });
+
+    try {
+      const data = schema.parse({
+        month,
+        year,
+        id,
+      });
+      api.get(`api/trainee/${data.id}`).then((res) => {
+        console.log(res);
+        setTrainee(res.data);
+      });
+      setFilterOptions({
+        month: {
+          value: data.month + "",
+          label: data.month + "",
+        },
+        year: {
+          value: data.year + "",
+          label: data.year + "",
+        },
+        traineeId: data.id,
+      });
+    } catch (error) {
+      console.log(error);
+    }
+  }, []);
+
+  useEffect(() => {
     setMatchingTrainees(trainees);
     setResultCount(trainees.length);
+    console.log(trainees);
   }, [trainees]);
 
   useEffect(() => {
@@ -105,37 +158,36 @@ export default function AttendencesPage() {
         const institutes = filterOptions.institutes?.map((institute) => {
           return institute.value;
         });
-
         let filter = {
-          start_date: filterOptions.start_date,
-          end_date: filterOptions.end_date,
+          month: filterOptions.month.value,
+          year: filterOptions.year.value,
           programmes: programmes,
           departments: departments,
           institutes: institutes,
+          traineeId: filterOptions.traineeId,
         };
-
         const getFilteredData = async (filterParams: typeof filter) => {
           //set loading state
           console.log(filterParams);
           setLoading(true);
-          if (filterOptions.start_date) {
-            const startDate = new Date(filterOptions.start_date);
-
+          if (filterParams.month && filterParams.year) {
             const [attendencesResponse, workingDaysResponse] = await Promise.all([
               api.get("api/attendence", {
                 params: {
-                  month: startDate.getMonth() + 1,
-                  year: startDate.getFullYear(),
+                  month: filterParams.month,
+                  year: filterParams.year,
+                  trainee_id: filterParams.traineeId,
                 },
               }),
-              api.get(`api/calender/${startDate.getFullYear()}/${startDate.getMonth() + 1}`),
+              api.get(`api/calender/${filterParams.year}/${filterParams.month}`),
             ]);
+            console.log(workingDaysResponse.data);
+            console.log(attendencesResponse.data);
             setWorkingDays(workingDaysResponse.data);
             setTrainees(attendencesResponse.data);
           }
           setLoading(false);
         };
-
         getFilteredData(filter);
       } catch (error) {
         console.log(error);
@@ -164,6 +216,27 @@ export default function AttendencesPage() {
     }
   };
 
+  const [months, setMonths] = useState<any[]>([]);
+
+  const year = watch("year");
+  //const month = watch("month");
+
+  useEffect(() => {
+    console.log(loaderData.summary);
+    setValue("month", { value: "", label: "" });
+    if (year) {
+      const yearSummary: any = loaderData.summary.find((record: any) => {
+        return record.year == year.value;
+      });
+      yearSummary && setMonths(yearSummary.months || []);
+    }
+  }, [year]);
+
+  /* useEffect(() => {
+    //in here the year and month is setted to the filterOptions
+    //then the chain of useEffects run resulting in fetching the data from the server
+  }, [year, months]); */
+
   const fuse = new Fuse(trainees, {
     keys: ["ATT_NO"],
     isCaseSensitive: false,
@@ -176,17 +249,83 @@ export default function AttendencesPage() {
 
   const onSubmit = async (data: filterFormValues) => {
     console.log(data);
+    let values = data;
+    if (filterOptions && filterOptions.traineeId) {
+      values.traineeId = filterOptions.traineeId;
+    }
+
     if (
       (data.departments && data.departments.length > 0) ||
       (data.institutes && data.institutes.length > 0) ||
       (data.programmes && data.programmes.length > 0) ||
-      data.start_date ||
-      data.end_date
+      (data.month && data.year)
     ) {
-      setFilterOptions(data);
+      setFilterOptions(values);
       setFilterVisible(false);
     } else {
       setError("root", { message: "one of the filters must be used to filter data " });
+    }
+  };
+
+  const handleDownload = () => {
+    console.log("click");
+    if (workingDays && trainees.length > 0) {
+      try {
+        const headers = [
+          "S/NO",
+          "ATTN NO",
+          "REG NO",
+          "END DATE",
+          "NAME",
+          ...workingDays,
+          "ATTN TOTAL",
+          "PAY AMOUNT(Rs)",
+        ]; /* [id,date1,date2,date3] */
+        let rows = [headers];
+        let sNo = 0;
+        console.log(trainees);
+        /* 
+        [
+          {
+            trainee:12,
+            attendences : {
+              day1 :prsent,
+              day2 : present 
+            }
+          }
+        ]
+        */
+        trainees.forEach((trainee: any) => {
+          sNo++;
+          let row = [sNo, trainee.ATT_NO, trainee.REG_NO, trainee.end_date, trainee.name];
+          console.log(trainee);
+          workingDays.forEach((day) => {
+            // console.log(day);
+            const attendence = trainee.attendences.find(
+              (attendence: any) => attendence.date == day
+            );
+            if (attendence) {
+              console.log(day, attendence);
+              row.push(attendence.status);
+            } else {
+              throw new Error(
+                `mismatch occured no attendece record  trainee-id-${trainee.id} for day-${day}!`
+              );
+            }
+          });
+          rows.push(row);
+        });
+        console.log(rows);
+      } catch (error: any) {
+        Swal.fire({
+          icon: "error",
+          title: "Oops...",
+          text: error.message || "un expected error occured",
+          footer: '<a href="#">Why do I have this issue?</a>',
+        });
+      }
+    } else {
+      console.log(workingDays, trainees);
     }
   };
 
@@ -256,12 +395,13 @@ export default function AttendencesPage() {
                       );
                     })}
 
-                  {filterOptions && filterOptions.start_date && filterOptions.end_date ? (
-                    <span className="ms-1 badge bg-success">{`${filterOptions.start_date} to ${filterOptions.end_date}`}</span>
-                  ) : filterOptions?.start_date ? (
-                    <span className="ms-1 badge bg-success">{`From ${filterOptions.start_date}`}</span>
-                  ) : filterOptions?.end_date ? (
-                    <span className="ms-1 badge bg-success">{`From ${filterOptions.end_date}`}</span>
+                  {filterOptions && filterOptions.month && filterOptions.year ? (
+                    <span className="ms-1 badge bg-success">{`${filterOptions.year.value} - ${filterOptions.month.value}`}</span>
+                  ) : (
+                    ""
+                  )}
+                  {filterOptions && trainee && trainee.id ? (
+                    <span className="ms-1 badge bg-warning">{`${trainee.ATT_NO} `}</span>
                   ) : (
                     ""
                   )}
@@ -272,50 +412,66 @@ export default function AttendencesPage() {
                 </div>
               </div>
             </div>
+            <div className="border border-2 rounded-2 p-1">
+              <div
+                className=" table-responsive rounded-2  table-scrollbar"
+                style={{ maxHeight: "53vh" }}
+              >
+                {loading ? (
+                  <MiniLoader />
+                ) : (
+                  <table className="table table-sm table-bordered w-100">
+                    <thead className="table-dark">
+                      <tr className="">
+                        <th>Attendance Number</th>
 
-            <div className=" table-responsive rounded-2">
-              {loading ? (
-                <MiniLoader />
-              ) : (
-                <table className="table table-bordered w-100">
-                  <thead className="table-dark">
-                    <tr className="">
-                      <th>Attendance Number</th>
-
-                      {workingDays.map((day) => {
-                        return (
-                          <th
-                            style={{
-                              whiteSpace: "nowrap",
-                              width: "200px",
-                              textOverflow: "ellipsis",
-                              overflow: "hidden",
-                              border: "1px solid #ddd",
-                              padding: "8px",
-                            }}
-                          >
-                            {day}
-                          </th>
-                        );
-                      })}
-                    </tr>
-                  </thead>
-                  <tbody>
-                    {matchingTrainees.map((trainee: any) => (
-                      <tr key={`${trainee.trainee_id}`}>
-                        <td>{trainee.ATT_NO}</td>
-                        {trainee.attendences.map((attendence: any) => (
-                          <FlipableTableCell
-                            onTime={attendence.on_time}
-                            offTime={attendence.off_time}
-                            status={attendence.status}
-                          />
-                        ))}
+                        {workingDays.map((day) => {
+                          return (
+                            <th
+                              style={{
+                                whiteSpace: "nowrap",
+                                width: "200px",
+                                textOverflow: "ellipsis",
+                                overflow: "hidden",
+                                border: "1px solid #ddd",
+                                padding: "8px",
+                              }}
+                            >
+                              {day}
+                            </th>
+                          );
+                        })}
                       </tr>
-                    ))}
-                  </tbody>
-                </table>
-              )}
+                    </thead>
+                    <tbody>
+                      {matchingTrainees.map((trainee: any) => (
+                        <tr key={`${trainee.trainee_id}`}>
+                          <td>{trainee.ATT_NO}</td>
+                          {trainee.attendences.map((attendence: any) => (
+                            <FlipableTableCell
+                              onTime={attendence.on_time}
+                              offTime={attendence.off_time}
+                              status={attendence.status}
+                            />
+                          ))}
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
+                )}
+              </div>
+            </div>
+            <div className=" d-flex mt-2 ">
+              <Link to={"/OJT/attendence/new"} className="btn btn-primary btn-sm ms-auto">
+                Upload Attendences
+              </Link>
+              <button
+                type="button"
+                className="btn btn-success btn-sm ms-2"
+                onClick={handleDownload}
+              >
+                Download Records
+              </button>
             </div>
             {/* Modal to display schedule */}
             {/* <Modal show={show} onHide={handleClose}>
@@ -365,7 +521,7 @@ export default function AttendencesPage() {
               <Modal.Body>
                 <form className="">
                   {errors.root && <p className="text-danger m-0">{errors.root.message}</p>}
-                  <div>
+                  {/*  <div>
                     <div className=" fw-semibold">Training Programmes</div>
                     <div className="ps-1 mt-1">
                       <Controller
@@ -427,31 +583,47 @@ export default function AttendencesPage() {
                         }}
                       />
                     </div>
-                  </div>
+                  </div> */}
 
                   <div className="mt-2 mb-2">
-                    <div className="fw-semibold  d-flex">
-                      <div>Filter by Time periods</div>
-                    </div>
-
                     <div className="ps-1 mt-1 container">
                       <div className="row">
-                        <div className="fw-light col-2">From</div>
-                        <div className="ms-2 col">
-                          <input
-                            type="date"
-                            {...register("start_date")}
-                            className="form-control form-control-sm"
+                        <div className=" fw-semibold">Year</div>
+                        <div className="ps-1 mt-1">
+                          <Controller
+                            name="year"
+                            control={control}
+                            render={({ field }) => {
+                              return (
+                                <ReactSelect
+                                  {...field}
+                                  options={loaderData.summary.map((record: any) => ({
+                                    value: record.year,
+                                    label: record.year,
+                                  }))}
+                                />
+                              );
+                            }}
                           />
                         </div>
                       </div>
-                      <div className="row mt-2">
-                        <div className="fw-light col-2">To</div>
-                        <div className="ms-2 col">
-                          <input
-                            type="date"
-                            {...register("end_date")}
-                            className="form-control form-control-sm"
+                      <div className="row">
+                        <div className=" fw-semibold">Month</div>
+                        <div className="ps-1 mt-1">
+                          <Controller
+                            name="month"
+                            control={control}
+                            render={({ field }) => {
+                              return (
+                                <ReactSelect
+                                  {...field}
+                                  options={months.map((month: any) => ({
+                                    value: month,
+                                    label: month,
+                                  }))}
+                                />
+                              );
+                            }}
                           />
                         </div>
                       </div>
@@ -473,8 +645,6 @@ export default function AttendencesPage() {
                       departments: null,
                       institutes: null,
                       programmes: null,
-                      start_date: null,
-                      end_date: null,
                     });
                     setFilterOptions(null);
                     setFilterVisible(false);

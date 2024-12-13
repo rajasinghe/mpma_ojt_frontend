@@ -9,6 +9,7 @@ interface loaderData {
 
 export default function TraineeDetailsAddPageV2() {
   const loaderData = useLoaderData() as loaderData;
+
   return (
     <div className="">
       <section className="bg-primary-subtle ">

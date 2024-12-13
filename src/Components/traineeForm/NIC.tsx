@@ -7,45 +7,67 @@ interface NicProps {
   className: string;
   nicDisableState: [boolean, React.Dispatch<React.SetStateAction<boolean>>];
   setNIC_NO: (value: React.SetStateAction<string | null>) => void;
+  nic?: string;
 }
 
 const schema = z.object({
   NIC_NO: z
     .string()
     .regex(
-      /^(([5,6,7,8,9]{1})([0-9]{1})([0,1,2,3,5,6,7,8]{1})([0-9]{6})([v|V|x|X]))|(([1,2]{1})([0,9]{1})([0-9]{2})([0,1,2,3,5,6,7,8]{1})([0-9]{7}))/,
+      /^(([5-9]{1})([0-9]{1})([0,1,2,3,5,6,7,8]{1})([0-9]{6})([vVxX]))|(([1-2]{1})([0,9]{1})([0-9]{2})([0,1,2,3,5,6,7,8]{1})([0-9]{7}))$/,
       "invalid NIC format"
     ),
 });
 
 type formType = z.infer<typeof schema>;
 
-export default function NIC({ nicDisableState, className, setNIC_NO }: NicProps) {
+export default function NIC({ nicDisableState, className, setNIC_NO, nic }: NicProps) {
   const [disabled, disable] = nicDisableState;
+  let defaultValue = {};
+  if (nic) {
+    defaultValue = {
+      NIC_NO: nic,
+    };
+  }
   const {
     register,
     handleSubmit,
+    setFocus,
+    watch,
     formState: { isSubmitting, errors },
-  } = useForm<formType>({ resolver: zodResolver(schema) });
+  } = useForm<formType>({
+    resolver: zodResolver(schema),
+    defaultValues: defaultValue,
+  });
 
   const onSubmit = async (data: formType) => {
     try {
-      const response = await api.get(`/api/trainee/eligibility/${data.NIC_NO}`);
-      console.log(response);
-      if (response.status == 200) {
-        if (response.data.exists) {
-          return Swal.fire({
-            title: "Not Eligible",
-            text: "record exists with the nic number ",
-            icon: "error",
-          });
-        } else {
-          setNIC_NO(response.data.nic);
-          disable(true);
+      if (nic && data.NIC_NO == nic) {
+        return Swal.fire({
+          title: "No Change in NIC",
+          text: " ",
+          icon: "error",
+        });
+      } else {
+        const response = await api.get(`/api/trainee/eligibility/${data.NIC_NO}`);
+        console.log(response);
+        if (response.status == 200) {
+          if (response.data.exists) {
+            setFocus("NIC_NO");
+            return Swal.fire({
+              title: "Not Eligible",
+              text: "record exists with the nic number ",
+              icon: "error",
+            });
+          } else {
+            setNIC_NO(response.data.nic);
+            disable(true);
+          }
         }
       }
     } catch (error) {
       console.log(error);
+      setFocus("NIC_NO");
       Swal.fire({
         icon: "error",
         title: "Oops...",
@@ -54,6 +76,8 @@ export default function NIC({ nicDisableState, className, setNIC_NO }: NicProps)
       });
     }
   };
+
+  const nicField = watch("NIC_NO");
 
   return (
     <div className={className}>
@@ -68,7 +92,7 @@ export default function NIC({ nicDisableState, className, setNIC_NO }: NicProps)
               {...register("NIC_NO")}
             />
             <button
-              disabled={isSubmitting || disabled}
+              disabled={isSubmitting || disabled || nicField == nic}
               className="btn btn-sm btn-success ms-2"
               type="button"
               onClick={handleSubmit(onSubmit)}

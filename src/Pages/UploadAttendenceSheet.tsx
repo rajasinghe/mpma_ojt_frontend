@@ -77,7 +77,7 @@ export default function UploadAttendenceSheet() {
   return (
     <div>
       <section className="bg-primary-subtle ">
-        <div className="px-3 fw-bold fs-3">Analyze Attendence Sheet</div>
+        <div className="px-3 fw-bold fs-3">Upload Attendence Sheet</div>
       </section>
       <section className=" bg-body-tertiary px-2 mt-1">
         <div className="container-fluid border border-dark rounded-2 my-2">
@@ -85,10 +85,10 @@ export default function UploadAttendenceSheet() {
             <div>
               * before uploading the excel file make sure that excel sheet is in the correct format
             </div>
+            <div> * provide the correct month and year of the uploaded excel file.</div>
             <div>
-              {" "}
-              * provide the correct month and year of the uploaded excel file to retrive a valid
-              attendence sheet
+              * old records corresponding to the month will be deleted from the database and new
+              records will be added upon uploading .
             </div>
           </div>
 
