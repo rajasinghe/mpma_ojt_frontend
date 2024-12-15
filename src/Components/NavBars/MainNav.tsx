@@ -16,7 +16,7 @@ export default function MainNav() {
       <nav className="navbar navbar-expand-lg">
         <div className="container-fluid">
           <a className="navbar-brand" href="#">
-            <img src={logo} alt="" width={50} className="d-inline-block align-text-top" />
+            <img src={logo} alt="" width={40} className="d-inline-block align-text-top" />
           </a>
           <a className="navbar-brand" href="#">
             MPMA
@@ -37,36 +37,21 @@ export default function MainNav() {
               <li className="nav-item">
                 <Link
                   className="nav-link active navbar_text txt d-flex flex-column align-items-center"
-                  to="/Trainee/new"
-                >
-                  <div className={`navLinkBody ${pathname == "/Trainee/new" ? "active" : ""}`}>
-                    Add Trainee
-                  </div>
-                </Link>
-              </li>
-
-              <li className="nav-item">
-                <Link
-                  className="nav-link active navbar_text txt d-flex flex-column align-items-center"
-                  to="/Trainee"
+                  to="Trainees"
                 >
                   <div
-                    className={`navLinkBody ${
-                      /^\/Trainee\/\d+\/update$/.test(pathname) || pathname == "/Trainee"
-                        ? "active"
-                        : ""
-                    }`}
+                    className={`navLinkBody ${/^\/OJT\/trainees/i.test(pathname) ? "active" : ""}`}
                   >
-                    View Trainees
+                    Trainees
                   </div>
                 </Link>
               </li>
               <li className="nav-item">
                 <Link
                   className="nav-link active navbar_text txt d-flex flex-column align-items-center"
-                  to="/Trainee/calender"
+                  to="calender"
                 >
-                  <div className={`navLinkBody ${pathname == "/Trainee/calender" ? "active" : ""}`}>
+                  <div className={`navLinkBody ${pathname == "/OJT/calender" ? "active" : ""}`}>
                     Calender
                   </div>
                 </Link>
@@ -74,12 +59,12 @@ export default function MainNav() {
               <li className="nav-item">
                 <Link
                   className="nav-link active navbar_text txt d-flex flex-column align-items-center"
-                  to="/Trainee/attendence"
+                  to="attendence"
                 >
                   <div
-                    className={`navLinkBody ${pathname == "/Trainee/attendence" ? "active" : ""}`}
+                    className={`navLinkBody ${/^\/OJT\/attendence/.test(pathname) ? "active" : ""}`}
                   >
-                    Attendence Sheet
+                    Attendence
                   </div>
                 </Link>
               </li>

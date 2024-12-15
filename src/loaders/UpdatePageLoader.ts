@@ -1,11 +1,19 @@
 import api from "../api";
 export const updatePageLoader = async ({ params }: any) => {
-  const NIC_NO = params.NIC_NO;
-  console.log(NIC_NO);
-  const [trainee, departments, periods] = await Promise.all([
-    api.get(`api/trainee/${NIC_NO}`),
-    api.get("/api/department"),
-    api.get(`api/trainee/periods`),
+  const [trainee, departments, periods, violationStatus] = await Promise.all([
+    api.get(`api/trainee/${params.id}`),
+    api.get("/api/institutes"),
+    api.get(`/api/programs`),
+    api.get("api/trainee/regNoViolation", {
+      params: {
+        traineeId: params.id,
+      },
+    }),
   ]);
-  return { trainee: trainee.data, departments: departments.data, periods: periods.data };
+  console.log(violationStatus.data.exists);
+  return {
+    trainee: { ...trainee.data, regNoViolation: violationStatus.data.exists },
+    institutes: departments.data,
+    programs: periods.data,
+  };
 };

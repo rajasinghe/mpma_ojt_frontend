@@ -1,0 +1,11 @@
+.present{
+    background-color: #A1EEBD;
+    
+}
+
+.absent{
+    background-color:tomato;
+    opacity: 50;
+}
+
+

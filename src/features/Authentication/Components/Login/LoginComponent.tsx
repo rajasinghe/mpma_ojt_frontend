@@ -2,7 +2,9 @@ import { Link } from "react-router-dom";
 import { z } from "zod";
 import { SubmitHandler, useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
-
+import "./style.css";
+import api from "../../../../api";
+import Swal from "sweetalert2";
 interface LoginComponentProps {
   className?: string;
 }
@@ -27,7 +29,24 @@ function LoginComponent({}: LoginComponentProps) {
   //const login = async (data: loginRequest) => {};
 
   const onSubmit: SubmitHandler<loginRequest> = async (data) => {
-    console.log(data);
+    try {
+      console.log(data);
+      Swal.fire({
+        title: "Please Wait",
+        didOpen: () => {
+          Swal.showLoading();
+        },
+      });
+      const response = await api.post("api/auth/login", data);
+      console.log(response.data);
+    } catch (error) {
+      Swal.fire({
+        icon: "error",
+        title: "Oops...",
+        text: "Something went wrong!",
+        footer: '<a href="#">Why do I have this issue?</a>',
+      });
+    }
   };
 
   return (
@@ -55,9 +74,9 @@ function LoginComponent({}: LoginComponentProps) {
           </div>
           <div className="login-special">
             <div className="login-forgotpass-back">
-              <a href="#">
+              {/* <a href="#">
                 <div className="login-forgotpass">Forgot password ?</div>
-              </a>
+              </a> */}
             </div>
           </div>
           <div className="login-submit">
@@ -73,7 +92,7 @@ function LoginComponent({}: LoginComponentProps) {
               </Link>
             </div>
           </div>
-          <div className="login-ORTitleBack">---OR---</div>
+          {/* <div className="login-ORTitleBack">---OR---</div>
           <div className="login-signInTitle">Sign in with</div>
           <div className="login-googleLogin">
             <a href="#">
@@ -81,7 +100,7 @@ function LoginComponent({}: LoginComponentProps) {
                 <div className="googleLoginLogo"></div> <div>Sign in with Google</div>{" "}
               </button>
             </a>
-          </div>
+          </div> */}
         </div>
       </div>
     </form>

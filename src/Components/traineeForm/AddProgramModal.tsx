@@ -6,26 +6,25 @@ import { z } from "zod";
 import api from "../../api";
 
 interface props {
-  setPrograms: React.Dispatch<React.SetStateAction<any[]>>;
+  setPrograms: any;
   visibilityState: [boolean, React.Dispatch<React.SetStateAction<boolean>>];
+  type?: "normal" | "naita" | "cinec";
 }
 
 const schema = z.object({
   name: z.string().min(1, { message: "Name is required" }),
-  code: z.union([
-    z
-      .string()
-      .regex(/^[a-zA-Z]+$/, { message: "cannot contain any spaces,numbers or special charachters" })
-      .toUpperCase()
-      .min(2, { message: "code must contain letters in the range of 2-10" })
-      .max(10),
-    z.string().length(0),
-  ]),
+  special: z.boolean(),
+  code: z
+    .string()
+    .min(2, { message: "code must contain letters in the range of 2-10" })
+    .regex(/^[a-zA-Z]+$/, { message: "cannot contain any spaces,numbers or special charachters" })
+    .toUpperCase()
+    .max(10),
 });
 
 type formType = z.infer<typeof schema>;
 
-export default function AddProgramModal({ visibilityState, setPrograms }: props) {
+export default function AddProgramModal({ visibilityState, type, setPrograms }: props) {
   const [show, setShow] = visibilityState;
 
   const {
@@ -57,9 +56,9 @@ export default function AddProgramModal({ visibilityState, setPrograms }: props)
           });
 
           //submitting the data to insert a instute
-          const response = await api.post("api/programs", formData);
+          console.log({ ...formData, type: type });
+          const response = await api.post("api/programs", { ...formData, type: type });
           console.log(response);
-
           //if the response is successfull then refetch the institues
           const { data } = await api.get("api/programs");
           setPrograms(data);
@@ -119,7 +118,7 @@ export default function AddProgramModal({ visibilityState, setPrograms }: props)
         <Modal.Title>ADD NEW PROGRAM</Modal.Title>
       </Modal.Header>
       <Modal.Body>
-        <form onSubmit={handleSubmit(onSubmit)}>
+        <form>
           <div className="mb-3">
             <label className="form-label">Program Name</label>
             <input {...register("name")} className="form-control" type="text" />
@@ -127,12 +126,28 @@ export default function AddProgramModal({ visibilityState, setPrograms }: props)
           </div>
 
           <div className="mb-3">
-            <label className="form-label">Program Code</label>
+            <label className="form-label">
+              {type == "naita" ? "Special Code" : "Program Code"}
+            </label>
             <input {...register("code")} className="form-control" type="text" />
             {errors.code && <p className="text-danger m-0">{errors.code.message}</p>}
           </div>
+          {!type && (
+            <div className="form-check">
+              <input className="form-check-input" type="checkbox" {...register("special")} />
+              <label className="form-check-label">Special Program</label>
+            </div>
+          )}
           <div className="d-flex">
-            <button disabled={isSubmitting} className="btn btn-primary ms-auto">
+            <button
+              type="button"
+              onClick={() => {
+                let submission = handleSubmit(onSubmit);
+                submission();
+              }}
+              disabled={isSubmitting}
+              className="btn btn-primary ms-auto"
+            >
               {isSubmitting ? "Submiting..." : "Submit"}
             </button>
           </div>

@@ -1,6 +1,5 @@
-import { Link, useLoaderData, useNavigate, useNavigation } from "react-router-dom";
+import { Link, useLoaderData, useNavigation } from "react-router-dom";
 import { Trainee } from "../Components/traineeForm/Trainee";
-import { Button, Modal } from "react-bootstrap";
 import { useEffect, useState } from "react";
 import { formatDate } from "../helpers";
 import Fuse from "fuse.js";
@@ -13,6 +12,7 @@ import api from "../api";
 import Loader from "../Components/Loader/Loader";
 import MiniLoader from "../Components/Loader/MiniLoader";
 import Swal from "sweetalert2";
+import { Modal } from "react-bootstrap";
 
 interface loaderProps {
   trainees: Trainee[];
@@ -55,17 +55,14 @@ type filterFormValues = z.infer<typeof filterSchema>;
 export default function ViewTraineesPage() {
   const loaderData = useLoaderData() as loaderProps;
   const [trainees, setTrainees] = useState<Trainee[]>(loaderData.trainees);
-  const navigate = useNavigate();
   const [matchingTrainees, setMatchingTrainees] = useState<Trainee[]>(loaderData.trainees);
   const [keyword, setKeyword] = useState<string>("");
 
-  const [show, setShow] = useState(false);
   const [filterVisible, setFilterVisible] = useState(false);
 
   const [filterOptions, setFilterOptions] = useState<filterFormValues | null>(null);
   const [resultCount, setResultCount] = useState<number>(loaderData.trainees.length);
   const [searchCount, setSearchCount] = useState<number | null>(null);
-  const [selectedSchedule, setSelectedSchedule] = useState<Trainee | null>(null);
 
   const [loading, setLoading] = useState<boolean>(false);
 
@@ -148,17 +145,17 @@ export default function ViewTraineesPage() {
     console.log(matchingTrainees);
   }, []);
 
-  const handleClose = () => setShow(false);
+  /* const handleClose = () => setShow(false); */
 
   // Function to handle showing the modal with the selected trainee's schedule or redirect to add schedules page
-  const handleShow = (trainee: Trainee) => {
-    if (trainee.schedules.length > 0) {
+  /* const handleShow = (trainee: Trainee) => {
+    if (trainee.schedules) {
       setSelectedSchedule(trainee); // Set the selected trainee
       setShow(true); // Show the modal
     } else {
       navigate(`${trainee.id}/add_schedules`);
     }
-  };
+  }; */
 
   const handleSearch = (keyword: string) => {
     if (keyword.trim() != "") {
@@ -206,14 +203,14 @@ export default function ViewTraineesPage() {
       {state == "loading" ? (
         <Loader />
       ) : (
-        <div className="">
+        <div className="body d-flex flex-column">
           {/* header section */}
           <section className="bg-primary-subtle ">
-            <div className="px-3  fw-bold fs-3">Trainees</div>
+            <div className="px-3  fw-bold fs-4">Trainees</div>
           </section>
 
-          <section className="px-2 mt-1">
-            {/*  */}
+          <section className="px-2 mt-1 flex-grow-0">
+            {/*search bar  */}
             <div className="bg-body-secondary p-2 mb-2 rounded-2 position-relative">
               {/* serach box */}
               <div className="d-flex">
@@ -226,15 +223,13 @@ export default function ViewTraineesPage() {
                     handleSearch(e.target.value);
                   }}
                 />
-                <button className="btn shadow ms-2 btn-outline-warning">
-                  <img
-                    src={optionsIcon}
-                    height={"30px"}
-                    alt=""
-                    onClick={() => {
-                      setFilterVisible(true);
-                    }}
-                  />
+                <button
+                  onClick={() => {
+                    setFilterVisible(true);
+                  }}
+                  className="btn shadow ms-2 btn-outline-warning"
+                >
+                  <img src={optionsIcon} height={"22px"} alt="" />
                 </button>
               </div>
 
@@ -245,7 +240,11 @@ export default function ViewTraineesPage() {
                   {filterOptions?.institutes &&
                     filterOptions.institutes.map((institute) => {
                       return (
-                        <span key={institute.value} className="badge bg-primary ms-1">
+                        <span
+                          key={institute.value}
+                          className="badge bg-primary ms-1"
+                          style={{ fontSize: "10px" }}
+                        >
                           {institute.label}
                         </span>
                       );
@@ -284,99 +283,65 @@ export default function ViewTraineesPage() {
               </div>
             </div>
 
-            <div className=" table-responsive rounded-2">
-              {loading ? (
-                <MiniLoader />
-              ) : (
-                <table className="table table-bordered w-100">
-                  <thead className="table-dark">
-                    <tr>
-                      <th scope="col">Attendance Number</th>
-                      <th>Registration Number</th>
-                      <th scope="col">Trainee Name</th>
-                      <th scope="col">NIC Number</th>
-                      <th>University Institute</th>
-                      <th>Training Programme</th>
-                      <th>Telephone Number</th>
-                      <th>Training Period</th>
-                      <th>Start Date</th>
-                      <th>End Date</th>
-                      <th>Schedule</th>
-                      <th>Options</th>
-                    </tr>
-                  </thead>
-                  <tbody>
-                    {matchingTrainees.map((trainee: Trainee) => (
-                      <tr key={`${trainee.NIC_NO}-${trainee.REG_NO}`}>
-                        <td>{trainee.ATT_NO}</td>
-                        <td>{trainee.REG_NO}</td>
-                        <td>{trainee.name}</td>
-                        <td>{trainee.NIC_NO}</td>
-                        <td>{trainee.institute}</td>
-                        <td>{trainee.program}</td>
-                        <td>{trainee.contact_no}</td>
-                        <td>{trainee.training_period}</td>
-                        <td>{formatDate(trainee.start_date)}</td>
-                        <td>{formatDate(trainee.end_date)}</td>
-                        <td>
-                          <button
-                            className="btn btn-secondary w-100"
-                            onClick={() => handleShow(trainee)} // Pass trainee to handleShow
-                          >
-                            {trainee.schedules && trainee.schedules.length > 0
-                              ? "View Schedule"
-                              : "Add Schedule"}
-                          </button>
-                        </td>
-                        <td>
-                          <Link
-                            className="btn btn-warning"
-                            to={`/Trainee/${trainee.NIC_NO}/update`}
-                          >
-                            Update
-                          </Link>
-                        </td>
-                      </tr>
-                    ))}
-                  </tbody>
-                </table>
-              )}
-            </div>
-            {/* Modal to display schedule */}
-            <Modal show={show} onHide={handleClose}>
-              <Modal.Header closeButton>
-                <Modal.Title>Schedule for {selectedSchedule?.name}</Modal.Title>
-              </Modal.Header>
-              <Modal.Body>
-                {selectedSchedule ? (
-                  <table className="table table-bordered">
-                    <thead className="table-light">
-                      <tr>
-                        <th>Department</th>
+            <div className="border border-2 rounded-2 p-1">
+              <div
+                className=" table-responsive rounded-2  table-scrollbar"
+                style={{ maxHeight: "53vh" }}
+              >
+                {loading ? (
+                  <MiniLoader />
+                ) : (
+                  <table className="table table-sm table-bordered w-100">
+                    <thead className="table-dark position-sticky top-0">
+                      <tr className="small" style={{ fontSize: "" }}>
+                        <th scope="col">ATT No.</th>
+                        <th>Reg No.</th>
+                        <th scope="col">Name</th>
+                        <th scope="col">NIC Number</th>
+                        <th>Institute</th>
+                        <th>Programme</th>
+                        <th>Tel No</th>
+                        <th className=" ">Training Period</th>
                         <th>Start Date</th>
                         <th>End Date</th>
+                        <th>Options</th>
                       </tr>
                     </thead>
                     <tbody>
-                      {selectedSchedule.schedules.map((schedule, index) => (
-                        <tr key={index}>
-                          <td>{schedule.name}</td>
-                          <td>{formatDate(schedule.start_date)}</td>
-                          <td>{formatDate(schedule.end_date)}</td>
+                      {matchingTrainees.map((trainee: Trainee) => (
+                        <tr key={`${trainee.NIC_NO}-${trainee.REG_NO}`}>
+                          <td>{trainee.ATT_NO}</td>
+                          <td>{trainee.REG_NO}</td>
+                          <td>{trainee.name}</td>
+                          <td>{trainee.NIC_NO}</td>
+                          <td>{trainee.institute}</td>
+                          <td>{trainee.program}</td>
+                          <td>{trainee.contact_no}</td>
+                          <td>{trainee.training_period}</td>
+                          <td>{formatDate(trainee.start_date)}</td>
+                          <td>{formatDate(trainee.end_date)}</td>
+
+                          <td>
+                            <Link className="btn btn-sm btn-warning" to={`${trainee.id}/profile`}>
+                              Profile
+                            </Link>
+                          </td>
                         </tr>
                       ))}
                     </tbody>
+                    <div></div>
                   </table>
-                ) : (
-                  <p>No schedule available.</p>
                 )}
-              </Modal.Body>
-              <Modal.Footer>
-                <Button variant="secondary" onClick={handleClose}>
-                  Close
-                </Button>
-              </Modal.Footer>
-            </Modal>
+              </div>
+            </div>
+
+            <div className=" d-flex mt-2">
+              <Link to={"/OJT/trainees/new"} className="btn btn-primary btn-sm ms-auto">
+                Add New Trainee
+              </Link>
+              <button className="btn btn-success btn-sm ms-2">Download Records</button>
+            </div>
+
             {/* filter model */}
             <Modal
               show={filterVisible}
