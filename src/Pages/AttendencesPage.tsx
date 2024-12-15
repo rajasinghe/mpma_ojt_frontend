@@ -65,7 +65,6 @@ const filterSchema = z.object({
 type filterFormValues = z.infer<typeof filterSchema>;
 
 export default function AttendencesPage() {
- 
   const loaderData = useLoaderData() as loaderProps;
   /* here the trainees means a object which has the attendences related to each trainee */
   const [trainees, setTrainees] = useState(loaderData.trainees);
@@ -183,6 +182,9 @@ export default function AttendencesPage() {
             ]);
             console.log(workingDaysResponse.data);
             console.log(attendencesResponse.data);
+            /* attendencesResponse.data.array.forEach(element) => {
+                if(element)
+            }); */
             setWorkingDays(workingDaysResponse.data);
             setTrainees(attendencesResponse.data);
           }
@@ -206,6 +208,7 @@ export default function AttendencesPage() {
     if (keyword.trim() != "") {
       const searchResults = fuse.search(keyword);
       const resultingTrainees = searchResults.map((result) => {
+        console.log(result);
         return result.item;
       });
       setSearchCount(searchResults.length);

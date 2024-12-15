@@ -9,7 +9,11 @@ interface props {
 export default function FlipableTableCell({ status, onTime, offTime }: props) {
   const [isFlipped, setFlipped] = useState<boolean>(false);
   return (
-    <td className={`p-0 ${status == "1" ? "table-danger" : "table-warning"}`}>
+    <td
+      className={`p-0 ${
+        status == "1" ? "table-success" : onTime || offTime ? "table-warning" : "table-danger"
+      }`}
+    >
       <div
         className={`flip-container ${isFlipped ? "flipped" : ""}`}
         onClick={() => {
