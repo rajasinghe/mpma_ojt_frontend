@@ -157,13 +157,6 @@ export default function AddProgramModal({ visibilityState, type, setPrograms }: 
             >
               {isSubmitting ? "Submiting..." : "Submit"}
             </button>
-            <button
-              onClick={() => {
-                console.log(errors);
-              }}
-            >
-              show error
-            </button>
           </div>
         </form>
       </Modal.Body>
