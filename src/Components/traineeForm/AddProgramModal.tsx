@@ -134,7 +134,7 @@ export default function AddProgramModal({ visibilityState, type, setPrograms }: 
             <label className="form-label">
               {type == "naita" ? "Special Code" : "Program Code"}
             </label>
-            {/* <input {...register("code")} className="form-control" type="text" /> */}
+            <input {...register("code")} className="form-control" type="text" />
             {errors.code && <p className="text-danger m-0">{errors.code.message}</p>}
           </div>
           {!type && (
