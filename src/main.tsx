@@ -30,6 +30,7 @@ import LoginPage from "./Pages/LoginPage.tsx";
 import ErrorHandler from "./Components/ErrorHandler.tsx";
 import TraineeBankDetailsUpdatePage from "./Pages/TraineeBankDetailsUpdatePage.tsx";
 import TraineeDetailsUpdatePage from "./Pages/Admin/TraineeDetailsUpdate.tsx";
+import DepartmentsPage from "./Pages/Admin/DepartmentsPage.tsx";
 const router = createBrowserRouter([
   {
     path: "/",
@@ -97,6 +98,10 @@ const router = createBrowserRouter([
         path: "trainees/:id/bank_details/update",
         loader: traineeBankDetailsLoader,
         element: <TraineeBankDetailsUpdatePage />,
+      },
+      {
+        path: "departments",
+        element: <DepartmentsPage />,
       },
     ],
   },
