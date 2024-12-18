@@ -11,17 +11,22 @@ interface props {
   type?: "normal" | "naita" | "cinec";
 }
 
-const schema = z.object({
-  name: z.string().min(1, { message: "Name is required" }),
-  special: z.boolean(),
-  code: z
-    .string()
-    .min(2, { message: "code must contain letters in the range of 2-10" })
-    .regex(/^[a-zA-Z]+$/, { message: "cannot contain any spaces,numbers or special charachters" })
-    .toUpperCase()
-    .max(10),
-});
-
+const schema = z
+  .object({
+    name: z.string().min(1, { message: "Name is required" }),
+    special: z.boolean().optional(),
+    code: z
+      .string()
+      .min(2, { message: "code must contain letters in the range of 2-10" })
+      .regex(/^[a-zA-Z]+$/, { message: "cannot contain any spaces,numbers or special charachters" })
+      .toUpperCase()
+      .max(10)
+      .optional(),
+  })
+  .refine((data) => data.special || data.code, {
+    message: "A code is required for the program",
+    path: [],
+  });
 type formType = z.infer<typeof schema>;
 
 export default function AddProgramModal({ visibilityState, type, setPrograms }: props) {
@@ -138,12 +143,14 @@ export default function AddProgramModal({ visibilityState, type, setPrograms }: 
               <label className="form-check-label">Special Program</label>
             </div>
           )}
+          {errors.root && <p className="text-danger m-0">{errors.root.message}</p>}
           <div className="d-flex">
             <button
               type="button"
-              onClick={() => {
+              onClick={async () => {
+                console.log("clicked");
                 let submission = handleSubmit(onSubmit);
-                submission();
+                await submission();
               }}
               disabled={isSubmitting}
               className="btn btn-primary ms-auto"
