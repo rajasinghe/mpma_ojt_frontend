@@ -13,6 +13,7 @@ import Loader from "../Components/Loader/Loader";
 import MiniLoader from "../Components/Loader/MiniLoader";
 import Swal from "sweetalert2";
 import { Modal } from "react-bootstrap";
+import { utils, writeFileXLSX } from "xlsx";
 
 interface loaderProps {
   trainees: Trainee[];
@@ -53,6 +54,7 @@ const filterSchema = z.object({
 type filterFormValues = z.infer<typeof filterSchema>;
 
 export default function ViewTraineesPage() {
+  
   const loaderData = useLoaderData() as loaderProps;
   const [trainees, setTrainees] = useState<Trainee[]>(loaderData.trainees);
   const [matchingTrainees, setMatchingTrainees] = useState<Trainee[]>(loaderData.trainees);
@@ -144,6 +146,47 @@ export default function ViewTraineesPage() {
   useEffect(() => {
     console.log(matchingTrainees);
   }, []);
+
+  const handleDownload = async () => {
+    try {
+      console.log(matchingTrainees);
+      const headers = [
+        "ATT_NO",
+        "REG_NO",
+        "Name",
+        "NIC_NO",
+        "Institute",
+        "program",
+        "TEL_NO",
+        "Training Period",
+        "Start Date",
+        "End Date",
+      ];
+      const dataRows = matchingTrainees.map((trainee) => {
+        return [
+          trainee.ATT_NO,
+          trainee.REG_NO,
+          trainee.name,
+          trainee.NIC_NO,
+          trainee.institute,
+          trainee.program,
+          trainee.contact_no,
+          trainee.training_period,
+          formatDate(trainee.start_date),
+          formatDate(trainee.end_date),
+        ];
+      });
+      console.log(dataRows[0]);
+      const rows = [headers, ...dataRows];
+      const book = utils.book_new();
+
+      const sheet = utils.aoa_to_sheet(rows);
+      utils.book_append_sheet(book, sheet, "Register");
+      writeFileXLSX(book, "register.xlsx", { bookType: "xlsx" });
+    } catch (error) {
+      console.log(error);
+    }
+  };
 
   /* const handleClose = () => setShow(false); */
 
@@ -339,7 +382,9 @@ export default function ViewTraineesPage() {
               <Link to={"/OJT/trainees/new"} className="btn btn-primary btn-sm ms-auto">
                 Add New Trainee
               </Link>
-              <button className="btn btn-success btn-sm ms-2">Download Records</button>
+              <button className="btn btn-success btn-sm ms-2" onClick={handleDownload}>
+                Download Records
+              </button>
             </div>
 
             {/* filter model */}
