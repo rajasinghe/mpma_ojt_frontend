@@ -38,9 +38,9 @@ export default function ProfilePage() {
             Institute -{" "}
             {institutes.find((institute: any) => trainee.institute_id == institute.id).name}{" "}
           </div>
-          <div className="  fw-semibold">NIC - 200218103171</div>
-          <div className="  fw-semibold">Name - 1090901920</div>
-          <div className="  fw-semibold">Contact Number - 07878878676</div>
+          <div className="  fw-semibold">NIC - {trainee.NIC_NO}</div>
+          <div className="  fw-semibold">Name - {trainee.name}</div>
+          <div className="  fw-semibold">Contact Number - {trainee.contact_no}</div>
           <div>
             <Link to={`/OJT/Trainees/${trainee.id}/update`} className="btn btn-sm btn-warning">
               Update
