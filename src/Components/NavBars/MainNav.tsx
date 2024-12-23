@@ -1,6 +1,7 @@
 import { useEffect } from "react";
 import "./MainNav.css";
 import logo from "../../assets/SLPA_Logo-Cu9TOj32.png";
+import profile_icon from "../../assets/profile_icon.png";
 //import { UserContext } from "../../App";
 import { Link, useLocation } from "react-router-dom";
 
@@ -69,6 +70,16 @@ export default function MainNav() {
                 </Link>
               </li>
             </ul>
+            <div className="ms-auto">
+              <Link to={"/OJT/user_profile"}>
+                <img
+                  src={profile_icon}
+                  alt=""
+                  width={40}
+                  className="d-inline-block align-text-top"
+                />
+              </Link>
+            </div>
           </div>
         </div>
       </nav>
