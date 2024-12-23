@@ -54,7 +54,6 @@ const filterSchema = z.object({
 type filterFormValues = z.infer<typeof filterSchema>;
 
 export default function ViewTraineesPage() {
-  
   const loaderData = useLoaderData() as loaderProps;
   const [trainees, setTrainees] = useState<Trainee[]>(loaderData.trainees);
   const [matchingTrainees, setMatchingTrainees] = useState<Trainee[]>(loaderData.trainees);
