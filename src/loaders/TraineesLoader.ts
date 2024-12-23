@@ -1,6 +1,7 @@
 import api from "../api.ts";
 
 export const viewTraineesPageLoader = async () => {
+  console.log(api.defaults.headers.common.Authorization);
   const [trainees, departments, programmes, institutes] = await Promise.all([
     api.get("/api/trainee"),
     api.get("/api/department"),

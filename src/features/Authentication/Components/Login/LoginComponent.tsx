@@ -1,4 +1,4 @@
-import { Link } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
 import { z } from "zod";
 import { SubmitHandler, useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
@@ -22,7 +22,7 @@ function LoginComponent({}: LoginComponentProps) {
     formState: { isSubmitting },
   } = useForm<loginRequest>({ resolver: zodResolver(schema) });
 
-  //const navigate = useNavigate();
+  const navigate = useNavigate();
 
   //const usercontext = useContext(UserContext);
 
@@ -37,8 +37,11 @@ function LoginComponent({}: LoginComponentProps) {
           Swal.showLoading();
         },
       });
-      const response = await api.post("api/auth/login", data);
+      const response = await api.post("auth/login", data);
+      localStorage.setItem("token", response.data);
       console.log(response.data);
+      navigate("/OJT/");
+      Swal.close();
     } catch (error) {
       Swal.fire({
         icon: "error",

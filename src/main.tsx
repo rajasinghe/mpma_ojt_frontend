@@ -30,73 +30,83 @@ import LoginPage from "./Pages/LoginPage.tsx";
 import ErrorHandler from "./Components/ErrorHandler.tsx";
 import TraineeBankDetailsUpdatePage from "./Pages/TraineeBankDetailsUpdatePage.tsx";
 import TraineeDetailsUpdatePage from "./Pages/Admin/TraineeDetailsUpdate.tsx";
+import UserProfilePage from "./Pages/UserProfilePage.tsx";
+import { profileLoader } from "./loaders/UserLoaders.ts";
+
 const router = createBrowserRouter([
   {
-    path: "/",
-    element: <LandingPage />,
-  },
-  {
-    path: "/OJT/login",
+    path: "/login",
     element: <LoginPage />,
   },
   {
-    path: "/OJT",
-    element: <Base />,
-    errorElement: <ErrorHandler />,
+    path: "/",
+    element: <LandingPage />,
     children: [
       {
-        path: "trainees",
-        loader: viewTraineesPageLoader,
-        element: <ViewTraineesPage />,
-      },
-      {
-        path: "add_old_records",
-        loader: traineesInsertFormPageLoader,
-        element: <TraineeDetailsAddPage />,
-      },
-      {
-        path: "trainees/new",
-        element: <TraineeDetailsAddPageV2 />,
-        loader: newTraineesInsertPageLoader,
-      },
-      {
-        path: "trainees/:id/add_schedules",
-        element: <TraineeAddSchedulePage />,
-        loader: traineeAddSchedulePageLoader,
-      },
-      {
-        path: "attendence/new",
-        element: <UploadAttendenceSheet />,
-      },
-      {
-        path: "attendence",
-        element: <AttendencesPage />,
-        loader: viewAttendenceLoader,
-      },
-      {
-        path: "calender",
-        loader: holidaysLoader,
-        element: <CalenderPage />,
-      },
-      {
-        path: "trainees/:id/profile",
-        loader: profilePageLoader,
-        element: <ProfilePage />,
-      },
-      {
-        path: "trainees/:id/update",
-        loader: updatePageLoader,
-        element: <TraineeDetailsUpdatePage />,
-      },
-      {
-        path: "trainees/:id/bank_details",
-        loader: traineeBankDetailsLoader,
-        element: <TraineeAddBankDetailsPage />,
-      },
-      {
-        path: "trainees/:id/bank_details/update",
-        loader: traineeBankDetailsLoader,
-        element: <TraineeBankDetailsUpdatePage />,
+        path: "/OJT",
+        element: <Base />,
+        errorElement: <ErrorHandler />,
+        children: [
+          {
+            path: "user_profile",
+            element: <UserProfilePage />,
+            loader: profileLoader,
+          },
+          {
+            path: "trainees",
+            loader: viewTraineesPageLoader,
+            element: <ViewTraineesPage />,
+          },
+          {
+            path: "add_old_records",
+            loader: traineesInsertFormPageLoader,
+            element: <TraineeDetailsAddPage />,
+          },
+          {
+            path: "trainees/new",
+            element: <TraineeDetailsAddPageV2 />,
+            loader: newTraineesInsertPageLoader,
+          },
+          {
+            path: "trainees/:id/add_schedules",
+            element: <TraineeAddSchedulePage />,
+            loader: traineeAddSchedulePageLoader,
+          },
+          {
+            path: "attendence/new",
+            element: <UploadAttendenceSheet />,
+          },
+          {
+            path: "attendence",
+            element: <AttendencesPage />,
+            loader: viewAttendenceLoader,
+          },
+          {
+            path: "calender",
+            loader: holidaysLoader,
+            element: <CalenderPage />,
+          },
+          {
+            path: "trainees/:id/profile",
+            loader: profilePageLoader,
+            element: <ProfilePage />,
+          },
+          {
+            path: "trainees/:id/update",
+            loader: updatePageLoader,
+            element: <TraineeDetailsUpdatePage />,
+          },
+          {
+            path: "trainees/:id/bank_details",
+            loader: traineeBankDetailsLoader,
+            element: <TraineeAddBankDetailsPage />,
+          },
+          {
+            path: "trainees/:id/bank_details/update",
+            loader: traineeBankDetailsLoader,
+            element: <TraineeBankDetailsUpdatePage />,
+          },
+        ],
       },
     ],
   },
