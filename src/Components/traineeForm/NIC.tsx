@@ -3,6 +3,7 @@ import { useForm } from "react-hook-form";
 import { z } from "zod";
 import api from "../../api";
 import Swal from "sweetalert2";
+import { useEffect } from "react";
 interface NicProps {
   className: string;
   nicDisableState: [boolean, React.Dispatch<React.SetStateAction<boolean>>];
@@ -29,10 +30,16 @@ export default function NIC({ nicDisableState, className, setNIC_NO, nic }: NicP
       NIC_NO: nic,
     };
   }
+
+  useEffect(() => {
+    console.log("nic Changed", nic);
+  }, [nic]);
+
   const {
     register,
     handleSubmit,
     setFocus,
+    setValue,
     watch,
     formState: { isSubmitting, errors },
   } = useForm<formType>({

@@ -32,7 +32,18 @@ import TraineeBankDetailsUpdatePage from "./Pages/TraineeBankDetailsUpdatePage.t
 import TraineeDetailsUpdatePage from "./Pages/Admin/TraineeDetailsUpdate.tsx";
 import UserProfilePage from "./Pages/UserProfilePage.tsx";
 import { profileLoader } from "./loaders/UserLoaders.ts";
-
+import { departmentSummaryLoader, singleDepartmentLoader } from "./loaders/DepartmentLoader.ts";
+import DepartmentsPage from "./Pages/DepartmentsPage.tsx";
+import DepartmentPage from "./Pages/DepartmentPage.tsx";
+import api from "./api.ts";
+const setToken = () => {
+  const token = localStorage.getItem("token");
+  console.log(token);
+  if (token) {
+    api.defaults.headers.common.Authorization = token;
+  }
+};
+setToken();
 const router = createBrowserRouter([
   {
     path: "/login",
@@ -105,6 +116,16 @@ const router = createBrowserRouter([
             path: "trainees/:id/bank_details/update",
             loader: traineeBankDetailsLoader,
             element: <TraineeBankDetailsUpdatePage />,
+          },
+          {
+            path: "departments",
+            loader: departmentSummaryLoader,
+            element: <DepartmentsPage />,
+          },
+          {
+            path: "departments/:id",
+            loader: singleDepartmentLoader,
+            element: <DepartmentPage />,
           },
         ],
       },

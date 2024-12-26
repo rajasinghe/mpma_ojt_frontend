@@ -34,29 +34,43 @@ export const newTraineesInsertPageLoader = async () => {
 };
 
 export const traineeAddSchedulePageLoader = async ({ params }: any) => {
-  const [traineeResponse, departmentsResponse, periodsResponse, scheduleResponse] =
-    await Promise.allSettled([
+  try {
+    const [
+      traineeResponse,
+      departmentsResponse,
+      periodsResponse,
+      interviewResponse,
+      scheduleResponse,
+    ] = await Promise.allSettled([
       api.get(`api/trainee/${params.id}`),
       api.get("api/department"),
       api.get("api/periods"),
+      api.get(`api/trainee/${params.id}/interview`),
       api.get(`api/trainee/${params.id}/schedule`),
     ]);
-  if (
-    traineeResponse.status == "fulfilled" &&
-    departmentsResponse.status == "fulfilled" &&
-    periodsResponse.status == "fulfilled"
-  ) {
-    let trainee = { ...traineeResponse.value.data };
-    if (scheduleResponse.status == "fulfilled") {
-      trainee.schedules = scheduleResponse.value.data;
+    if (
+      traineeResponse.status == "fulfilled" &&
+      departmentsResponse.status == "fulfilled" &&
+      periodsResponse.status == "fulfilled"
+    ) {
+      let trainee = { ...traineeResponse.value.data };
+      if (scheduleResponse.status == "fulfilled") {
+        trainee.schedules = scheduleResponse.value.data;
+      }
+      if (interviewResponse.status == "fulfilled") {
+        trainee.interviews = interviewResponse.value.data;
+      }
+      return {
+        trainee,
+        departmentsList: departmentsResponse.value.data,
+        periodsList: periodsResponse.value.data,
+      };
+    } else {
+      throw new Error("failed to get necessary records");
     }
-    return {
-      trainee,
-      departmentsList: departmentsResponse.value.data,
-      periodsList: periodsResponse.value.data,
-    };
-  } else {
-    throw new Error("failed to get necessary records");
+  } catch (error) {
+    console.log(error);
+    throw error;
   }
 };
 
