@@ -10,6 +10,7 @@ import Swal from "sweetalert2";
 import api from "../api";
 import { endDateCalculator, formatDateToIso } from "../helpers";
 import AddPeriodModal from "../Components/traineeForm/AddPeriodModal";
+import moment from "moment";
 const schema = z.object({
   schedules: z.array(
     z.object({
@@ -154,6 +155,9 @@ export default function TraineeAddSchedulePage() {
             text: "schedule has been updated at the database .",
             icon: "success",
           });
+          //delete the interview record
+          const deleteInterViewResponse = await api.delete(`api/trainee/${trainee.id}/interview`);
+          console.log(deleteInterViewResponse);
           //reset();
           navigate(`/OJT/trainees/${trainee.id}/profile`);
         }
@@ -209,6 +213,41 @@ export default function TraineeAddSchedulePage() {
                 <div className="fw-semibold">NIC NO - {trainee.NIC_NO}</div>
               </div>
             </div>
+            {trainee.interviews.length > 0 && (
+              <div className="container-fluid border border-dark rounded-2 my-2">
+                <div className=" fs-5 fw-bolder">Interview Details</div>
+                <div className="w-50 border border-2 rounded-2 p-1 mt-2 mb-2">
+                  <div>
+                    <table className="table table-striped table-sm table-bordered ">
+                      <thead className="table-dark">
+                        <tr className="small" style={{ fontSize: "" }}>
+                          <th className=" text-center">Division</th>
+                          <th>Interviewed Date</th>
+                        </tr>
+                      </thead>
+                      <tbody>
+                        {trainee.interviews.map((interview: any, index: number) => {
+                          const createdAt = moment(interview.createdAt);
+                          return (
+                            <tr key={`${interview.id}`}>
+                              <td>
+                                {
+                                  departmentsList.find(
+                                    (department) => department.id == interview.departmentId
+                                  ).name
+                                }
+                              </td>
+                              <td>{createdAt.format("YYYY-MM-DD")}</td>
+                            </tr>
+                          );
+                        })}
+                      </tbody>
+                    </table>
+                  </div>
+                </div>
+              </div>
+            )}
+
             <div>
               <div className=" text-black-50">
                 Add the department if the desired department is not in the list

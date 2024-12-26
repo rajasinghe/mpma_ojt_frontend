@@ -69,6 +69,20 @@ export default function MainNav() {
                   </div>
                 </Link>
               </li>
+              <li className="nav-item">
+                <Link
+                  className="nav-link active navbar_text txt d-flex flex-column align-items-center"
+                  to="departments"
+                >
+                  <div
+                    className={`navLinkBody ${
+                      /^\/OJT\/departments/.test(pathname) ? "active" : ""
+                    }`}
+                  >
+                    Departments
+                  </div>
+                </Link>
+              </li>
             </ul>
             <div className="ms-auto">
               <Link to={"/OJT/user_profile"}>

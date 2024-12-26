@@ -40,7 +40,7 @@ function LoginComponent({}: LoginComponentProps) {
       const response = await api.post("auth/login", data);
       localStorage.setItem("token", response.data);
       console.log(response.data);
-      navigate("/OJT/");
+      navigate("/OJT/trainees");
       Swal.close();
     } catch (error) {
       Swal.fire({

@@ -95,6 +95,7 @@ export default function AttendencesPage() {
     watch,
     handleSubmit,
   } = useForm<filterFormValues>();
+  
   const { state } = useNavigation();
 
   useEffect(() => {

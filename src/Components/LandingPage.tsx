@@ -1,4 +1,4 @@
-import { Outlet, useNavigate, useNavigation } from "react-router-dom";
+import { Outlet, useLocation, useNavigate, useNavigation } from "react-router-dom";
 import Loader from "./Loader/Loader";
 import { useEffect } from "react";
 import api from "../api";
@@ -6,9 +6,11 @@ import Swal from "sweetalert2";
 export default function LandingPage() {
   const { state } = useNavigation();
   const navigate = useNavigate();
+  const location = useLocation();
   useEffect(() => {
     //recieve the token from the localstorage
     const token = localStorage.getItem("token");
+    console.log(location);
     //authentication procedure and get the the profile info
     console.log("landing effect");
     console.log(token);
@@ -25,7 +27,9 @@ export default function LandingPage() {
     try {
       const response = await api.get("auth");
       console.log(response.data);
-      navigate("/OJT/Trainees");
+      if (location.pathname == "/") {
+        navigate("/OJT/Trainees");
+      }
     } catch (error) {
       console.log(error);
       Swal.fire({
