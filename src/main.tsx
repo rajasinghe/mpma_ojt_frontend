@@ -36,7 +36,7 @@ import { departmentSummaryLoader, singleDepartmentLoader } from "./loaders/Depar
 import DepartmentsPage from "./Pages/DepartmentsPage.tsx";
 import DepartmentPage from "./Pages/DepartmentPage.tsx";
 import api from "./api.ts";
-const setToken = () => {
+export const setToken = () => {
   const token = localStorage.getItem("token");
   console.log(token);
   if (token) {
@@ -44,6 +44,7 @@ const setToken = () => {
   }
 };
 setToken();
+
 const router = createBrowserRouter([
   {
     path: "/login",

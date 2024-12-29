@@ -1,6 +1,6 @@
 import { Modal } from "react-bootstrap";
 import { useForm } from "react-hook-form";
-import { z } from "zod";
+import { date, z } from "zod";
 import NIC from "../traineeForm/NIC";
 import { useEffect, useState } from "react";
 import { zodResolver } from "@hookform/resolvers/zod";
@@ -15,6 +15,7 @@ interface Props {
 }
 const schema = z.object({
   name: z.string().min(1, { message: "Name is required" }),
+  date: z.string().date(),
 });
 
 export default function InterviewModal({
@@ -28,7 +29,11 @@ export default function InterviewModal({
   const nicDisableState = useState<boolean>(false);
   type formType = z.infer<typeof schema>;
   useEffect(() => {
+    resetAll();
+  }, [show]);
+  useEffect(() => {
     console.log("interview changed", interview);
+    resetAll();
     if (interview) {
       setNic(interview.NIC);
       setValue("name", interview.name);
@@ -52,7 +57,7 @@ export default function InterviewModal({
     setShow(false);
   };
 
-  const insert = async (name: any) => {
+  const insert = async (formData: formType) => {
     try {
       const response = await Swal.fire({
         title: "New Interview",
@@ -71,7 +76,7 @@ export default function InterviewModal({
         const response = await api.post("api/interview", {
           NIC: nic,
           depId: department.id,
-          name: name,
+          ...formData,
         });
         console.log(response);
         refetchInterviews();
@@ -98,7 +103,7 @@ export default function InterviewModal({
     }
   };
 
-  const update = async (name: any) => {
+  const update = async (formData: formType) => {
     try {
       const response = await Swal.fire({
         title: "Update Interview",
@@ -116,7 +121,7 @@ export default function InterviewModal({
         });
         const response = await api.put(`api/interview/${interview.id}`, {
           NIC: nic,
-          name: name,
+          ...formData,
         });
         console.log(response);
         refetchInterviews(); //fetch the interviews list again
@@ -143,20 +148,24 @@ export default function InterviewModal({
     }
   };
 
+  const resetAll = () => {
+    reset();
+    nicDisableState[1](false);
+    setNic(null);
+  };
+
   const onSubmit = async (formData: formType) => {
     try {
       if (nic == null) {
         return setError("root", { message: "Validate a Nic before Submission" });
       }
       if (interview) {
-        await update(formData.name);
+        await update(formData);
       } else {
-        await insert(formData.name);
+        await insert(formData);
       }
 
-      reset();
-      setNic(null);
-      nicDisableState[1](false);
+      resetAll();
     } catch (error) {
       console.log(error);
     }
@@ -185,6 +194,16 @@ export default function InterviewModal({
             />
             {errors.name && <p className="text-danger m-0">{errors.name.message}</p>}
           </div>
+          <div className="mb-3">
+            <label className="form-label">Date</label>
+            <input
+              {...register("date")}
+              disabled={nic == null}
+              className="form-control"
+              type="date"
+            />
+            {errors.date && <p className="text-danger m-0">{errors.date.message}</p>}
+          </div>
           <div className="d-flex">
             <button disabled={isSubmitting} className="btn btn-primary ms-auto">
               {isSubmitting ? "Submiting..." : "Submit"}
@@ -193,9 +212,7 @@ export default function InterviewModal({
               type="button"
               className="btn btn-danger ms-2"
               onClick={() => {
-                reset();
-                nicDisableState[1](false);
-                setNic(null);
+                resetAll();
               }}
             >
               Reset

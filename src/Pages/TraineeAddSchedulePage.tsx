@@ -226,7 +226,7 @@ export default function TraineeAddSchedulePage() {
                         </tr>
                       </thead>
                       <tbody>
-                        {trainee.interviews.map((interview: any, index: number) => {
+                        {trainee.interviews.map((interview: any) => {
                           const createdAt = moment(interview.createdAt);
                           return (
                             <tr key={`${interview.id}`}>

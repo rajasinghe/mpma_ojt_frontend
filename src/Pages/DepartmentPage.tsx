@@ -125,6 +125,7 @@ export default function DepartmentPage() {
                           <th></th>
                           <th>name</th>
                           <th>NIC</th>
+                          <th>Scheduled Date</th>
                           <th>Interviewed Date</th>
                           <th>Interviewed Time</th>
                           <th></th>
@@ -138,6 +139,7 @@ export default function DepartmentPage() {
                               <td>{index + 1}</td>
                               <td>{interview.name}</td>
                               <td>{interview.NIC}</td>
+                              <td>{moment(interview.date).format("YYYY-MM-DD")}</td>
                               <td>{createdAt.format("YYYY-MM-DD")}</td>
                               <td>{createdAt.format("hh:mm:ss A")}</td>
                               <td>

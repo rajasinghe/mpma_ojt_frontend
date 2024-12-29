@@ -5,6 +5,7 @@ import { zodResolver } from "@hookform/resolvers/zod";
 import "./style.css";
 import api from "../../../../api";
 import Swal from "sweetalert2";
+import { setToken } from "../../../../main";
 interface LoginComponentProps {
   className?: string;
 }
@@ -39,6 +40,7 @@ function LoginComponent({}: LoginComponentProps) {
       });
       const response = await api.post("auth/login", data);
       localStorage.setItem("token", response.data);
+      setToken();
       console.log(response.data);
       navigate("/OJT/trainees");
       Swal.close();
