@@ -1,4 +1,4 @@
-import { useLoaderData, useNavigation } from "react-router-dom";
+import { useLoaderData, useNavigate, useNavigation } from "react-router-dom";
 import Loader from "../Components/Loader/Loader";
 import { useState } from "react";
 import moment from "moment";
@@ -13,15 +13,20 @@ export default function DepartmentPage() {
   const [interviews, setInterviews] = useState(department.interviews);
   const [isInterviewsLoading, setInterviewLoading] = useState(false);
   const interviewModalVisibilityState = useState<boolean>(false);
+  const [summaryState, setSummary] = useState(interviewSummary);
   const [selectedInterview, setSelectedInterview] = useState(undefined);
-
+  const navigate = useNavigate();
   const refetchInterviews = async () => {
     //show the mini loader
     try {
       setInterviewLoading(true);
-      const response = await api.get(`api/department/${department.id}/interview`);
-      console.log(response.data);
-      setInterviews(response.data);
+      const [interviewsResponse, summaryResponse] = await Promise.all([
+        api.get(`api/department/${department.id}/interview`),
+        api.get(`api/department/${department.id}/interview/summary`),
+      ]);
+      navigate(0);
+      setInterviews(interviewsResponse.data);
+      setSummary(summaryResponse.data);
       setInterviewLoading(false);
     } catch (error: any) {
       //console.log(error);
@@ -192,7 +197,7 @@ export default function DepartmentPage() {
         </div>
       )}
       <InterviewModal
-        interviewSummary={interviewSummary}
+        interviewSummary={summaryState}
         refetchInterviews={refetchInterviews}
         interview={selectedInterview}
         department={department}

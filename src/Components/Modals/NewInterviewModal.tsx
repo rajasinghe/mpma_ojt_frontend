@@ -28,6 +28,7 @@ export default function InterviewModal({
   department,
   refetchInterviews,
 }: Props) {
+
   const [show, setShow] = showState;
   const [nic, setNic] = useState<string | null>(null);
   const nicDisableState = useState<boolean>(false);
@@ -199,9 +200,10 @@ export default function InterviewModal({
           nicDisableState={nicDisableState}
           setNIC_NO={setNic}
         />
-        
+
         <form onSubmit={handleSubmit(onSubmit)}>
           <div>
+
             <Select
               isDisabled={nic == null}
               className="my-2"
@@ -258,6 +260,7 @@ export default function InterviewModal({
               Reset
             </button>
           </div>
+          
         </form>
       </Modal.Body>
     </Modal>
