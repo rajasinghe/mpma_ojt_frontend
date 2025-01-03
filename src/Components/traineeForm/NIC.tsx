@@ -39,7 +39,6 @@ export default function NIC({ nicDisableState, className, setNIC_NO, nic }: NicP
     register,
     handleSubmit,
     setFocus,
-    setValue,
     watch,
     formState: { isSubmitting, errors },
   } = useForm<formType>({

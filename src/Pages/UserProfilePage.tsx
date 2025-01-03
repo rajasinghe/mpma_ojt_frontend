@@ -1,6 +1,6 @@
 import { useLoaderData, useNavigation } from "react-router-dom";
 import Loader from "../Components/Loader/Loader";
-import UserProfile from "../Components/UserProfile/UserProfile";
+import UserProfile from "../Components/User/UserProfile/UserProfile";
 
 export default function UserProfilePage() {
   const { state } = useNavigation();

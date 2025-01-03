@@ -1,5 +1,5 @@
 import { useEffect } from "react";
-import profileImg from "../../assets/SLPA_Logo-Cu9TOj32.png";
+import profileImg from "../../../assets/SLPA_Logo-Cu9TOj32.png";
 import style from "./styles.module.css";
 export default function UserProfile({ user, className }: any) {
   useEffect(() => {

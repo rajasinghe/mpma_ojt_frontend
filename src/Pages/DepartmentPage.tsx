@@ -1,6 +1,6 @@
 import { useLoaderData, useNavigation } from "react-router-dom";
 import Loader from "../Components/Loader/Loader";
-import { useEffect, useState } from "react";
+import { useState } from "react";
 import moment from "moment";
 import InterviewModal from "../Components/Modals/NewInterviewModal";
 import editIcon from "../assets/edit.png";
@@ -9,11 +9,12 @@ import Swal from "sweetalert2";
 import api from "../api";
 export default function DepartmentPage() {
   const { state } = useNavigation();
-  const { department } = useLoaderData() as any;
+  const { department, interviewSummary } = useLoaderData() as any;
   const [interviews, setInterviews] = useState(department.interviews);
   const [isInterviewsLoading, setInterviewLoading] = useState(false);
   const interviewModalVisibilityState = useState<boolean>(false);
   const [selectedInterview, setSelectedInterview] = useState(undefined);
+
   const refetchInterviews = async () => {
     //show the mini loader
     try {
@@ -22,12 +23,13 @@ export default function DepartmentPage() {
       console.log(response.data);
       setInterviews(response.data);
       setInterviewLoading(false);
-    } catch (error) {
+    } catch (error: any) {
       //console.log(error);
       Swal.fire({
-        title: "Error",
-        text: "failed to fetch interviews ",
-        html: <div>refresh the page</div>,
+        icon: "error",
+        title: "Oops...",
+        text: error,
+        footer: '<a href="#">Why do I have this issue?</a>',
       });
     }
   };
@@ -60,7 +62,14 @@ export default function DepartmentPage() {
           showCloseButton: true,
         });
       }
-    } catch (error) {}
+    } catch (error: any) {
+      Swal.fire({
+        icon: "error",
+        title: "Oops...",
+        text: error,
+        footer: '<a href="#">Why do I have this issue?</a>',
+      });
+    }
   };
 
   return (
@@ -183,6 +192,7 @@ export default function DepartmentPage() {
         </div>
       )}
       <InterviewModal
+        interviewSummary={interviewSummary}
         refetchInterviews={refetchInterviews}
         interview={selectedInterview}
         department={department}

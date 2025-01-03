@@ -6,6 +6,7 @@ import "./style.css";
 import api from "../../../../api";
 import Swal from "sweetalert2";
 import { setToken } from "../../../../main";
+import { AxiosError } from "axios";
 interface LoginComponentProps {
   className?: string;
 }
@@ -44,13 +45,23 @@ function LoginComponent({}: LoginComponentProps) {
       console.log(response.data);
       navigate("/OJT/trainees");
       Swal.close();
-    } catch (error) {
-      Swal.fire({
-        icon: "error",
-        title: "Oops...",
-        text: "Something went wrong!",
-        footer: '<a href="#">Why do I have this issue?</a>',
-      });
+    } catch (error: any) {
+      console.log(error);
+      if (error instanceof AxiosError) {
+        Swal.fire({
+          icon: "error",
+          title: "Oops...",
+          text: error.response?.data.message,
+          footer: '<a href="#">Why do I have this issue?</a>',
+        });
+      } else {
+        Swal.fire({
+          icon: "error",
+          title: "Oops...",
+          text: error,
+          footer: '<a href="#">Why do I have this issue?</a>',
+        });
+      }
     }
   };
 

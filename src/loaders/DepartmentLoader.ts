@@ -11,6 +11,9 @@ export const departmentSummaryLoader = async () => {
 
 export const singleDepartmentLoader = async ({ params }: any) => {
   const departmentId = params.id;
-  const response = await api.get(`api/department/${departmentId}`);
-  return { department: response.data };
+  const [departmentResponse, interviewDatesResponse] = await Promise.all([
+    api.get(`api/department/${departmentId}`),
+    api.get(`api/department/${departmentId}/interview/summary`),
+  ]);
+  return { department: departmentResponse.data, interviewSummary: interviewDatesResponse.data };
 };

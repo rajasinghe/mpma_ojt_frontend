@@ -1,18 +1,21 @@
 import { Modal } from "react-bootstrap";
 import { useForm } from "react-hook-form";
-import { date, z } from "zod";
+import { z } from "zod";
 import NIC from "../traineeForm/NIC";
 import { useEffect, useState } from "react";
 import { zodResolver } from "@hookform/resolvers/zod";
 import Swal from "sweetalert2";
 import api from "../../api";
-import { useNavigate } from "react-router-dom";
+import Select from "react-select";
+
 interface Props {
   showState: [boolean, React.Dispatch<React.SetStateAction<boolean>>];
   interview?: any;
   department: any;
+  interviewSummary: any[];
   refetchInterviews: () => Promise<void>;
 }
+
 const schema = z.object({
   name: z.string().min(1, { message: "Name is required" }),
   date: z.string().date(),
@@ -21,27 +24,37 @@ const schema = z.object({
 export default function InterviewModal({
   showState,
   interview,
+  interviewSummary,
   department,
   refetchInterviews,
 }: Props) {
   const [show, setShow] = showState;
   const [nic, setNic] = useState<string | null>(null);
   const nicDisableState = useState<boolean>(false);
+  const [summary, setSummary] = useState<any | null>(null);
+
   type formType = z.infer<typeof schema>;
+
   useEffect(() => {
+    console.log(summary);
+    setSummary(null);
     resetAll();
   }, [show]);
+
   useEffect(() => {
     console.log("interview changed", interview);
     resetAll();
     if (interview) {
       setNic(interview.NIC);
+      console.log("here");
       setValue("name", interview.name);
+      console.log(interview);
     } else {
       setNic(null);
       setValue("name", "");
     }
   }, [interview]);
+
   const {
     register,
     setError,
@@ -53,6 +66,7 @@ export default function InterviewModal({
     resolver: zodResolver(schema),
     defaultValues: interview ? { name: interview.name } : {},
   });
+
   const handleClose = () => {
     setShow(false);
   };
@@ -150,6 +164,7 @@ export default function InterviewModal({
 
   const resetAll = () => {
     reset();
+    setSummary(null);
     nicDisableState[1](false);
     setNic(null);
   };
@@ -177,13 +192,47 @@ export default function InterviewModal({
         <Modal.Title>{interview ? "Update Interview" : "Interview New Trainee"}</Modal.Title>
       </Modal.Header>
       <Modal.Body>
+
         <NIC
           nic={interview ? interview.NIC : undefined}
           className=""
           nicDisableState={nicDisableState}
           setNIC_NO={setNic}
         />
+        
         <form onSubmit={handleSubmit(onSubmit)}>
+          <div>
+            <Select
+              isDisabled={nic == null}
+              className="my-2"
+              onChange={(item: any) => {
+                setValue("date", item.value);
+                console.log("here");
+                const summary = interviewSummary.find((summary) => item.value == summary.date);
+                setSummary(summary);
+              }}
+              options={interviewSummary.map((summary) => {
+                return {
+                  value: summary.date,
+                  label: summary.date,
+                };
+              })}
+            />
+
+            {errors.date && <p className="text-danger m-0">{errors.date.message}</p>}
+          </div>
+
+          {summary && (
+            <div className="container-fluid border border-dark rounded-2 my-2 py-2">
+              <div className="fw-semibold ">Department Count - {summary.departmentCount}</div>
+              <div className="fw-semibold ">Interview Count - {summary.interviews}</div>
+              <div className="fw-semibold ">
+                Total count at the selected date will be -{" "}
+                {summary.departmentCount + summary.interviews}
+              </div>
+            </div>
+          )}
+
           <div className="mb-3">
             <label className="form-label">Name</label>
             <input
@@ -194,16 +243,7 @@ export default function InterviewModal({
             />
             {errors.name && <p className="text-danger m-0">{errors.name.message}</p>}
           </div>
-          <div className="mb-3">
-            <label className="form-label">Date</label>
-            <input
-              {...register("date")}
-              disabled={nic == null}
-              className="form-control"
-              type="date"
-            />
-            {errors.date && <p className="text-danger m-0">{errors.date.message}</p>}
-          </div>
+
           <div className="d-flex">
             <button disabled={isSubmitting} className="btn btn-primary ms-auto">
               {isSubmitting ? "Submiting..." : "Submit"}

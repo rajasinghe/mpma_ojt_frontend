@@ -31,16 +31,20 @@ import ErrorHandler from "./Components/ErrorHandler.tsx";
 import TraineeBankDetailsUpdatePage from "./Pages/TraineeBankDetailsUpdatePage.tsx";
 import TraineeDetailsUpdatePage from "./Pages/Admin/TraineeDetailsUpdate.tsx";
 import UserProfilePage from "./Pages/UserProfilePage.tsx";
-import { profileLoader } from "./loaders/UserLoaders.ts";
+import { createUserLoader, profileLoader, viewUsersPageLoader } from "./loaders/UserLoaders.ts";
 import { departmentSummaryLoader, singleDepartmentLoader } from "./loaders/DepartmentLoader.ts";
 import DepartmentsPage from "./Pages/DepartmentsPage.tsx";
 import DepartmentPage from "./Pages/DepartmentPage.tsx";
 import api from "./api.ts";
+import AddUsersPage from "./Pages/Admin/AddUserPage.tsx";
+import ViewUsersPage from "./Pages/Admin/ViewUsersPage.tsx";
 export const setToken = () => {
   const token = localStorage.getItem("token");
   console.log(token);
   if (token) {
     api.defaults.headers.common.Authorization = token;
+  } else {
+    console.log("no token to set");
   }
 };
 setToken();
@@ -127,6 +131,16 @@ const router = createBrowserRouter([
             path: "departments/:id",
             loader: singleDepartmentLoader,
             element: <DepartmentPage />,
+          },
+          {
+            path: "createUser",
+            loader: createUserLoader,
+            element: <AddUsersPage />,
+          },
+          {
+            path: "users",
+            loader: viewUsersPageLoader,
+            element: <ViewUsersPage />,
           },
         ],
       },
