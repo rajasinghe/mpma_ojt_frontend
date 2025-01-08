@@ -38,6 +38,7 @@ import DepartmentPage from "./Pages/DepartmentPage.tsx";
 import api from "./api.ts";
 import AddUsersPage from "./Pages/Admin/AddUserPage.tsx";
 import ViewUsersPage from "./Pages/Admin/ViewUsersPage.tsx";
+
 export const setToken = () => {
   const token = localStorage.getItem("token");
   console.log(token);
@@ -47,6 +48,7 @@ export const setToken = () => {
     console.log("no token to set");
   }
 };
+
 setToken();
 
 const router = createBrowserRouter([
@@ -133,7 +135,7 @@ const router = createBrowserRouter([
             element: <DepartmentPage />,
           },
           {
-            path: "createUser",
+            path: "users/create",
             loader: createUserLoader,
             element: <AddUsersPage />,
           },

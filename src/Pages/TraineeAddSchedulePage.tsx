@@ -11,6 +11,7 @@ import api from "../api";
 import { endDateCalculator, formatDateToIso } from "../helpers";
 import AddPeriodModal from "../Components/traineeForm/AddPeriodModal";
 import moment from "moment";
+
 const schema = z.object({
   schedules: z.array(
     z.object({
@@ -186,6 +187,7 @@ export default function TraineeAddSchedulePage() {
         }
       });
   };
+
   return (
     <>
       {state == "loading" ? (
@@ -213,7 +215,7 @@ export default function TraineeAddSchedulePage() {
                 <div className="fw-semibold">NIC NO - {trainee.NIC_NO}</div>
               </div>
             </div>
-            {trainee.interviews.length > 0 && (
+            {trainee.interviews && trainee.interviews.length > 0 && (
               <div className="container-fluid border border-dark rounded-2 my-2">
                 <div className=" fs-5 fw-bolder">Interview Details</div>
                 <div className="w-50 border border-2 rounded-2 p-1 mt-2 mb-2">

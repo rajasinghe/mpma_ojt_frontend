@@ -4,6 +4,7 @@ import { Controller, useForm } from "react-hook-form";
 import { z } from "zod";
 import Swal from "sweetalert2";
 import api from "../../../api";
+import { useNavigate } from "react-router-dom";
 
 interface Props {
   user?: Partial<FormData>;
@@ -30,6 +31,7 @@ export default function UserForm({ defaultLevels, className }: Props) {
     resolver: zodResolver(schema),
   });
 
+  const navigate = useNavigate();
   // Submit handler
   const onSubmit = async (data: FormData) => {
     console.log({ ...data, accessLevels: data.accessLevels.map((element) => element.value) });
@@ -59,6 +61,7 @@ export default function UserForm({ defaultLevels, className }: Props) {
             icon: "success",
             showCloseButton: true,
           });
+          navigate("/OJT/users");
         } else {
           Swal.fire({
             icon: "error",

@@ -28,7 +28,6 @@ export default function InterviewModal({
   department,
   refetchInterviews,
 }: Props) {
-
   const [show, setShow] = showState;
   const [nic, setNic] = useState<string | null>(null);
   const nicDisableState = useState<boolean>(false);
@@ -193,7 +192,6 @@ export default function InterviewModal({
         <Modal.Title>{interview ? "Update Interview" : "Interview New Trainee"}</Modal.Title>
       </Modal.Header>
       <Modal.Body>
-
         <NIC
           nic={interview ? interview.NIC : undefined}
           className=""
@@ -203,10 +201,10 @@ export default function InterviewModal({
 
         <form onSubmit={handleSubmit(onSubmit)}>
           <div>
-
+            <label className="form-label">Date</label>
             <Select
               isDisabled={nic == null}
-              className="my-2"
+              className=""
               onChange={(item: any) => {
                 setValue("date", item.value);
                 console.log("here");
@@ -220,12 +218,12 @@ export default function InterviewModal({
                 };
               })}
             />
-
             {errors.date && <p className="text-danger m-0">{errors.date.message}</p>}
           </div>
 
           {summary && (
             <div className="container-fluid border border-dark rounded-2 my-2 py-2">
+              <div className="fw-semibold ">Scheduled count - {summary.headCount}</div>
               <div className="fw-semibold ">Department Count - {summary.departmentCount}</div>
               <div className="fw-semibold ">Interview Count - {summary.interviews}</div>
               <div className="fw-semibold ">
@@ -260,7 +258,6 @@ export default function InterviewModal({
               Reset
             </button>
           </div>
-          
         </form>
       </Modal.Body>
     </Modal>

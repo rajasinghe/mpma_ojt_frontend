@@ -1,16 +1,12 @@
-import { useEffect } from "react";
 import "./MainNav.css";
 import logo from "../../assets/SLPA_Logo-Cu9TOj32.png";
 import profile_icon from "../../assets/profile_icon.png";
 //import { UserContext } from "../../App";
-import { Link, useLocation } from "react-router-dom";
+import { Link, useLocation, useOutletContext } from "react-router-dom";
 
 export default function MainNav() {
   let { pathname } = useLocation();
-
-  useEffect(() => {
-    console.log(pathname);
-  });
+  const user = useOutletContext() as any;
 
   return (
     <div>
@@ -83,6 +79,20 @@ export default function MainNav() {
                   </div>
                 </Link>
               </li>
+              {user && user.type == "SUPERADMIN" && (
+                <li className="nav-item">
+                  <Link
+                    className="nav-link active navbar_text txt d-flex flex-column align-items-center"
+                    to="users"
+                  >
+                    <div
+                      className={`navLinkBody ${/^\/OJT\/users/.test(pathname) ? "active" : ""}`}
+                    >
+                      Users
+                    </div>
+                  </Link>
+                </li>
+              )}
             </ul>
             <div className="ms-auto">
               <Link to={"/OJT/user_profile"}>
