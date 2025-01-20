@@ -8,10 +8,12 @@ import "./ViewTrainee.css";
 import { z } from "zod";
 import { Controller, useForm } from "react-hook-form";
 import api from "../api";
-import Loader from "../Components/Loader/Loader";
-import MiniLoader from "../Components/Loader/MiniLoader";
+import Loader from "../Components/ui/Loader/Loader";
+import MiniLoader from "../Components/ui/Loader/MiniLoader";
 import Swal from "sweetalert2";
 import FlipableTableCell from "../Components/Tables/FlippableCell/FlipableTableCell";
+import { MainContainer } from "../layout/containers/main_container/MainContainer";
+import SubContainer from "../layout/containers/sub_container/SubContainer";
 
 interface loaderProps {
   trainees: [];
@@ -95,7 +97,7 @@ export default function AttendencesPage() {
     watch,
     handleSubmit,
   } = useForm<filterFormValues>();
-  
+
   const { state } = useNavigation();
 
   useEffect(() => {
@@ -336,16 +338,13 @@ export default function AttendencesPage() {
   return (
     <>
       {state == "loading" ? (
-        <Loader />
+        <div>
+          <Loader />
+        </div>
       ) : (
-        <div className="">
-          {/* header section */}
-          <section className="bg-primary-subtle ">
-            <div className="px-3  fw-bold fs-3">Trainee Attendeces</div>
-          </section>
-
-          <section className="px-2 mt-1">
-            {/*  */}
+        <MainContainer title="Attendence" breadCrumbs={["Home", "Attendence"]}>
+          {/*search bar  */}
+          <SubContainer>
             <div className="bg-body-secondary p-2 mb-2 rounded-2 position-relative">
               {/* serach box */}
               <div className="d-flex">
@@ -371,13 +370,22 @@ export default function AttendencesPage() {
               </div>
 
               {/* filter options display */}
-              <div className="ms-1 mt-1 pe-4 fw-semibold d-flex">
+              <div
+                className="ms-1 mt-1 pe-4 fw-semibold d-flex"
+                style={{
+                  fontSize: "12px",
+                }}
+              >
                 <div>
                   <div>Filters Applied :-</div>
                   {filterOptions?.institutes &&
                     filterOptions.institutes.map((institute) => {
                       return (
-                        <span key={institute.value} className="badge bg-primary ms-1">
+                        <span
+                          key={institute.value}
+                          className="badge bg-primary ms-1"
+                          style={{ fontSize: "8px" }}
+                        >
                           {institute.label}
                         </span>
                       );
@@ -385,7 +393,11 @@ export default function AttendencesPage() {
                   {filterOptions?.departments &&
                     filterOptions.departments.map((department) => {
                       return (
-                        <span key={department.value} className="badge bg-danger ms-1">
+                        <span
+                          key={department.value}
+                          className="badge bg-primary ms-1"
+                          style={{ fontSize: "8px" }}
+                        >
                           {department.label}
                         </span>
                       );
@@ -393,19 +405,29 @@ export default function AttendencesPage() {
                   {filterOptions?.programmes &&
                     filterOptions.programmes.map((program) => {
                       return (
-                        <span key={program.value} className="badge ms-1 bg-warning ms-1">
+                        <span
+                          key={program.value}
+                          className="badge bg-primary ms-1"
+                          style={{ fontSize: "8px" }}
+                        >
                           {program.label}
                         </span>
                       );
                     })}
 
                   {filterOptions && filterOptions.month && filterOptions.year ? (
-                    <span className="ms-1 badge bg-success">{`${filterOptions.year.value} - ${filterOptions.month.value}`}</span>
+                    <span
+                      className="badge bg-primary ms-1"
+                      style={{ fontSize: "8px" }}
+                    >{`${filterOptions.year.value} - ${filterOptions.month.value}`}</span>
                   ) : (
                     ""
                   )}
                   {filterOptions && trainee && trainee.id ? (
-                    <span className="ms-1 badge bg-warning">{`${trainee.ATT_NO} `}</span>
+                    <span
+                      className="badge bg-primary ms-1"
+                      style={{ fontSize: "8px" }}
+                    >{`${trainee.ATT_NO} `}</span>
                   ) : (
                     ""
                   )}
@@ -477,41 +499,7 @@ export default function AttendencesPage() {
                 Download Records
               </button>
             </div>
-            {/* Modal to display schedule */}
-            {/* <Modal show={show} onHide={handleClose}>
-              <Modal.Header closeButton>
-                <Modal.Title>Schedule for {selectedSchedule?.name}</Modal.Title>
-              </Modal.Header>
-              <Modal.Body>
-                {selectedSchedule ? (
-                  <table className="table table-bordered">
-                    <thead className="table-light">
-                      <tr>
-                        <th>Department</th>
-                        <th>Start Date</th>
-                        <th>End Date</th>
-                      </tr>
-                    </thead>
-                    <tbody>
-                      {selectedSchedule.schedules.map((schedule, index) => (
-                        <tr key={index}>
-                          <td>{schedule.name}</td>
-                          <td>{formatDate(schedule.start_date)}</td>
-                          <td>{formatDate(schedule.end_date)}</td>
-                        </tr>
-                      ))}
-                    </tbody>
-                  </table>
-                ) : (
-                  <p>No schedule available.</p>
-                )}
-              </Modal.Body>
-              <Modal.Footer>
-                <Button variant="secondary" onClick={handleClose}>
-                  Close
-                </Button>
-              </Modal.Footer>
-            </Modal> */}
+
             {/* filter model */}
             <Modal
               show={filterVisible}
@@ -658,8 +646,8 @@ export default function AttendencesPage() {
                 </button>
               </Modal.Footer>
             </Modal>
-          </section>
-        </div>
+          </SubContainer>
+        </MainContainer>
       )}
     </>
   );

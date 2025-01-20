@@ -4,6 +4,7 @@ import { createBrowserRouter, RouterProvider } from "react-router-dom";
 import Base from "./Pages/Base.tsx";
 import TraineeDetailsAddPage from "./Pages/TraineeDetailsAddPage.tsx";
 import "bootstrap/dist/css/bootstrap.css";
+import "bootstrap-icons/font/bootstrap-icons.css";
 import "bootstrap/dist/js/bootstrap.bundle.min";
 import ViewTraineesPage from "./Pages/ViewTraineesPage.tsx";
 import {

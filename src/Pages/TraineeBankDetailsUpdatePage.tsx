@@ -1,7 +1,8 @@
 import { useLoaderData, useNavigation } from "react-router-dom";
-import Loader from "../Components/Loader/Loader";
+import Loader from "../Components/ui/Loader/Loader";
 
 import BankDetailsForm from "../Components/BankDetailsForm";
+import { MainContainer } from "../layout/containers/main_container/MainContainer";
 
 interface LoaderData {
   trainee: any;
@@ -17,21 +18,12 @@ export default function TraineeBankDetailsUpdatePage() {
       {state == "loading" ? (
         <Loader />
       ) : (
-        <div className="">
-          {/* <button
-            type="button"
-            onClick={() => {
-              console.log(errors);
-            }}
-          >
-            show errors
-          </button> */}
-          {/* header section */}
-          <section className="bg-primary-subtle ">
-            <div className="px-3 fw-bold fs-3">Update Bank Details</div>
-          </section>
+        <MainContainer
+          title="Bank Details"
+          breadCrumbs={["Home", "Trainee", "Profile", "Bank Details"]}
+        >
           <BankDetailsForm trainee={trainee} />
-        </div>
+        </MainContainer>
       )}
     </>
   );

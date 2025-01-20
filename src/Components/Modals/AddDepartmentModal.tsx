@@ -20,6 +20,7 @@ type FormType = z.infer<typeof schema>;
 
 export default function AddDepartmentModal({ visibilityState, setDepartments }: props) {
   const [show, setShow] = visibilityState;
+
   const {
     register,
     reset,
@@ -27,6 +28,7 @@ export default function AddDepartmentModal({ visibilityState, setDepartments }: 
     handleSubmit,
     formState: { errors, isSubmitting },
   } = useForm<FormType>({ resolver: zodResolver(schema) });
+  
   const handleClose = () => {
     setShow(false);
   };

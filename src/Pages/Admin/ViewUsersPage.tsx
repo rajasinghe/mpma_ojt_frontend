@@ -1,12 +1,14 @@
 import { Link, useLoaderData, useNavigation } from "react-router-dom";
-import Loader from "../../Components/Loader/Loader";
+import Loader from "../../Components/ui/Loader/Loader";
 import { Fragment, useEffect, useState } from "react";
 import editIcon from "../../assets/edit.png";
 import activeIcon from "../../assets/active.png";
 import inactiveIcon from "../../assets/inactive.png";
 import Swal from "sweetalert2";
 import api from "../../api";
-import MiniLoader from "../../Components/Loader/MiniLoader";
+import MiniLoader from "../../Components/ui/Loader/MiniLoader";
+import { MainContainer } from "../../layout/containers/main_container/MainContainer";
+import SubContainer from "../../layout/containers/sub_container/SubContainer";
 export default function ViewUsersPage() {
   const { state } = useNavigation();
   const loaderData = useLoaderData() as any;
@@ -118,90 +120,88 @@ export default function ViewUsersPage() {
       {state == "loading" ? (
         <Loader />
       ) : (
-        <div>
-          <section className="bg-primary-subtle ">
-            <div className="px-3  fw-bold fs-3">User Manager</div>
-          </section>
-
-          <section className="w-75 border border-2 rounded-2 p-1 m-2">
-            <div>
-              {isLoading ? (
-                <MiniLoader />
-              ) : (
-                <div className=" table-responsive" style={{ height: "70vh" }}>
-                  <table className="table table-sm table-bordered w-100">
-                    <thead className="table-dark position-sticky top-0">
-                      <tr className="small" style={{ fontSize: "" }}>
-                        <th>name</th>
-                        <th>user name</th>
-                        <th>Status</th>
-                        <th>Access Levels</th>
-                        <th>Options</th>
-                      </tr>
-                    </thead>
-                    <tbody>
-                      {users.map((user: any) => {
-                        return (
-                          <Fragment key={user.id}>
-                            <tr key={user.id}>
-                              <td rowSpan={user.accessLevels.length}>{user.name}</td>
-                              <td rowSpan={user.accessLevels.length}>{user.username}</td>
-                              <td rowSpan={user.accessLevels.length}>{user.status}</td>
-                              <td>{user.accessLevels[0].access}</td>
-                              <td rowSpan={user.accessLevels.length} className=" ">
-                                <div className="d-flex align-content-center justify-content-center flex-column align-items-center ">
-                                  <img
-                                    src={editIcon}
-                                    onClick={() => {
-                                      Swal.fire({
-                                        text: "the feature will be available soon",
-                                      });
-                                    }}
-                                    alt=""
-                                    className="btn mt-2 btn-sm btn-outline-secondary"
-                                  />
-                                  {user.status == "ACTIVE" ? (
+        <MainContainer title="User Manager" breadCrumbs={["Home", "Users"]}>
+          <SubContainer>
+            <section className="w-75 border border-2 rounded-2 p-1 m-2">
+              <div>
+                {isLoading ? (
+                  <MiniLoader />
+                ) : (
+                  <div className=" table-responsive" style={{ height: "70vh" }}>
+                    <table className="table table-sm table-bordered w-100">
+                      <thead className="table-dark position-sticky top-0">
+                        <tr className="small" style={{ fontSize: "" }}>
+                          <th>name</th>
+                          <th>user name</th>
+                          <th>Status</th>
+                          <th>Access Levels</th>
+                          <th>Options</th>
+                        </tr>
+                      </thead>
+                      <tbody>
+                        {users.map((user: any) => {
+                          return (
+                            <Fragment key={user.id}>
+                              <tr key={user.id}>
+                                <td rowSpan={user.accessLevels.length}>{user.name}</td>
+                                <td rowSpan={user.accessLevels.length}>{user.username}</td>
+                                <td rowSpan={user.accessLevels.length}>{user.status}</td>
+                                <td>{user.accessLevels[0].access}</td>
+                                <td rowSpan={user.accessLevels.length} className=" ">
+                                  <div className="d-flex align-content-center justify-content-center flex-column align-items-center ">
                                     <img
-                                      src={inactiveIcon}
-                                      alt=""
+                                      src={editIcon}
                                       onClick={() => {
-                                        deactivateUser(user.id);
+                                        Swal.fire({
+                                          text: "the feature will be available soon",
+                                        });
                                       }}
-                                      className="btn mt-3 btn-sm btn-outline-secondary"
-                                    />
-                                  ) : (
-                                    <img
-                                      onClick={() => {
-                                        activateUser(user.id);
-                                      }}
-                                      src={activeIcon}
                                       alt=""
-                                      className="btn mt-3 btn-sm btn-outline-secondary"
+                                      className="btn mt-2 btn-sm btn-outline-secondary"
                                     />
-                                  )}
-                                </div>
-                              </td>
-                            </tr>
-                            {user.accessLevels.slice(1).map((level: any) => (
-                              <tr key={`${user.id}.${level.id}`}>
-                                <td>{level.access}</td>
+                                    {user.status == "ACTIVE" ? (
+                                      <img
+                                        src={inactiveIcon}
+                                        alt=""
+                                        onClick={() => {
+                                          deactivateUser(user.id);
+                                        }}
+                                        className="btn mt-3 btn-sm btn-outline-secondary"
+                                      />
+                                    ) : (
+                                      <img
+                                        onClick={() => {
+                                          activateUser(user.id);
+                                        }}
+                                        src={activeIcon}
+                                        alt=""
+                                        className="btn mt-3 btn-sm btn-outline-secondary"
+                                      />
+                                    )}
+                                  </div>
+                                </td>
                               </tr>
-                            ))}
-                          </Fragment>
-                        );
-                      })}
-                    </tbody>
-                  </table>
-                </div>
-              )}
+                              {user.accessLevels.slice(1).map((level: any) => (
+                                <tr key={`${user.id}.${level.id}`}>
+                                  <td>{level.access}</td>
+                                </tr>
+                              ))}
+                            </Fragment>
+                          );
+                        })}
+                      </tbody>
+                    </table>
+                  </div>
+                )}
+              </div>
+            </section>
+            <div className="d-flex m-1">
+              <Link to={"/OJT/users/create"} className="ms-auto me-5 btn btn-sm btn-primary">
+                Create User
+              </Link>
             </div>
-          </section>
-          <div className="d-flex m-1">
-            <Link to={"/OJT/users/create"} className="ms-auto me-5 btn btn-sm btn-primary">
-              Create User
-            </Link>
-          </div>
-        </div>
+          </SubContainer>
+        </MainContainer>
       )}
     </>
   );

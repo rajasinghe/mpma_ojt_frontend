@@ -3,6 +3,8 @@ import { z } from "zod";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import Swal from "sweetalert2";
+import { MainContainer } from "../layout/containers/main_container/MainContainer";
+import SubContainer from "../layout/containers/sub_container/SubContainer";
 
 export default function UploadAttendenceSheet() {
   const fileSchema = z.object({
@@ -75,48 +77,48 @@ export default function UploadAttendenceSheet() {
   };
 
   return (
-    <div>
-      <section className="bg-primary-subtle ">
-        <div className="px-3 fw-bold fs-3">Upload Attendence Sheet</div>
-      </section>
-      <section className=" bg-body-tertiary px-2 mt-1">
-        <div className="container-fluid border border-dark rounded-2 my-2">
-          <div className="fw-semibold">
-            <div>
-              * before uploading the excel file make sure that excel sheet is in the correct format
+    <MainContainer title="Upload Attendence Sheet" breadCrumbs={["Home", "Attendence", "Upload"]}>
+      <SubContainer>
+        <section className=" bg-body-tertiary px-2 mt-1">
+          <div className="container-fluid border border-dark rounded-2 my-2">
+            <div className="fw-semibold">
+              <div>
+                * before uploading the excel file make sure that excel sheet is in the correct
+                format
+              </div>
+              <div> *provide the correct month and year of the uploaded excel file.</div>
+              <div>
+                * old records corresponding to the month will be deleted from the database and new
+                records will be added upon uploading.
+              </div>
             </div>
-            <div> * provide the correct month and year of the uploaded excel file.</div>
-            <div>
-              * old records corresponding to the month will be deleted from the database and new
-              records will be added upon uploading .
-            </div>
-          </div>
 
-          <form onSubmit={handleSubmit(onSubmit)} className="p-3">
-            <div className="mb-3">
-              <label className="form-label">Year</label>
-              <input type="text" {...register("year")} className="form-control" />
-              {errors.year && <p className="text-danger">{errors.year.message}</p>}
-            </div>
-            <div className="mb-3">
-              <label className="form-label">Month</label>
-              <input type="text" {...register("month")} className="form-control" />
-              {errors.month && <p className="text-danger">{errors.month.message}</p>}
-            </div>
-            <div className="mb-3">
-              <label className="form-label">Default file input example</label>
-              <input className="form-control" {...register("file")} type="file" id="formFile" />
-              {errors.file && <p className="text-danger">{errors.file.message}</p>}
-            </div>
-            <div className=" d-flex">
-              <button type="submit" className="btn btn-primary ms-auto">
-                Submit
-              </button>
-            </div>
-            {errors.root && <p className="text-danger">{errors.root.message}</p>}
-          </form>
-        </div>
-      </section>
-    </div>
+            <form onSubmit={handleSubmit(onSubmit)} className="p-3">
+              <div className="mb-3">
+                <label className="form-label">Year</label>
+                <input type="text" {...register("year")} className="form-control" />
+                {errors.year && <p className="text-danger">{errors.year.message}</p>}
+              </div>
+              <div className="mb-3">
+                <label className="form-label">Month</label>
+                <input type="text" {...register("month")} className="form-control" />
+                {errors.month && <p className="text-danger">{errors.month.message}</p>}
+              </div>
+              <div className="mb-3">
+                <label className="form-label">Default file input example</label>
+                <input className="form-control" {...register("file")} type="file" id="formFile" />
+                {errors.file && <p className="text-danger">{errors.file.message}</p>}
+              </div>
+              <div className=" d-flex">
+                <button type="submit" className="btn btn-primary ms-auto">
+                  Submit
+                </button>
+              </div>
+              {errors.root && <p className="text-danger">{errors.root.message}</p>}
+            </form>
+          </div>
+        </section>
+      </SubContainer>
+    </MainContainer>
   );
 }

@@ -1,5 +1,5 @@
 import { useLoaderData, useNavigate, useNavigation } from "react-router-dom";
-import Loader from "../Components/Loader/Loader";
+import Loader from "../Components/ui/Loader/Loader";
 import { useState } from "react";
 import moment from "moment";
 import InterviewModal from "../Components/Modals/NewInterviewModal";
@@ -7,6 +7,8 @@ import editIcon from "../assets/edit.png";
 import removeIcon from "../assets/remove_icon_sm.png";
 import Swal from "sweetalert2";
 import api from "../api";
+import { MainContainer } from "../layout/containers/main_container/MainContainer";
+import SubContainer from "../layout/containers/sub_container/SubContainer";
 export default function DepartmentPage() {
   const { state } = useNavigation();
   const { department, interviewSummary } = useLoaderData() as any;
@@ -82,11 +84,11 @@ export default function DepartmentPage() {
       {state == "loading" ? (
         <Loader />
       ) : (
-        <div>
-          <section className="bg-primary-subtle ">
-            <div className="px-3  fw-bold fs-3">{department.name}</div>
-          </section>
-          <section className=" m-1 border border-dark-subtle border-2 rounded bg-body-tertiary p-2">
+        <MainContainer
+          title={`${department.name}`}
+          breadCrumbs={["Home", "Departments", department.name]}
+        >
+          <SubContainer>
             <div className="container-fluid border border-dark rounded-2 my-2 py-2">
               <div className="fw-semibold ">Active Trainees - {department.schedules.length}</div>
               <div className="fw-semibold ">Maximum Capacity - {department.max_count}</div>
@@ -193,8 +195,8 @@ export default function DepartmentPage() {
                 </button>
               </div>
             </div>
-          </section>
-        </div>
+          </SubContainer>
+        </MainContainer>
       )}
       <InterviewModal
         interviewSummary={summaryState}

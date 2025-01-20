@@ -1,6 +1,8 @@
 import { Link, useLoaderData, useNavigation } from "react-router-dom";
-import Loader from "../Components/Loader/Loader";
+import Loader from "../Components/ui/Loader/Loader";
 import { useEffect } from "react";
+import { MainContainer } from "../layout/containers/main_container/MainContainer";
+import SubContainer from "../layout/containers/sub_container/SubContainer";
 
 export default function DepartmentsPage() {
   const { state } = useNavigation();
@@ -13,12 +15,13 @@ export default function DepartmentsPage() {
       {state == "loading" ? (
         <Loader />
       ) : (
-        <div>
-          <section className="bg-primary-subtle ">
-            <div className="px-3  fw-bold fs-3">Departments</div>
-          </section>
-          <section className="w-75 border border-2 rounded-2 p-1 m-2">
-            <div>
+        <MainContainer title="Departments" breadCrumbs={["Home", "Departments"]}>
+          <SubContainer>
+            <div className=" d-flex flex-column"></div>
+            <section
+              style={{ maxHeight: "75vh" }}
+              className="w-75 border border-2 rounded-2 p-1 m-2 overflow-y-auto"
+            >
               <table className="table table-striped table-sm table-bordered w-100">
                 <thead className="table-dark position-sticky top-0">
                   <tr className="small" style={{ fontSize: "" }}>
@@ -48,9 +51,9 @@ export default function DepartmentsPage() {
                   ))}
                 </tbody>
               </table>
-            </div>
-          </section>
-        </div>
+            </section>
+          </SubContainer>
+        </MainContainer>
       )}
     </>
   );

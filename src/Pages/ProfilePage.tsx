@@ -1,6 +1,8 @@
 import { useEffect } from "react";
 import { Link, useLoaderData } from "react-router-dom";
 import { formatDate, getMonthName } from "../helpers";
+import { MainContainer } from "../layout/containers/main_container/MainContainer";
+import SubContainer from "../layout/containers/sub_container/SubContainer";
 
 export default function ProfilePage() {
   const { trainee, departments, periods, programs, institutes } = useLoaderData() as any;
@@ -8,24 +10,8 @@ export default function ProfilePage() {
     console.log(institutes);
   }, []);
   return (
-    <div>
-      <section className="bg-primary-subtle ">
-        <div className="px-3 fw-bold fs-3">Trainee Profile</div>
-      </section>
-      <section className=" m-1 border border-dark-subtle border-2 rounded bg-body-tertiary px-2">
-        {/* <div>
-          <div className=" text-black-50">
-            Add the department if the desired department is not in the list
-          </div>
-          <button
-            onClick={() => {
-              setDepartmentsModalVisibility(true);
-            }}
-            className="mt-1 link d-inline badge btn text-dark btn-outline-primary border-3 btn-sm"
-          >
-            Add Department
-          </button>
-        </div> */}
+    <MainContainer title="Trainee Profile" breadCrumbs={["Home", "Trainee", "Profile"]}>
+      <SubContainer>
         <div className="container-fluid border border-dark rounded-2 my-2 py-2">
           <div className="fs-5 fw-bolder">Trainee Details</div>
           <div className="fw-semibold ">Reg NO - {trainee.REG_NO}</div>
@@ -184,7 +170,7 @@ export default function ProfilePage() {
             </div>
           )}
         </div>
-      </section>
-    </div>
+      </SubContainer>
+    </MainContainer>
   );
 }

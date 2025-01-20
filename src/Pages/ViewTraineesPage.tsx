@@ -9,11 +9,13 @@ import "./ViewTrainee.css";
 import { z } from "zod";
 import { Controller, useForm } from "react-hook-form";
 import api from "../api";
-import Loader from "../Components/Loader/Loader";
-import MiniLoader from "../Components/Loader/MiniLoader";
+import Loader from "../Components/ui/Loader/Loader";
+import MiniLoader from "../Components/ui/Loader/MiniLoader";
 import Swal from "sweetalert2";
 import { Modal } from "react-bootstrap";
 import { utils, writeFileXLSX } from "xlsx";
+import { MainContainer } from "../layout/containers/main_container/MainContainer";
+import SubContainer from "../layout/containers/sub_container/SubContainer";
 
 interface loaderProps {
   trainees: Trainee[];
@@ -245,281 +247,315 @@ export default function ViewTraineesPage() {
       {state == "loading" ? (
         <Loader />
       ) : (
-        <div className="body d-flex flex-column">
-          {/* header section */}
-          <section className="bg-primary-subtle ">
-            <div className="px-3  fw-bold fs-4">Trainees</div>
-          </section>
-
-          <section className="px-2 mt-1 flex-grow-0">
-            {/*search bar  */}
-            <div className="bg-body-secondary p-2 mb-2 rounded-2 position-relative">
-              {/* serach box */}
-              <div className="d-flex">
-                <input
-                  className=" form-control"
-                  type="text"
-                  value={keyword}
-                  onChange={(e) => {
-                    setKeyword(e.target.value);
-                    handleSearch(e.target.value);
-                  }}
-                />
-                <button
-                  onClick={() => {
-                    setFilterVisible(true);
-                  }}
-                  className="btn shadow ms-2 btn-outline-warning"
-                >
-                  <img src={optionsIcon} height={"22px"} alt="" />
-                </button>
-              </div>
-
-              {/* filter options display */}
-              <div className="ms-1 mt-1 pe-4 fw-semibold d-flex">
-                <div>
-                  <div>Filters Applied :-</div>
-                  {filterOptions?.institutes &&
-                    filterOptions.institutes.map((institute) => {
-                      return (
-                        <span
-                          key={institute.value}
-                          className="badge bg-primary ms-1"
-                          style={{ fontSize: "10px" }}
-                        >
-                          {institute.label}
-                        </span>
-                      );
-                    })}
-                  {filterOptions?.departments &&
-                    filterOptions.departments.map((department) => {
-                      return (
-                        <span key={department.value} className="badge bg-danger ms-1">
-                          {department.label}
-                        </span>
-                      );
-                    })}
-                  {filterOptions?.programmes &&
-                    filterOptions.programmes.map((program) => {
-                      return (
-                        <span key={program.value} className="badge ms-1 bg-warning ms-1">
-                          {program.label}
-                        </span>
-                      );
-                    })}
-
-                  {filterOptions && filterOptions.start_date && filterOptions.end_date ? (
-                    <span className="ms-1 badge bg-success">{`${filterOptions.start_date} to ${filterOptions.end_date}`}</span>
-                  ) : filterOptions?.start_date ? (
-                    <span className="ms-1 badge bg-success">{`From ${filterOptions.start_date}`}</span>
-                  ) : filterOptions?.end_date ? (
-                    <span className="ms-1 badge bg-success">{`From ${filterOptions.end_date}`}</span>
-                  ) : (
-                    ""
-                  )}
-                </div>
-                <div className="ms-auto">
-                  <div className="">Total Count - {resultCount}</div>
-                  <div>Search Count - {searchCount}</div>
-                </div>
-              </div>
-            </div>
-
-            <div className="border border-2 rounded-2 p-1">
-              <div
-                className=" table-responsive rounded-2  table-scrollbar"
-                style={{ maxHeight: "53vh" }}
-              >
-                {loading ? (
-                  <MiniLoader />
-                ) : (
-                  <table className="table table-sm table-bordered w-100">
-                    <thead className="table-dark position-sticky top-0">
-                      <tr className="small" style={{ fontSize: "" }}>
-                        <th scope="col">ATT No.</th>
-                        <th>Reg No.</th>
-                        <th scope="col">Name</th>
-                        <th scope="col">NIC Number</th>
-                        <th>Institute</th>
-                        <th>Programme</th>
-                        <th>Tel No</th>
-                        <th className=" ">Training Period</th>
-                        <th>Start Date</th>
-                        <th>End Date</th>
-                        <th>Options</th>
-                      </tr>
-                    </thead>
-                    <tbody>
-                      {matchingTrainees.map((trainee: Trainee) => (
-                        <tr key={`${trainee.NIC_NO}-${trainee.REG_NO}`}>
-                          <td>{trainee.ATT_NO}</td>
-                          <td>{trainee.REG_NO}</td>
-                          <td>{trainee.name}</td>
-                          <td>{trainee.NIC_NO}</td>
-                          <td>{trainee.institute}</td>
-                          <td>{trainee.program}</td>
-                          <td>{trainee.contact_no}</td>
-                          <td>{trainee.training_period}</td>
-                          <td>{formatDate(trainee.start_date)}</td>
-                          <td>{formatDate(trainee.end_date)}</td>
-
-                          <td>
-                            <Link className="btn btn-sm btn-warning" to={`${trainee.id}/profile`}>
-                              Profile
-                            </Link>
-                          </td>
-                        </tr>
-                      ))}
-                    </tbody>
-                    <div></div>
-                  </table>
-                )}
-              </div>
-            </div>
-
-            <div className=" d-flex mt-2">
-              <Link to={"/OJT/trainees/new"} className="btn btn-primary btn-sm ms-auto">
-                Add New Trainee
-              </Link>
-              <button className="btn btn-success btn-sm ms-2" onClick={handleDownload}>
-                Download Records
-              </button>
-            </div>
-
-            {/* filter model */}
-            <Modal
-              show={filterVisible}
-              onHide={() => {
-                setFilterVisible(false);
-              }}
-            >
-              <Modal.Header closeButton>
-                <div className=" fw-bold  w-100 ">Filters</div>
-              </Modal.Header>
-              <Modal.Body>
-                <form className="">
-                  {errors.root && <p className="text-danger m-0">{errors.root.message}</p>}
-                  <div>
-                    <div className=" fw-semibold">Training Programmes</div>
-                    <div className="ps-1 mt-1">
-                      <Controller
-                        name="programmes"
-                        control={control}
-                        render={({ field }) => {
-                          return (
-                            <ReactSelect
-                              {...field}
-                              isMulti={true}
-                              options={loaderData.programmes.map((programme) => ({
-                                value: programme.id,
-                                label: programme.name,
-                              }))}
-                            />
-                          );
+        <MainContainer title="Trainees" breadCrumbs={["Home", "Trainees"]}>
+          <SubContainer>
+            <div className="body">
+              {/* header section */}
+              <section className="px-2 mt-1 ">
+                {/*search bar  */}
+                <div className="d-flex flex-column">
+                  <div className="bg-body-secondary p-2 mb-2 rounded-2 ">
+                    {/* serach box */}
+                    <div className="d-flex">
+                      <input
+                        className=" form-control "
+                        type="text"
+                        value={keyword}
+                        onChange={(e) => {
+                          setKeyword(e.target.value);
+                          handleSearch(e.target.value);
                         }}
                       />
-                    </div>
-                  </div>
-                  <div>
-                    <div className=" fw-semibold">Institutes</div>
-                    <div className="ps-1 mt-1">
-                      <Controller
-                        name="institutes"
-                        control={control}
-                        render={({ field }) => {
-                          return (
-                            <ReactSelect
-                              {...field}
-                              isMulti={true}
-                              options={loaderData.institutes.map((institute) => ({
-                                value: institute.id,
-                                label: institute.name,
-                              }))}
-                            />
-                          );
+                      <button
+                        onClick={() => {
+                          setFilterVisible(true);
                         }}
-                      />
-                    </div>
-                  </div>
-                  <div>
-                    <div className=" fw-semibold">Departments</div>
-                    <div className="ps-1 mt-1">
-                      <Controller
-                        name="departments"
-                        control={control}
-                        render={({ field }) => {
-                          return (
-                            <ReactSelect
-                              {...field}
-                              isMulti={true}
-                              options={loaderData.departments.map((department) => ({
-                                value: department.id,
-                                label: department.name,
-                              }))}
-                            />
-                          );
-                        }}
-                      />
-                    </div>
-                  </div>
-
-                  <div className="mt-2 mb-2">
-                    <div className="fw-semibold  d-flex">
-                      <div>Filter by Time periods</div>
+                        className="btn shadow ms-2 btn-outline-warning"
+                      >
+                        <img src={optionsIcon} height={"22px"} alt="" />
+                      </button>
                     </div>
 
-                    <div className="ps-1 mt-1 container">
-                      <div className="row">
-                        <div className="fw-light col-2">From</div>
-                        <div className="ms-2 col">
-                          <input
-                            type="date"
-                            {...register("start_date")}
-                            className="form-control form-control-sm"
-                          />
-                        </div>
+                    {/* filter options display */}
+                    <div
+                      className="ms-1 mt-1 pe-4 fw-semibold d-flex"
+                      style={{
+                        fontSize: "12px",
+                      }}
+                    >
+                      <div>
+                        <div>Filters Applied :-</div>
+                        {filterOptions?.institutes &&
+                          filterOptions.institutes.map((institute) => {
+                            return (
+                              <span
+                                key={institute.value}
+                                className="badge bg-primary ms-1"
+                                style={{ fontSize: "8px" }}
+                              >
+                                {institute.label}
+                              </span>
+                            );
+                          })}
+                        {filterOptions?.departments &&
+                          filterOptions.departments.map((department) => {
+                            return (
+                              <span
+                                key={department.value}
+                                className="badge bg-primary ms-1"
+                                style={{ fontSize: "8px" }}
+                              >
+                                {department.label}
+                              </span>
+                            );
+                          })}
+                        {filterOptions?.programmes &&
+                          filterOptions.programmes.map((program) => {
+                            return (
+                              <span
+                                key={program.value}
+                                className="badge bg-primary ms-1"
+                                style={{ fontSize: "8px" }}
+                              >
+                                {program.label}
+                              </span>
+                            );
+                          })}
+
+                        {filterOptions && filterOptions.start_date && filterOptions.end_date ? (
+                          <span
+                            className="badge bg-primary ms-1"
+                            style={{ fontSize: "8px" }}
+                          >{`${filterOptions.start_date} to ${filterOptions.end_date}`}</span>
+                        ) : filterOptions?.start_date ? (
+                          <span
+                            className="badge bg-primary ms-1"
+                            style={{ fontSize: "8px" }}
+                          >{`From ${filterOptions.start_date}`}</span>
+                        ) : filterOptions?.end_date ? (
+                          <span
+                            className="badge bg-primary ms-1"
+                            style={{ fontSize: "8px" }}
+                          >{`From ${filterOptions.end_date}`}</span>
+                        ) : (
+                          ""
+                        )}
                       </div>
-                      <div className="row mt-2">
-                        <div className="fw-light col-2">To</div>
-                        <div className="ms-2 col">
-                          <input
-                            type="date"
-                            {...register("end_date")}
-                            className="form-control form-control-sm"
-                          />
-                        </div>
+                      <div className="ms-auto">
+                        <div className="">Total Count - {resultCount}</div>
+                        <div>Search Count - {searchCount}</div>
                       </div>
                     </div>
                   </div>
-                </form>
-              </Modal.Body>
-              <Modal.Footer>
-                <button
-                  className=" ms-auto btn btn-sm  btn-success"
-                  onClick={handleSubmit(onSubmit)}
-                >
-                  Apply Filters
-                </button>
-                <button
-                  className=" btn btn-danger btn-sm"
-                  onClick={() => {
-                    reset({
-                      departments: null,
-                      institutes: null,
-                      programmes: null,
-                      start_date: null,
-                      end_date: null,
-                    });
-                    setFilterOptions(null);
+
+                  <div
+                    className="border border-2 rounded-2 p-1"
+                    style={{
+                      flex: 1,
+                    }}
+                  >
+                    <div className=" table-responsive rounded-2  table-scrollbar">
+                      {loading ? (
+                        <MiniLoader />
+                      ) : (
+                        <table className="table table-sm table-bordered w-100">
+                          <thead className="table-dark position-sticky top-0">
+                            <tr className="small" style={{ fontSize: "" }}>
+                              <th scope="col">ATT No.</th>
+                              <th>Reg No.</th>
+                              <th scope="col">Name</th>
+                              <th scope="col">NIC Number</th>
+                              <th>Institute</th>
+                              <th>Programme</th>
+                              <th>Tel No</th>
+                              <th className=" ">Training Period</th>
+                              <th>Start Date</th>
+                              <th>End Date</th>
+                              <th>Options</th>
+                            </tr>
+                          </thead>
+                          <tbody>
+                            {matchingTrainees.map((trainee: Trainee) => (
+                              <tr key={`${trainee.NIC_NO}-${trainee.REG_NO}`}>
+                                <td>{trainee.ATT_NO}</td>
+                                <td>{trainee.REG_NO}</td>
+                                <td>{trainee.name}</td>
+                                <td>{trainee.NIC_NO}</td>
+                                <td>{trainee.institute}</td>
+                                <td>{trainee.program}</td>
+                                <td>{trainee.contact_no}</td>
+                                <td>{trainee.training_period}</td>
+                                <td>{formatDate(trainee.start_date)}</td>
+                                <td>{formatDate(trainee.end_date)}</td>
+
+                                <td>
+                                  <Link
+                                    className="btn btn-sm btn-warning"
+                                    to={`${trainee.id}/profile`}
+                                  >
+                                    Profile
+                                  </Link>
+                                </td>
+                              </tr>
+                            ))}
+                          </tbody>
+                          <div></div>
+                        </table>
+                      )}
+                    </div>
+                  </div>
+
+                  <div
+                    className=" d-flex mt-2"
+                    style={{
+                      height: "4vh",
+                    }}
+                  >
+                    <Link to={"/OJT/trainees/new"} className="btn btn-primary btn-sm ms-auto">
+                      Add New Trainee
+                    </Link>
+                    <button className="btn btn-success btn-sm ms-2" onClick={handleDownload}>
+                      Download Records
+                    </button>
+                  </div>
+                </div>
+
+                {/* filter model */}
+                <Modal
+                  show={filterVisible}
+                  onHide={() => {
                     setFilterVisible(false);
                   }}
                 >
-                  Reset
-                </button>
-              </Modal.Footer>
-            </Modal>
-          </section>
-        </div>
+                  <Modal.Header closeButton>
+                    <div className=" fw-bold  w-100 ">Filters</div>
+                  </Modal.Header>
+                  <Modal.Body>
+                    <form className="">
+                      {errors.root && <p className="text-danger m-0">{errors.root.message}</p>}
+                      <div>
+                        <div className=" fw-semibold">Training Programmes</div>
+                        <div className="ps-1 mt-1">
+                          <Controller
+                            name="programmes"
+                            control={control}
+                            render={({ field }) => {
+                              return (
+                                <ReactSelect
+                                  {...field}
+                                  isMulti={true}
+                                  options={loaderData.programmes.map((programme) => ({
+                                    value: programme.id,
+                                    label: programme.name,
+                                  }))}
+                                />
+                              );
+                            }}
+                          />
+                        </div>
+                      </div>
+                      <div>
+                        <div className=" fw-semibold">Institutes</div>
+                        <div className="ps-1 mt-1">
+                          <Controller
+                            name="institutes"
+                            control={control}
+                            render={({ field }) => {
+                              return (
+                                <ReactSelect
+                                  {...field}
+                                  isMulti={true}
+                                  options={loaderData.institutes.map((institute) => ({
+                                    value: institute.id,
+                                    label: institute.name,
+                                  }))}
+                                />
+                              );
+                            }}
+                          />
+                        </div>
+                      </div>
+                      <div>
+                        <div className=" fw-semibold">Departments</div>
+                        <div className="ps-1 mt-1">
+                          <Controller
+                            name="departments"
+                            control={control}
+                            render={({ field }) => {
+                              return (
+                                <ReactSelect
+                                  {...field}
+                                  isMulti={true}
+                                  options={loaderData.departments.map((department) => ({
+                                    value: department.id,
+                                    label: department.name,
+                                  }))}
+                                />
+                              );
+                            }}
+                          />
+                        </div>
+                      </div>
+
+                      <div className="mt-2 mb-2">
+                        <div className="fw-semibold  d-flex">
+                          <div>Filter by Time periods</div>
+                        </div>
+
+                        <div className="ps-1 mt-1 container">
+                          <div className="row">
+                            <div className="fw-light col-2">From</div>
+                            <div className="ms-2 col">
+                              <input
+                                type="date"
+                                {...register("start_date")}
+                                className="form-control form-control-sm"
+                              />
+                            </div>
+                          </div>
+                          <div className="row mt-2">
+                            <div className="fw-light col-2">To</div>
+                            <div className="ms-2 col">
+                              <input
+                                type="date"
+                                {...register("end_date")}
+                                className="form-control form-control-sm"
+                              />
+                            </div>
+                          </div>
+                        </div>
+                      </div>
+                    </form>
+                  </Modal.Body>
+                  <Modal.Footer>
+                    <button
+                      className=" ms-auto btn btn-sm  btn-success"
+                      onClick={handleSubmit(onSubmit)}
+                    >
+                      Apply Filters
+                    </button>
+                    <button
+                      className=" btn btn-danger btn-sm"
+                      onClick={() => {
+                        reset({
+                          departments: null,
+                          institutes: null,
+                          programmes: null,
+                          start_date: null,
+                          end_date: null,
+                        });
+                        setFilterOptions(null);
+                        setFilterVisible(false);
+                      }}
+                    >
+                      Reset
+                    </button>
+                  </Modal.Footer>
+                </Modal>
+              </section>
+            </div>
+          </SubContainer>
+        </MainContainer>
       )}
     </>
   );

@@ -1,15 +1,6 @@
-.main_content{
-    margin-top: 50px;
-}
+
 .profile_pic{
     border-radius: 50% !important;
     width: 100px !important;
     border: 5px solid #16b8ea;
-}
-.content_box{
-  background-color: white;
-  width: 400px;
-  padding: 20px;
-  box-sizing: border-box;
-  box-shadow: 0 15px 25px 
 }

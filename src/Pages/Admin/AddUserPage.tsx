@@ -1,6 +1,8 @@
 import { useEffect } from "react";
 import { useLoaderData } from "react-router-dom";
 import UserForm from "../../Components/User/UserForm/UserForm";
+import { MainContainer } from "../../layout/containers/main_container/MainContainer";
+import SubContainer from "../../layout/containers/sub_container/SubContainer";
 
 export default function AddUsersPage() {
   const loaderData = useLoaderData() as any;
@@ -8,13 +10,10 @@ export default function AddUsersPage() {
     console.log(loaderData);
   }, []);
   return (
-    <div className="">
-      <section className="bg-primary-subtle ">
-        <div className="px-3 fw-bold fs-3">Create User Account</div>
-      </section>
-      <section className="m-1 mx-2 border border-dark-subtle border-2 rounded bg-body-tertiary p-2">
+    <MainContainer title="Create User" breadCrumbs={["Home", "Users", "Create User"]}>
+      <SubContainer>
         <UserForm defaultLevels={loaderData} />
-      </section>
-    </div>
+      </SubContainer>
+    </MainContainer>
   );
 }

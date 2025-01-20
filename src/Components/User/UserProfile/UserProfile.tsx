@@ -8,7 +8,7 @@ export default function UserProfile({ user, className }: any) {
   return (
     <div className={`${style.main_content} ${style.content_box} ${className}`}>
       <center>
-        <img src={profileImg} className={`card-img-top  ${style.profile_pic}`} alt="Avatar" />
+        <img src={profileImg} className={` card-img-top  ${style.profile_pic}`} alt="Avatar" />
       </center>
       <div className="card-body">
         <h5 className="card-title text-center fw-bold">{user.name}</h5>

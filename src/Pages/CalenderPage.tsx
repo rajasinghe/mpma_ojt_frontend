@@ -1,6 +1,8 @@
 import { useLoaderData } from "react-router-dom";
 import MarkHolidays from "../Components/Callenders/Holidays/Markholidays";
 import { useEffect } from "react";
+import { MainContainer } from "../layout/containers/main_container/MainContainer";
+import SubContainer from "../layout/containers/sub_container/SubContainer";
 
 export default function CalenderPage() {
   const events = useLoaderData();
@@ -8,16 +10,10 @@ export default function CalenderPage() {
     console.log(events);
   }, []);
   return (
-    <div>
-      <section className="bg-primary-subtle ">
-        <div className="px-3 fw-bold fs-3">Work Calender</div>
-      </section>
-      <section className=" bg-body-tertiary px-2 mt-1">
-        <div className="container-fluid border border-dark rounded-2 my-2">
-          {/* <div className=" fs-5 fw-bolder">Trainee Schedule</div> */}
-          <MarkHolidays events={events} className=" " />
-        </div>
-      </section>
-    </div>
+    <MainContainer title="Work Calender" breadCrumbs={["Home", "Calender"]}>
+      <SubContainer>
+        <MarkHolidays events={events} className=" " />
+      </SubContainer>
+    </MainContainer>
   );
 }

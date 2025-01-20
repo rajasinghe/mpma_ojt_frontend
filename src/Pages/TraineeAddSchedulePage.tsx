@@ -1,5 +1,5 @@
 import { useLoaderData, useNavigate, useNavigation, useSearchParams } from "react-router-dom";
-import Loader from "../Components/Loader/Loader";
+import Loader from "../Components/ui/Loader/Loader";
 import { useEffect, useState } from "react";
 import { Controller, useFieldArray, useForm } from "react-hook-form";
 import { z } from "zod";
@@ -11,6 +11,8 @@ import api from "../api";
 import { endDateCalculator, formatDateToIso } from "../helpers";
 import AddPeriodModal from "../Components/traineeForm/AddPeriodModal";
 import moment from "moment";
+import { MainContainer } from "../layout/containers/main_container/MainContainer";
+import SubContainer from "../layout/containers/sub_container/SubContainer";
 
 const schema = z.object({
   schedules: z.array(
@@ -193,20 +195,8 @@ export default function TraineeAddSchedulePage() {
       {state == "loading" ? (
         <Loader />
       ) : (
-        <div className="">
-          {/* <button
-            type="button"
-            onClick={() => {
-              console.log(errors);
-            }}
-          >
-            show errors
-          </button> */}
-          {/* header section */}
-          <section className="bg-primary-subtle ">
-            <div className="px-3 fw-bold fs-3">Update Trainee Schedule</div>
-          </section>
-          <section className=" m-1 border border-dark-subtle border-2 rounded bg-body-tertiary px-2">
+        <MainContainer title="Trainee Schedule" breadCrumbs={["Trainee", "Profile", "Schedule"]}>
+          <SubContainer>
             <div className="container-fluid border border-dark rounded-2 my-2">
               <div className=" fs-5 fw-bolder">Trainee Details</div>
               <div className="">
@@ -450,8 +440,8 @@ export default function TraineeAddSchedulePage() {
                 </div>
               </form>
             </div>
-          </section>
-        </div>
+          </SubContainer>
+        </MainContainer>
       )}
       <AddDepartmentModal
         setDepartments={setDepartments}

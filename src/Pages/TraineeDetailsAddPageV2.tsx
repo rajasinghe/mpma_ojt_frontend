@@ -1,5 +1,7 @@
 import { useLoaderData } from "react-router-dom";
 import TraineeForm from "../Components/traineeForm/TraineeFormV2";
+import { MainContainer } from "../layout/containers/main_container/MainContainer";
+import SubContainer from "../layout/containers/sub_container/SubContainer";
 
 interface loaderData {
   periods: any[];
@@ -11,18 +13,15 @@ export default function TraineeDetailsAddPageV2() {
   const loaderData = useLoaderData() as loaderData;
 
   return (
-    <div className="">
-      <section className="bg-primary-subtle ">
-        <div className="px-3 fw-bold fs-3">New Trainees</div>
-      </section>
-      <section className="mx-2 px-1 mt-1 border border-dark-subtle border-2 rounded bg-body-tertiary ">
+    <MainContainer title="Trainee Registration" breadCrumbs={["Home", "Trainee", "Registration"]}>
+      <SubContainer>
         <TraineeForm
           className="p-2"
           periods={loaderData.periods}
           programs={loaderData.programs}
           institutes={loaderData.institutes}
         />
-      </section>
-    </div>
+      </SubContainer>
+    </MainContainer>
   );
 }

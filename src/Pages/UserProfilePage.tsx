@@ -1,6 +1,8 @@
 import { useLoaderData, useNavigation } from "react-router-dom";
-import Loader from "../Components/Loader/Loader";
+import Loader from "../Components/ui/Loader/Loader";
 import UserProfile from "../Components/User/UserProfile/UserProfile";
+import { MainContainer } from "../layout/containers/main_container/MainContainer";
+import SubContainer from "../layout/containers/sub_container/SubContainer";
 
 export default function UserProfilePage() {
   const { state } = useNavigation();
@@ -11,9 +13,13 @@ export default function UserProfilePage() {
       {state == "loading" ? (
         <Loader />
       ) : (
-        <div className="d-flex main p-4">
-          <UserProfile className="mx-auto mt-3" user={user} />
-        </div>
+        <>
+          <MainContainer breadCrumbs={["Home", "Profile"]} title="Profile Page">
+            <SubContainer>
+              <UserProfile className="" user={user} />
+            </SubContainer>
+          </MainContainer>
+        </>
       )}
     </>
   );

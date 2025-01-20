@@ -14,11 +14,11 @@ const schema = z.object({
   accNo: z.string().regex(/^[0-9]+$/),
   branchCode: z.string().regex(/^[0-9]+$/),
 });
+
 type formType = z.infer<typeof schema>;
 
 export default function BankDetailsForm({ trainee }: props) {
   const navigate = useNavigate();
-
   useEffect(() => {
     if (trainee.bankDetails) {
       setValue("accNo", trainee.bankDetails.acc_no + "");
@@ -100,6 +100,7 @@ export default function BankDetailsForm({ trainee }: props) {
         }
       });
   };
+
   const insert = async (formData: formType) => {
     Swal.fire({
       title: "Are you Sure?",

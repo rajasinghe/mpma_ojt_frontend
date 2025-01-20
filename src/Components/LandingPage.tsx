@@ -1,13 +1,15 @@
 import { Outlet, useLocation, useNavigate, useNavigation } from "react-router-dom";
-import Loader from "./Loader/Loader";
+import Loader from "./ui/Loader/Loader";
 import { useEffect, useState } from "react";
 import api from "../api";
 import Swal from "sweetalert2";
 export default function LandingPage() {
   const { state } = useNavigation();
+  const [authenticating, setAuthenticating] = useState<boolean>(false);
   const navigate = useNavigate();
   const location = useLocation();
   const [user, setUser] = useState();
+
   useEffect(() => {
     //recieve the token from the localstorage
     const token = localStorage.getItem("token");
@@ -26,9 +28,14 @@ export default function LandingPage() {
 
   const authenticate = async () => {
     try {
+      console.log(state);
+      setAuthenticating(true);
       const response = await api.get("auth");
+      setAuthenticating(false);
+      console.log(state);
       console.log(response.data);
       setUser(response.data);
+
       if (location.pathname == "/") {
         navigate("/OJT/Trainees");
       }
@@ -41,5 +48,5 @@ export default function LandingPage() {
       navigate("/login");
     }
   };
-  return <>{state == "loading" ? <Loader /> : <Outlet context={user} />}</>;
+  return <>{authenticating ? <Loader text="Authenticating..." /> : <Outlet context={user} />}</>;
 }
