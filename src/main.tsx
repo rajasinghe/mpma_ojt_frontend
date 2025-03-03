@@ -39,6 +39,7 @@ import DepartmentPage from "./Pages/DepartmentPage.tsx";
 import api from "./api.ts";
 import AddUsersPage from "./Pages/Admin/AddUserPage.tsx";
 import ViewUsersPage from "./Pages/Admin/ViewUsersPage.tsx";
+import NotificationPage from "./Pages/NotificationPage.tsx";
 
 export const setToken = () => {
   const token = localStorage.getItem("token");
@@ -145,6 +146,10 @@ const router = createBrowserRouter([
             loader: viewUsersPageLoader,
             element: <ViewUsersPage />,
           },
+          {
+            path: "notification",
+            element: <NotificationPage />,
+          }
         ],
       },
     ],
