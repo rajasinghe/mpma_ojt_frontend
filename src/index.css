@@ -21,7 +21,7 @@ body {
 
 
 .table-scrollbar {
-  max-height: 300px;
+  max-height: 65vh;
   overflow-y: auto;
 }
 

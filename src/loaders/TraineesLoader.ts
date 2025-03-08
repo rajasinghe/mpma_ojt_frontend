@@ -58,9 +58,10 @@ export const traineeAddSchedulePageLoader = async ({ params }: any) => {
         trainee.schedules = scheduleResponse.value.data;
       }
       if (interviewResponse.status == "fulfilled") {
-        console.log
         trainee.interviews = interviewResponse.value.data;
+        console.log(interviewResponse.value.data);
       }
+
       return {
         trainee,
         departmentsList: departmentsResponse.value.data,

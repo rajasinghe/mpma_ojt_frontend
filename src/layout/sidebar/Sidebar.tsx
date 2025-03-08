@@ -2,6 +2,7 @@ import { useEffect, useState } from "react";
 import "./style.css";
 import logo from "../../assets/SLPA_Logo-Cu9TOj32.png";
 import { Link, useLocation, useNavigation } from "react-router-dom";
+import api from "../../api";
 interface Props {
   user: any;
 }
@@ -59,47 +60,49 @@ const Sidebar = ({ user }: Props) => {
   ];
   const [links, setLinks] = useState<RouteLink[]>(initLinks);
   useEffect(() => {
-    console.log(user);
-    if (user && user.type == "SUPERADMIN") {
-      setLinks([
-        ...initLinks,
-        {
-          name: "Departments",
-          regex: /^\/OJT\/departments/i,
-          route: "/OJT/departments",
-          active_icon: "bi-diagram-3-fill",
-          inactive_icon: "bi-diagram-3",
-        },
-        {
-          name: "Users",
-          regex: /^\/OJT\/users/i,
-          route: "/OJT/users",
-          active_icon: "bi-key-fill",
-          inactive_icon: "bi-key",
-          subLinks: [
-            {
-              name: "Add User",
-              regex: /^\/OJT\/users\/create/i,
-              route: "/OJT/users/create",
-              active_icon: "bi-patch-plus-fill",
-              inactive_icon: "bi-patch-plus",
-            },
-          ],
-        },
-      ]);
-    } else if (
-      user.accessLevels.find((accessLevel: any) => accessLevel.access == "interview:modify")
-    ) {
-      setLinks([
-        ...initLinks,
-        {
-          name: "Departments",
-          regex: /^\/OJT\/departments/i,
-          route: "/OJT/departments",
-          active_icon: "bi-diagram-3-fill",
-          inactive_icon: "bi-diagram-3",
-        },
-      ]);
+    if (user) {
+      console.log(user);
+      if (user && user.type == "SUPERADMIN") {
+        setLinks([
+          ...initLinks,
+          {
+            name: "Departments",
+            regex: /^\/OJT\/departments/i,
+            route: "/OJT/departments",
+            active_icon: "bi-diagram-3-fill",
+            inactive_icon: "bi-diagram-3",
+          },
+          {
+            name: "Users",
+            regex: /^\/OJT\/users/i,
+            route: "/OJT/users",
+            active_icon: "bi-key-fill",
+            inactive_icon: "bi-key",
+            subLinks: [
+              {
+                name: "Add User",
+                regex: /^\/OJT\/users\/create/i,
+                route: "/OJT/users/create",
+                active_icon: "bi-patch-plus-fill",
+                inactive_icon: "bi-patch-plus",
+              },
+            ],
+          },
+        ]);
+      } else if (
+        user.accessLevels.find((accessLevel: any) => accessLevel.access == "interview:modify")
+      ) {
+        setLinks([
+          ...initLinks,
+          {
+            name: "Departments",
+            regex: /^\/OJT\/departments/i,
+            route: "/OJT/departments",
+            active_icon: "bi-diagram-3-fill",
+            inactive_icon: "bi-diagram-3",
+          },
+        ]);
+      }
     }
   }, [user]);
 

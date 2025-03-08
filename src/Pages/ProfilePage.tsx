@@ -14,6 +14,7 @@ export default function ProfilePage() {
       <SubContainer>
         <div className="container-fluid border border-dark rounded-2 my-2 py-2">
           <div className="fs-5 fw-bolder">Trainee Details</div>
+          <div className="fw-semibold ">Status - {trainee.status == 1 ? "Active" : "Inactive"}</div>
           <div className="fw-semibold ">Reg NO - {trainee.REG_NO}</div>
           <div className="fw-semibold">ATT NO - {trainee.ATT_NO}</div>
           <div className="fw-semibold">

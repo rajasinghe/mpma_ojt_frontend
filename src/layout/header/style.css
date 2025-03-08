@@ -28,7 +28,7 @@
   .header {
     transition: all 0.5s;
     z-index: 990;
-    height: 10vh  ;
+    height: 5%  ;
     /* box-shadow: 0px 2px 20px rgba(1, 41, 112, 0.1); */
     /* background-color: #fff; */
     background-color: #f1f6ff;

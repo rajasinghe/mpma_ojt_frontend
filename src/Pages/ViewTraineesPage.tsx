@@ -51,6 +51,7 @@ const filterSchema = z.object({
     .nullable(),
   start_date: z.date().nullable(),
   end_date: z.date().nullable(),
+  includeInactiveTrainees: z.boolean(),
 });
 
 type filterFormValues = z.infer<typeof filterSchema>;
@@ -119,7 +120,10 @@ export default function ViewTraineesPage() {
           programmes: programmes,
           departments: departments,
           institutes: institutes,
+          includeInactiveTrainees: filterOptions.includeInactiveTrainees,
         };
+
+        console.log(filter);
 
         const getFilteredData = async (filterParams: any) => {
           //set loading state
@@ -211,12 +215,13 @@ export default function ViewTraineesPage() {
       setMatchingTrainees(resultingTrainees);
     } else {
       setResultCount(trainees.length);
+      setSearchCount(0);
       setMatchingTrainees(trainees);
     }
   };
 
   const fuse = new Fuse(trainees, {
-    keys: ["ATT_NO", "NIC_NO", "REG_NO"],
+    keys: ["ATT_NO", "NIC_NO", "REG_NO", "name"],
     isCaseSensitive: false,
     includeScore: true,
     includeMatches: true,
@@ -232,7 +237,8 @@ export default function ViewTraineesPage() {
       (data.institutes && data.institutes.length > 0) ||
       (data.programmes && data.programmes.length > 0) ||
       data.start_date ||
-      data.end_date
+      data.end_date ||
+      data.includeInactiveTrainees == true
     ) {
       setFilterOptions(data);
       setFilterVisible(false);
@@ -285,6 +291,11 @@ export default function ViewTraineesPage() {
                     >
                       <div>
                         <div>Filters Applied :-</div>
+                        {filterOptions?.institutes && (
+                          <span className="badge bg-danger ms-1" style={{ fontSize: "8px" }}>
+                            Inactive Trainees
+                          </span>
+                        )}
                         {filterOptions?.institutes &&
                           filterOptions.institutes.map((institute) => {
                             return (
@@ -367,10 +378,7 @@ export default function ViewTraineesPage() {
                               <th scope="col">NIC Number</th>
                               <th>Institute</th>
                               <th>Programme</th>
-                              <th>Tel No</th>
-                              <th className=" ">Training Period</th>
-                              <th>Start Date</th>
-                              <th>End Date</th>
+
                               <th>Options</th>
                             </tr>
                           </thead>
@@ -383,10 +391,6 @@ export default function ViewTraineesPage() {
                                 <td>{trainee.NIC_NO}</td>
                                 <td>{trainee.institute}</td>
                                 <td>{trainee.program}</td>
-                                <td>{trainee.contact_no}</td>
-                                <td>{trainee.training_period}</td>
-                                <td>{formatDate(trainee.start_date)}</td>
-                                <td>{formatDate(trainee.end_date)}</td>
 
                                 <td>
                                   <Link
@@ -524,6 +528,15 @@ export default function ViewTraineesPage() {
                             </div>
                           </div>
                         </div>
+                      </div>
+
+                      <div>
+                        <input
+                          className="form-check-input"
+                          type="checkbox"
+                          {...register("includeInactiveTrainees")}
+                        />
+                        <div className=" fw-semibold">Include Inactive Trainees</div>
                       </div>
                     </form>
                   </Modal.Body>

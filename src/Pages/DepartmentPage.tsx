@@ -1,6 +1,6 @@
-import { useLoaderData, useNavigate, useNavigation } from "react-router-dom";
+import { Link, useLoaderData, useNavigate, useNavigation } from "react-router-dom";
 import Loader from "../Components/ui/Loader/Loader";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import moment from "moment";
 import InterviewModal from "../Components/Modals/NewInterviewModal";
 import editIcon from "../assets/edit.png";
@@ -17,6 +17,11 @@ export default function DepartmentPage() {
   const interviewModalVisibilityState = useState<boolean>(false);
   const [summaryState, setSummary] = useState(interviewSummary);
   const [selectedInterview, setSelectedInterview] = useState(undefined);
+
+  useEffect(() => {
+    console.log(department);
+  });
+
   const navigate = useNavigate();
   const refetchInterviews = async () => {
     //show the mini loader
@@ -108,6 +113,7 @@ export default function DepartmentPage() {
                         <th>Reg NO</th>
                         <th>Start Date</th>
                         <th>End Date</th>
+                        <th>Options</th>
                       </tr>
                     </thead>
                     <tbody>
@@ -119,6 +125,16 @@ export default function DepartmentPage() {
                           <td>{schedule.trainee.REG_NO}</td>
                           <td>{schedule.start_date}</td>
                           <td className=" d-flex ">{schedule.end_date}</td>
+                          <td>
+                            <div className="d-flex">
+                              <Link
+                                className="btn btn-sm btn-warning mx-auto"
+                                to={`/OJT/trainees/${schedule.trainee_id}/profile`}
+                              >
+                                Profile
+                              </Link>
+                            </div>
+                          </td>
                         </tr>
                       ))}
                     </tbody>
