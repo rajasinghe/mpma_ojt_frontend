@@ -27,6 +27,12 @@ interface loaderProps {
   trainee: any;
 }
 
+interface CellProps {
+  columnIndex: number;
+  rowIndex: number;
+  style: React.CSSProperties;
+}
+
 const filterSchema = z.object({
   departments: z
     .array(
@@ -353,11 +359,26 @@ export default function AttendencesPage() {
     }
   };
 
-  const Cell = ({ columnIndex, rowIndex, style }) => (
-    <div style={style}>
-      Item {rowIndex},{columnIndex}
-    </div>
-  );
+  let rowCount = matchingTrainees.length;
+  let columnCount = workingDays.length;
+
+  const Cell = ({ columnIndex, rowIndex, style }: CellProps) => {
+      
+    const trainee = matchingTrainees[rowIndex];
+    const attendance = trainee?.attendences[columnIndex];
+
+    return (
+      <div style={style}>
+        {attendance && (
+          <FlipableTableCell
+            onTime={attendance.on_time}
+            offTime={attendance.off_time}
+            status={attendance.status}
+          />
+        )}
+      </div>
+    );
+  };
 
   return (
     <>
@@ -467,7 +488,7 @@ export default function AttendencesPage() {
                 className=" table-responsive rounded-2  table-scrollbar"
                 style={{ maxHeight: "53vh" }}
               >
-                {loading ? (
+                {/*loading ? (
                   <MiniLoader />
                 ) : (
                   <table className="table table-sm table-bordered w-100">
@@ -508,14 +529,15 @@ export default function AttendencesPage() {
                       ))}
                     </tbody>
                   </table>
-                )}
+                )*/}
               </div>
+              
               <Grid 
                 className="table table-sm table-bordered w-100"
-                columnCount={1000}
-                columnWidth={103.56}
-                height={150}
-                rowCount={1000}
+                columnCount={columnCount}
+                columnWidth={105}
+                height={300}
+                rowCount={rowCount}
                 rowHeight={51}
                 width={gridWidth}
               >
