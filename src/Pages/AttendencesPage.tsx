@@ -14,6 +14,8 @@ import Swal from "sweetalert2";
 import FlipableTableCell from "../Components/Tables/FlippableCell/FlipableTableCell";
 import { MainContainer } from "../layout/containers/main_container/MainContainer";
 import SubContainer from "../layout/containers/sub_container/SubContainer";
+import { FixedSizeGrid as Grid } from 'react-window';
+
 
 interface loaderProps {
   trainees: [];
@@ -99,6 +101,8 @@ export default function AttendencesPage() {
   } = useForm<filterFormValues>();
 
   const { state } = useNavigation();
+
+  const [gridWidth, setGridWidth] = useState<number>(0);
 
   useEffect(() => {
     const month = params.get("month");
@@ -206,6 +210,20 @@ export default function AttendencesPage() {
       }
     }
   }, [filterOptions]);
+
+  const updateGridWidth = () => {
+
+    const containerWidth = window.innerWidth;
+    setGridWidth(containerWidth);
+  };
+
+  useEffect(() => {
+    updateGridWidth();
+    window.addEventListener("resize", updateGridWidth);
+    return () => {
+      window.removeEventListener("resize", updateGridWidth);
+    };
+  }, []);
 
   const handleSearch = (keyword: string) => {
     if (keyword.trim() != "") {
@@ -334,6 +352,12 @@ export default function AttendencesPage() {
       console.log(workingDays, trainees);
     }
   };
+
+  const Cell = ({ columnIndex, rowIndex, style }) => (
+    <div style={style}>
+      Item {rowIndex},{columnIndex}
+    </div>
+  );
 
   return (
     <>
@@ -486,6 +510,17 @@ export default function AttendencesPage() {
                   </table>
                 )}
               </div>
+              <Grid 
+                className="table table-sm table-bordered w-100"
+                columnCount={1000}
+                columnWidth={103.56}
+                height={150}
+                rowCount={1000}
+                rowHeight={51}
+                width={gridWidth}
+              >
+                {Cell}
+              </Grid>
             </div>
             <div className=" d-flex mt-2 ">
               <Link to={"/OJT/attendence/new"} className="btn btn-primary btn-sm ms-auto">
