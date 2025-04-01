@@ -96,6 +96,10 @@ export default function AttendencesPage() {
   const [loading, setLoading] = useState<boolean>(false);
   const [params] = useSearchParams();
 
+  const columnWidth: number = 105; // Width of each column in pixels
+  const rowHeight: number = 51; // Height of each row in pixels 
+  const height: number = 300; // Height of the grid in pixels
+
   const {
     formState: { errors },
     setError,
@@ -362,32 +366,57 @@ export default function AttendencesPage() {
   let rowCount = matchingTrainees.length;
   let columnCount = workingDays.length;
 
-  const Header = () => (
-    <div style={{ display: 'flex', 
-          width: gridWidth, 
-          background: '#ddd', 
-          fontWeight: 'bold' }}
-        >
-      <div style={{ width: 100, 
-          padding: '5px', 
-          border: '1px solid #aaa', 
-          position: 'sticky', 
-          left: 0, 
-          backgroundColor: '#ddd' }}
-        >
-        ATT NO
-      </div>
-      {workingDays.map((day, index) => (
-        <div key={index} 
-          style={{ width: 105, 
-          padding: '5px', 
-          border: '1px solid #aaa' }}
-        >
-          {day}
+  const [scrollLeft, setScrollLeft] = useState(0);
+
+  // Header component with scroll synchronization
+  const Header = () => {
+    // Calculate total header width based on column count and width
+    const totalHeaderWidth = (columnCount + 1) * columnWidth; // +1 for "Att No" column
+  
+    return (
+      <div style={{
+        width: gridWidth,
+        overflow: 'hidden',
+        position: 'sticky',
+        top: 0,
+        background: 'white',
+        zIndex: 1,
+        borderBottom: '1px solid #ddd' // Add border for better visual separation
+      }}>
+        <div style={{
+          width: totalHeaderWidth,
+          transform: `translateX(-${scrollLeft}px)`,
+          whiteSpace: 'nowrap' // Prevent wrapping of header items
+        }}>
+          {/* "Att No" header cell */}
+          <div style={{ 
+            display: 'inline-block',
+            width: columnWidth,
+            padding: '8px',
+            fontWeight: 'bold',
+            borderRight: '1px solid #ddd' // Match grid border style
+          }}>
+            Att No
+          </div >
+          
+          {workingDays.map((day, index) => (
+            <div 
+              key={index} 
+              style={{ 
+                display: 'inline-block',
+                width: columnWidth,
+                padding: '8px',
+                fontWeight: 'bold',
+                borderRight: '1px solid #ddd' // Match grid border style
+              }}
+            >
+              {day}
+            </div>
+          ))}
         </div>
-      ))}
-    </div>
-  );
+      </div>
+    );
+  };
 
   const Cell = ({ columnIndex, rowIndex, style }: CellProps) => {
       
@@ -406,7 +435,7 @@ export default function AttendencesPage() {
             display: 'flex',
             alignItems: 'center',
             padding: '0px',
-            width: 105,
+            width: columnWidth,
             zIndex: 1,
             justifyContent: 'center',
           }}>
@@ -544,7 +573,7 @@ export default function AttendencesPage() {
               >
                 {/*loading ? (
                   <MiniLoader />
-                ) : (
+                ) : (/*
                   <table className="table table-sm table-bordered w-100">
                     <thead className="table-dark">
                       <tr className="">
@@ -585,16 +614,17 @@ export default function AttendencesPage() {
                   </table>
                 )*/}
               </div>
-              <div>
-                <Header/>
-                <Grid 
+              <div style={{ overflow: "hidden" }}>
+                <Header />
+                <Grid
                   className="table table-sm table-bordered w-100"
-                  columnCount={columnCount}
-                  columnWidth={105}
-                  height={300}
+                  columnCount={columnCount+1}
+                  columnWidth={columnWidth}
+                  height={height}
                   rowCount={rowCount}
-                  rowHeight={51}
+                  rowHeight={rowHeight}
                   width={gridWidth}
+                  onScroll={({ scrollLeft }) => setScrollLeft(scrollLeft)}
                 >
                   {Cell}
                 </Grid>
