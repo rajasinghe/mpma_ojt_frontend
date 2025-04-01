@@ -362,22 +362,76 @@ export default function AttendencesPage() {
   let rowCount = matchingTrainees.length;
   let columnCount = workingDays.length;
 
+  const Header = () => (
+    <div style={{ display: 'flex', 
+          width: gridWidth, 
+          background: '#ddd', 
+          fontWeight: 'bold' }}
+        >
+      <div style={{ width: 100, 
+          padding: '5px', 
+          border: '1px solid #aaa', 
+          position: 'sticky', 
+          left: 0, 
+          backgroundColor: '#ddd' }}
+        >
+        ATT NO
+      </div>
+      {workingDays.map((day, index) => (
+        <div key={index} 
+          style={{ width: 105, 
+          padding: '5px', 
+          border: '1px solid #aaa' }}
+        >
+          {day}
+        </div>
+      ))}
+    </div>
+  );
+
   const Cell = ({ columnIndex, rowIndex, style }: CellProps) => {
       
     const trainee = matchingTrainees[rowIndex];
-    const attendance = trainee?.attendences[columnIndex];
 
-    return (
-      <div style={style}>
-        {attendance && (
-          <FlipableTableCell
-            onTime={attendance.on_time}
-            offTime={attendance.off_time}
-            status={attendance.status}
-          />
-        )}
-      </div>
-    );
+      // First column shows ATT_NO
+    if (columnIndex === 0) {
+      return (
+        <div  style={style}>
+          <div style = {{
+            ...style,
+            position: 'sticky',
+            left: 0,
+            backgroundColor: 'white',
+            border: '1px solid #ddd',
+            display: 'flex',
+            alignItems: 'center',
+            padding: '0px',
+            width: 105,
+            zIndex: 1,
+            justifyContent: 'center',
+          }}>
+            {trainee.ATT_NO}
+          </div>
+        </div>
+      );
+    }
+
+    else {
+      const attendance = trainee?.attendences[columnIndex-1];
+
+      return (
+        <div style={style}>
+          {attendance && (
+            <FlipableTableCell
+              onTime={attendance.on_time}
+              offTime={attendance.off_time}
+              status={attendance.status}
+            />
+          )}
+        </div>
+      );
+    }
+
   };
 
   return (
@@ -531,18 +585,20 @@ export default function AttendencesPage() {
                   </table>
                 )*/}
               </div>
-              
-              <Grid 
-                className="table table-sm table-bordered w-100"
-                columnCount={columnCount}
-                columnWidth={105}
-                height={300}
-                rowCount={rowCount}
-                rowHeight={51}
-                width={gridWidth}
-              >
-                {Cell}
-              </Grid>
+              <div>
+                <Header/>
+                <Grid 
+                  className="table table-sm table-bordered w-100"
+                  columnCount={columnCount}
+                  columnWidth={105}
+                  height={300}
+                  rowCount={rowCount}
+                  rowHeight={51}
+                  width={gridWidth}
+                >
+                  {Cell}
+                </Grid>
+              </div>
             </div>
             <div className=" d-flex mt-2 ">
               <Link to={"/OJT/attendence/new"} className="btn btn-primary btn-sm ms-auto">
