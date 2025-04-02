@@ -386,7 +386,6 @@ export default function AttendencesPage() {
         <div style={{
           width: totalHeaderWidth,
           transform: `translateX(-${scrollLeft}px)`,
-          whiteSpace: 'nowrap' // Prevent wrapping of header items
         }}>
           {/* "Att No" header cell */}
           <div style={{ 
@@ -396,7 +395,7 @@ export default function AttendencesPage() {
             fontWeight: 'bold',
             borderRight: '1px solid #ddd' // Match grid border style
           }}>
-            Att No
+            Att. NO
           </div >
           
           {workingDays.map((day, index) => (
@@ -407,7 +406,8 @@ export default function AttendencesPage() {
                 width: columnWidth,
                 padding: '8px',
                 fontWeight: 'bold',
-                borderRight: '1px solid #ddd' // Match grid border style
+                borderRight: '1px solid #ddd', // Match grid border style
+                whiteSpace: 'nowrap' 
               }}
             >
               {day}
@@ -569,65 +569,27 @@ export default function AttendencesPage() {
             <div className="border border-2 rounded-2 p-1">
               <div
                 className=" table-responsive rounded-2  table-scrollbar"
-                style={{ maxHeight: "53vh" }}
+                style={{ maxHeight: "53vh"}}
               >
-                {/*loading ? (
+                {loading ? (
                   <MiniLoader />
-                ) : (/*
-                  <table className="table table-sm table-bordered w-100">
-                    <thead className="table-dark">
-                      <tr className="">
-                        <th>Attendance Number</th>
-
-                        {workingDays.map((day) => {
-                          return (
-                            <th
-                              style={{
-                                whiteSpace: "nowrap",
-                                width: "200px",
-                                textOverflow: "ellipsis",
-                                overflow: "hidden",
-                                border: "1px solid #ddd",
-                                padding: "8px",
-                              }}
-                            >
-                              {day}
-                            </th>
-                          );
-                        })}
-                      </tr>
-                    </thead>
-                    <tbody>
-                      {matchingTrainees.map((trainee: any) => (
-                        <tr key={`${trainee.trainee_id}`}>
-                          <td>{trainee.ATT_NO}</td>
-                          {trainee.attendences.map((attendence: any) => (
-                            <FlipableTableCell
-                              onTime={attendence.on_time}
-                              offTime={attendence.off_time}
-                              status={attendence.status}
-                            />
-                          ))}
-                        </tr>
-                      ))}
-                    </tbody>
-                  </table>
-                )*/}
-              </div>
-              <div style={{ overflow: "hidden" }}>
-                <Header />
-                <Grid
-                  className="table table-sm table-bordered w-100"
-                  columnCount={columnCount+1}
-                  columnWidth={columnWidth}
-                  height={height}
-                  rowCount={rowCount}
-                  rowHeight={rowHeight}
-                  width={gridWidth}
-                  onScroll={({ scrollLeft }) => setScrollLeft(scrollLeft)}
-                >
-                  {Cell}
-                </Grid>
+                ) : (
+                <div style={{ overflow: "hidden" }}>
+                  <Header />
+                  <Grid
+                    className="table table-sm table-bordered w-100"
+                    columnCount={columnCount+1}
+                    columnWidth={columnWidth}
+                    height={height}
+                    rowCount={rowCount}
+                    rowHeight={rowHeight}
+                    width={gridWidth}
+                    onScroll={({ scrollLeft }) => setScrollLeft(scrollLeft)}
+                  >
+                    {Cell}
+                  </Grid>
+                </div>
+                )}
               </div>
             </div>
             <div className=" d-flex mt-2 ">
