@@ -98,7 +98,32 @@ export default function AttendencesPage() {
 
   const columnWidth: number = 105; // Width of each column in pixels
   const rowHeight: number = 51; // Height of each row in pixels 
-  const height: number = 300; // Height of the grid in pixels
+  const [height, setHeight] = useState<number>(0);
+  
+  useEffect(() => {
+    const updateHeight = () => {
+      // Calculate height based on number of rows plus header row
+      const numberOfRows = matchingTrainees.length + 1; 
+      const calculatedHeight = (numberOfRows * rowHeight) + 15;
+      
+      // Get viewport height
+      const viewportHeight = window.innerHeight;
+      // Maximum height should be 53vh
+      const maxHeight = Math.floor(viewportHeight * 0.53);
+      
+      // Use the smaller of calculated height or maxHeight
+      const newHeight = Math.min(calculatedHeight, maxHeight);
+      
+      setHeight(newHeight);
+    };
+
+    updateHeight();
+    window.addEventListener('resize', updateHeight);
+
+    return () => {
+      window.removeEventListener('resize', updateHeight);
+    };
+  }, [matchingTrainees.length]); // Re-run when number of rows changes
 
   const {
     formState: { errors },
@@ -120,8 +145,8 @@ export default function AttendencesPage() {
     const id = params.get("id");
 
     const schema = z.object({
-      month: z.coerce.number().gt(0).lt(13),
-      year: z.coerce.number().gt(2000),
+      month: z.coerce.number().int().gte(0).lte(13),
+      year: z.coerce.number().int().gte(2001),
       id: z.coerce.number(),
     });
 
@@ -363,80 +388,45 @@ export default function AttendencesPage() {
     }
   };
 
-  let rowCount = matchingTrainees.length;
+  let rowCount = matchingTrainees.length+1;
   let columnCount = workingDays.length;
-
-  const [scrollLeft, setScrollLeft] = useState(0);
-
-  // Header component with scroll synchronization
-  const Header = () => {
-    // Calculate total header width based on column count and width
-    const totalHeaderWidth = (columnCount + 1) * columnWidth; // +1 for "Att No" column
-  
-    return (
-      <div style={{
-        width: gridWidth,
-        overflow: 'hidden',
-        position: 'sticky',
-        top: 0,
-        background: 'white',
-        zIndex: 1,
-        borderBottom: '1px solid #ddd' // Add border for better visual separation
-      }}>
-        <div style={{
-          width: totalHeaderWidth,
-          transform: `translateX(-${scrollLeft}px)`,
-        }}>
-          {/* "Att No" header cell */}
-          <div style={{ 
-            display: 'inline-block',
-            width: columnWidth,
-            padding: '8px',
-            fontWeight: 'bold',
-            borderRight: '1px solid #ddd' // Match grid border style
-          }}>
-            Att. NO
-          </div >
-          
-          {workingDays.map((day, index) => (
-            <div 
-              key={index} 
-              style={{ 
-                display: 'inline-block',
-                width: columnWidth,
-                padding: '8px',
-                fontWeight: 'bold',
-                borderRight: '1px solid #ddd', // Match grid border style
-                whiteSpace: 'nowrap' 
-              }}
-            >
-              {day}
-            </div>
-          ))}
-        </div>
-      </div>
-    );
-  };
 
   const Cell = ({ columnIndex, rowIndex, style }: CellProps) => {
       
-    const trainee = matchingTrainees[rowIndex];
+    //const trainee = matchingTrainees[rowIndex];
+    const trainee = matchingTrainees?.[rowIndex - 1] || {};
+    const day = workingDays[columnIndex - 1];
 
       // First column shows ATT_NO
-    if (columnIndex === 0) {
+    if(columnIndex === 0 && rowIndex === 0) {
+      return (
+        <div style={style}>
+          <div style = {{
+            ...style,
+            display: 'flex',
+            fontWeight: 'bold',
+            border: '1px solid #ddd',
+            backgroundColor:'#212529',
+            color: '#fff',
+            alignItems: 'center',
+          }}>
+            Attendance Number
+          </div>
+        </div>
+      );
+    }
+    
+    else if (columnIndex === 0) {
       return (
         <div  style={style}>
           <div style = {{
             ...style,
             position: 'sticky',
             left: 0,
-            backgroundColor: 'white',
             border: '1px solid #ddd',
             display: 'flex',
             alignItems: 'center',
             padding: '0px',
-            width: columnWidth,
-            zIndex: 1,
             justifyContent: 'center',
           }}>
             {trainee.ATT_NO}
@@ -445,11 +435,36 @@ export default function AttendencesPage() {
       );
     }
 
+    else if(rowIndex === 0) {
+
+      return (
+        <div 
+        style={{ 
+          ...style,
+          width: columnWidth,
+          whiteSpace: "nowrap",
+          textOverflow: "ellipsis",
+          overflow: "hidden",
+          border: "1px solid #ddd",
+          padding: "8px",
+          backgroundColor:'#212529',
+          color: '#fff',
+          fontWeight: 'bold'
+        }}
+      >
+        {day}
+        
+      </div>
+      );
+    }
+
     else {
       const attendance = trainee?.attendences[columnIndex-1];
 
       return (
-        <div style={style}>
+        <div style={{...style, 
+          border: "1px solid #ddd",
+          borderRight: "1px solid #a7b9b1"}}>
           {attendance && (
             <FlipableTableCell
               onTime={attendance.on_time}
@@ -568,14 +583,13 @@ export default function AttendencesPage() {
             </div>
             <div className="border border-2 rounded-2 p-1">
               <div
-                className=" table-responsive rounded-2  table-scrollbar"
-                style={{ maxHeight: "53vh"}}
+                className=" table-responsive rounded-2"
+                style={{ maxHeight: "53vh", overflow: "hidden"}}
               >
                 {loading ? (
                   <MiniLoader />
                 ) : (
                 <div style={{ overflow: "hidden" }}>
-                  <Header />
                   <Grid
                     className="table table-sm table-bordered w-100"
                     columnCount={columnCount+1}
@@ -584,7 +598,6 @@ export default function AttendencesPage() {
                     rowCount={rowCount}
                     rowHeight={rowHeight}
                     width={gridWidth}
-                    onScroll={({ scrollLeft }) => setScrollLeft(scrollLeft)}
                   >
                     {Cell}
                   </Grid>
