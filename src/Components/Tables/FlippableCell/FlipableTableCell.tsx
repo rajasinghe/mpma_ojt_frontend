@@ -9,7 +9,7 @@ interface props {
 export default function FlipableTableCell({ status, onTime, offTime }: props) {
   const [isFlipped, setFlipped] = useState<boolean>(false);
   return (
-    <td
+    <div
       className={`p-0 ${
         status == "1" ? "table-success" : onTime || offTime ? "table-warning" : "table-danger"
       }`}
@@ -30,6 +30,6 @@ export default function FlipableTableCell({ status, onTime, offTime }: props) {
           </div>
         </div>
       </div>
-    </td>
+    </div>
   );
 }

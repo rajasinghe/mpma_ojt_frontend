@@ -14,6 +14,8 @@ import Swal from "sweetalert2";
 import FlipableTableCell from "../Components/Tables/FlippableCell/FlipableTableCell";
 import { MainContainer } from "../layout/containers/main_container/MainContainer";
 import SubContainer from "../layout/containers/sub_container/SubContainer";
+import { FixedSizeGrid as Grid } from 'react-window';
+
 
 interface loaderProps {
   trainees: [];
@@ -23,6 +25,12 @@ interface loaderProps {
   institutes: [];
   summary: [];
   trainee: any;
+}
+
+interface CellProps {
+  columnIndex: number;
+  rowIndex: number;
+  style: React.CSSProperties;
 }
 
 const filterSchema = z.object({
@@ -88,6 +96,35 @@ export default function AttendencesPage() {
   const [loading, setLoading] = useState<boolean>(false);
   const [params] = useSearchParams();
 
+  const columnWidth: number = 105; // Width of each column in pixels
+  const rowHeight: number = 51; // Height of each row in pixels 
+  const [height, setHeight] = useState<number>(0);
+  
+  useEffect(() => {
+    const updateHeight = () => {
+      // Calculate height based on number of rows plus header row
+      const numberOfRows = matchingTrainees.length + 1; 
+      const calculatedHeight = (numberOfRows * rowHeight) + 15;
+      
+      // Get viewport height
+      const viewportHeight = window.innerHeight;
+      // Maximum height should be 53vh
+      const maxHeight = Math.floor(viewportHeight * 0.53);
+      
+      // Use the smaller of calculated height or maxHeight
+      const newHeight = Math.min(calculatedHeight, maxHeight);
+      
+      setHeight(newHeight);
+    };
+
+    updateHeight();
+    window.addEventListener('resize', updateHeight);
+
+    return () => {
+      window.removeEventListener('resize', updateHeight);
+    };
+  }, [matchingTrainees.length]); // Re-run when number of rows changes
+
   const {
     formState: { errors },
     setError,
@@ -100,14 +137,16 @@ export default function AttendencesPage() {
 
   const { state } = useNavigation();
 
+  const [gridWidth, setGridWidth] = useState<number>(0);
+
   useEffect(() => {
     const month = params.get("month");
     const year = params.get("year");
     const id = params.get("id");
 
     const schema = z.object({
-      month: z.coerce.number().gt(0).lt(13),
-      year: z.coerce.number().gt(2000),
+      month: z.coerce.number().int().gte(0).lte(13),
+      year: z.coerce.number().int().gte(2001),
       id: z.coerce.number(),
     });
 
@@ -206,6 +245,20 @@ export default function AttendencesPage() {
       }
     }
   }, [filterOptions]);
+
+  const updateGridWidth = () => {
+
+    const containerWidth = window.innerWidth;
+    setGridWidth(containerWidth);
+  };
+
+  useEffect(() => {
+    updateGridWidth();
+    window.addEventListener("resize", updateGridWidth);
+    return () => {
+      window.removeEventListener("resize", updateGridWidth);
+    };
+  }, []);
 
   const handleSearch = (keyword: string) => {
     if (keyword.trim() != "") {
@@ -335,6 +388,96 @@ export default function AttendencesPage() {
     }
   };
 
+  let rowCount = matchingTrainees.length+1;
+  let columnCount = workingDays.length;
+
+  const Cell = ({ columnIndex, rowIndex, style }: CellProps) => {
+      
+    //const trainee = matchingTrainees[rowIndex];
+    const trainee = matchingTrainees?.[rowIndex - 1] || {};
+    const day = workingDays[columnIndex - 1];
+
+      // First column shows ATT_NO
+    if(columnIndex === 0 && rowIndex === 0) {
+      return (
+        <div style={style}>
+          <div style = {{
+            ...style,
+            display: 'flex',
+            fontWeight: 'bold',
+            border: '1px solid #ddd',
+            backgroundColor:'#212529',
+            color: '#fff',
+            alignItems: 'center',
+          }}>
+            Attendance Number
+          </div>
+        </div>
+      );
+    }
+    
+    else if (columnIndex === 0) {
+      return (
+        <div  style={style}>
+          <div style = {{
+            ...style,
+            position: 'sticky',
+            left: 0,
+            border: '1px solid #ddd',
+            display: 'flex',
+            alignItems: 'center',
+            padding: '0px',
+            justifyContent: 'center',
+          }}>
+            {trainee.ATT_NO}
+          </div>
+        </div>
+      );
+    }
+
+    else if(rowIndex === 0) {
+
+      return (
+        <div 
+        style={{ 
+          ...style,
+          width: columnWidth,
+          whiteSpace: "nowrap",
+          textOverflow: "ellipsis",
+          overflow: "hidden",
+          border: "1px solid #ddd",
+          padding: "8px",
+          backgroundColor:'#212529',
+          color: '#fff',
+          fontWeight: 'bold'
+        }}
+      >
+        {day}
+        
+      </div>
+      );
+    }
+
+    else {
+      const attendance = trainee?.attendences[columnIndex-1];
+
+      return (
+        <div style={{...style, 
+          border: "1px solid #ddd",
+          borderRight: "1px solid #a7b9b1"}}>
+          {attendance && (
+            <FlipableTableCell
+              onTime={attendance.on_time}
+              offTime={attendance.off_time}
+              status={attendance.status}
+            />
+          )}
+        </div>
+      );
+    }
+
+  };
+
   return (
     <>
       {state == "loading" ? (
@@ -440,50 +583,25 @@ export default function AttendencesPage() {
             </div>
             <div className="border border-2 rounded-2 p-1">
               <div
-                className=" table-responsive rounded-2  table-scrollbar"
-                style={{ maxHeight: "53vh" }}
+                className=" table-responsive rounded-2"
+                style={{ maxHeight: "53vh", overflow: "hidden"}}
               >
                 {loading ? (
                   <MiniLoader />
                 ) : (
-                  <table className="table table-sm table-bordered w-100">
-                    <thead className="table-dark">
-                      <tr className="">
-                        <th>Attendance Number</th>
-
-                        {workingDays.map((day) => {
-                          return (
-                            <th
-                              style={{
-                                whiteSpace: "nowrap",
-                                width: "200px",
-                                textOverflow: "ellipsis",
-                                overflow: "hidden",
-                                border: "1px solid #ddd",
-                                padding: "8px",
-                              }}
-                            >
-                              {day}
-                            </th>
-                          );
-                        })}
-                      </tr>
-                    </thead>
-                    <tbody>
-                      {matchingTrainees.map((trainee: any) => (
-                        <tr key={`${trainee.trainee_id}`}>
-                          <td>{trainee.ATT_NO}</td>
-                          {trainee.attendences.map((attendence: any) => (
-                            <FlipableTableCell
-                              onTime={attendence.on_time}
-                              offTime={attendence.off_time}
-                              status={attendence.status}
-                            />
-                          ))}
-                        </tr>
-                      ))}
-                    </tbody>
-                  </table>
+                <div style={{ overflow: "hidden" }}>
+                  <Grid
+                    className="table table-sm table-bordered w-100"
+                    columnCount={columnCount+1}
+                    columnWidth={columnWidth}
+                    height={height}
+                    rowCount={rowCount}
+                    rowHeight={rowHeight}
+                    width={gridWidth}
+                  >
+                    {Cell}
+                  </Grid>
+                </div>
                 )}
               </div>
             </div>
