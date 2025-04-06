@@ -39,6 +39,7 @@ import DepartmentPage from "./Pages/DepartmentPage.tsx";
 import api from "./api.ts";
 import AddUsersPage from "./Pages/Admin/AddUserPage.tsx";
 import ViewUsersPage from "./Pages/Admin/ViewUsersPage.tsx";
+import { inboxLoader } from "./loaders/inboxLoader.ts";
 
 export const setToken = () => {
   const token = localStorage.getItem("token");
@@ -66,6 +67,15 @@ const router = createBrowserRouter([
         element: <Base />,
         errorElement: <ErrorHandler />,
         children: [
+          {
+            path: "inbox",
+            loader: inboxLoader,
+            element: (
+              <>
+                <div>inbox page</div>
+              </>
+            ),
+          },
           {
             path: "user_profile",
             element: <UserProfilePage />,

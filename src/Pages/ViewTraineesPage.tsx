@@ -291,7 +291,7 @@ export default function ViewTraineesPage() {
                     >
                       <div>
                         <div>Filters Applied :-</div>
-                        {filterOptions?.institutes && (
+                        {filterOptions?.includeInactiveTrainees && (
                           <span className="badge bg-danger ms-1" style={{ fontSize: "8px" }}>
                             Inactive Trainees
                           </span>
@@ -531,12 +531,14 @@ export default function ViewTraineesPage() {
                       </div>
 
                       <div>
-                        <input
-                          className="form-check-input"
-                          type="checkbox"
-                          {...register("includeInactiveTrainees")}
-                        />
-                        <div className=" fw-semibold">Include Inactive Trainees</div>
+                        <div className="d-flex">
+                          <input
+                            className="form-check-input"
+                            type="checkbox"
+                            {...register("includeInactiveTrainees")}
+                          />
+                          <div className="ms-2 fw-semibold">Include Inactive Trainees</div>
+                        </div>
                       </div>
                     </form>
                   </Modal.Body>

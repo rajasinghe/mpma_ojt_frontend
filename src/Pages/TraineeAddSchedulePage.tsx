@@ -51,6 +51,7 @@ export default function TraineeAddSchedulePage() {
     console.log(departmentsList);
     console.log(periodsList);
   }, []);
+  
   const [departments, setDepartments] = useState<any[]>(departmentsList);
   const [periods, setPeriods] = useState<any[]>(periodsList);
   const departmentsModalVisibility = useState<boolean>(false);
@@ -58,6 +59,7 @@ export default function TraineeAddSchedulePage() {
   const periodModalVisibilityState = useState<boolean>(false);
   const setPeriodModalVisibility = periodModalVisibilityState[1];
   const [endDate, setEndDate] = useState<Date | null>(null);
+
   const {
     control,
     register,

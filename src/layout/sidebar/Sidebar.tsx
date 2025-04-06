@@ -2,7 +2,6 @@ import { useEffect, useState } from "react";
 import "./style.css";
 import logo from "../../assets/SLPA_Logo-Cu9TOj32.png";
 import { Link, useLocation, useNavigation } from "react-router-dom";
-import api from "../../api";
 interface Props {
   user: any;
 }
@@ -58,7 +57,9 @@ const Sidebar = ({ user }: Props) => {
       ],
     },
   ];
+
   const [links, setLinks] = useState<RouteLink[]>(initLinks);
+
   useEffect(() => {
     if (user) {
       console.log(user);

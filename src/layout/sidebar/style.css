@@ -118,6 +118,10 @@
     color: #4154f1;
   }
 
+  .sub-link:hover{
+    color: #4154f1;
+  }
+
   .sidebar-nav .enable{
     color: #4154f1;
     background: #f6f9ff; 
