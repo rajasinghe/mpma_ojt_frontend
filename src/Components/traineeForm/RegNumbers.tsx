@@ -213,46 +213,52 @@ export default function RegNumbers({
       <div className="border border-dark p-2 rounded-2">
         <div className="mb-3">
           <label className="form-label">Type</label>
-          <div className="form-check">
-            <input
-              disabled={disable || disableCodeGenrationPattern}
-              value={"normal"}
-              {...register("code_generation_pattern")}
-              className="form-check-input"
-              type="radio"
-            />
-            <label className="form-check-label">Normal</label>
-          </div>
-          <div className="form-check me-3">
-            <input
-              disabled={disable || disableCodeGenrationPattern}
-              value={"cinec"}
-              {...register("code_generation_pattern")}
-              className="form-check-input"
-              type="radio"
-            />
-            <label className="form-check-label">CINEC Special</label>
+          <div style={{ display: "flex" , flexWrap: "wrap", justifyContent:"space-between" ,width: "50%"}}>
+          <div>
+            <div className="form-check">
+              <input
+                disabled={disable || disableCodeGenrationPattern}
+                value={"normal"}
+                {...register("code_generation_pattern")}
+                className="form-check-input"
+                type="radio"
+              />
+              <label className="form-check-label">Normal</label>
+            </div>
+            <div className="form-check ">
+              <input
+                disabled={disable || disableCodeGenrationPattern}
+                {...register("code_generation_pattern")}
+                value={"naita"}
+                className="form-check-input"
+                type="radio"
+              />
+              <label className="form-check-label">NAITA Craftsman</label>
+            </div>
           </div>
 
-          <div className="form-check ">
-            <input
-              disabled={disable || disableCodeGenrationPattern}
-              {...register("code_generation_pattern")}
-              value={"naita"}
-              className="form-check-input"
-              type="radio"
-            />
-            <label className="form-check-label">NAITA Craftsman</label>
+          <div style={{  }}>
+            <div className="form-check me-3">
+              <input
+                disabled={disable || disableCodeGenrationPattern}
+                value={"cinec"}
+                {...register("code_generation_pattern")}
+                className="form-check-input"
+                type="radio"
+              />
+              <label className="form-check-label">CINEC Special</label>
+            </div>
+            <div className="form-check ">
+              <input
+                disabled={disable || disableCodeGenrationPattern}
+                {...register("code_generation_pattern")}
+                value={"smti"}
+                className="form-check-input"
+                type="radio"
+              />
+              <label className="form-check-label">SMTI Special</label>
+            </div>
           </div>
-          <div className="form-check ">
-            <input
-              disabled={disable || disableCodeGenrationPattern}
-              {...register("code_generation_pattern")}
-              value={"smti"}
-              className="form-check-input"
-              type="radio"
-            />
-            <label className="form-check-label">SMTI Special</label>
           </div>
           {errors.code_generation_pattern && (
             <p className="text-danger m-0">{errors.code_generation_pattern.message}</p>
