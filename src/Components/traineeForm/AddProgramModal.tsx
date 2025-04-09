@@ -8,7 +8,7 @@ import api from "../../api";
 interface props {
   setPrograms: any;
   visibilityState: [boolean, React.Dispatch<React.SetStateAction<boolean>>];
-  type?: "normal" | "naita" | "cinec";
+  type?: "normal" | "naita" | "cinec" | "smti";
 }
 
 const schema = z

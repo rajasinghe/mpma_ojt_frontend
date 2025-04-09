@@ -29,7 +29,7 @@ const schema = z.object({
     label: z.string(),
     value: z.coerce.number(),
   }),
-  code_generation_pattern: z.enum(["normal", "naita", "cinec"]),
+  code_generation_pattern: z.enum(["normal", "naita", "cinec", "smti"]),
 });
 
 type formValues = z.infer<typeof schema>;
@@ -87,6 +87,8 @@ export default function RegNumbers({
     console.log("reg pattern", regPattern[0], regPattern[1]);
     if (regPattern[0] == "CINEC") {
       setValue("code_generation_pattern", "cinec");
+    } else if (regPattern[0] == "SMTI") {
+      setValue("code_generation_pattern", "smti");
     } else if (regPattern[1] == "NAITA") {
       setValue("code_generation_pattern", "naita");
     } else {
@@ -126,6 +128,16 @@ export default function RegNumbers({
       setInstituteDisable(true);
     } else if (code_generation_pattern == "cinec") {
       const institute = institutes.find((institute) => institute.name == "CINEC Campus");
+      console.log(institute);
+      setValue("institute", {
+        value: institute.id,
+        label: institute.name,
+      });
+      setInstitute(institute.id);
+      setInstituteDisable(true);
+      matchingProgrammes = programs.filter((program) => program.special_code == null);
+    } else if (code_generation_pattern == "smti") {
+      const institute = institutes.find((institute) => institute.name == "SMTI");
       console.log(institute);
       setValue("institute", {
         value: institute.id,
@@ -201,36 +213,52 @@ export default function RegNumbers({
       <div className="border border-dark p-2 rounded-2">
         <div className="mb-3">
           <label className="form-label">Type</label>
-          <div className="form-check">
-            <input
-              disabled={disable || disableCodeGenrationPattern}
-              value={"normal"}
-              {...register("code_generation_pattern")}
-              className="form-check-input"
-              type="radio"
-            />
-            <label className="form-check-label">Normal</label>
-          </div>
-          <div className="form-check me-3">
-            <input
-              disabled={disable || disableCodeGenrationPattern}
-              value={"cinec"}
-              {...register("code_generation_pattern")}
-              className="form-check-input"
-              type="radio"
-            />
-            <label className="form-check-label">CINEC Special</label>
+          <div style={{ display: "flex" , flexWrap: "wrap", justifyContent:"space-between" ,width: "50%"}}>
+          <div>
+            <div className="form-check">
+              <input
+                disabled={disable || disableCodeGenrationPattern}
+                value={"normal"}
+                {...register("code_generation_pattern")}
+                className="form-check-input"
+                type="radio"
+              />
+              <label className="form-check-label">Normal</label>
+            </div>
+            <div className="form-check ">
+              <input
+                disabled={disable || disableCodeGenrationPattern}
+                {...register("code_generation_pattern")}
+                value={"naita"}
+                className="form-check-input"
+                type="radio"
+              />
+              <label className="form-check-label">NAITA Craftsman</label>
+            </div>
           </div>
 
-          <div className="form-check ">
-            <input
-              disabled={disable || disableCodeGenrationPattern}
-              {...register("code_generation_pattern")}
-              value={"naita"}
-              className="form-check-input"
-              type="radio"
-            />
-            <label className="form-check-label">NAITA Craftsman</label>
+          <div style={{  }}>
+            <div className="form-check me-3">
+              <input
+                disabled={disable || disableCodeGenrationPattern}
+                value={"cinec"}
+                {...register("code_generation_pattern")}
+                className="form-check-input"
+                type="radio"
+              />
+              <label className="form-check-label">CINEC Special</label>
+            </div>
+            <div className="form-check ">
+              <input
+                disabled={disable || disableCodeGenrationPattern}
+                {...register("code_generation_pattern")}
+                value={"smti"}
+                className="form-check-input"
+                type="radio"
+              />
+              <label className="form-check-label">SMTI Special</label>
+            </div>
+          </div>
           </div>
           {errors.code_generation_pattern && (
             <p className="text-danger m-0">{errors.code_generation_pattern.message}</p>
