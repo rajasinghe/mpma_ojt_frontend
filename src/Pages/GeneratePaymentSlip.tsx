@@ -1,13 +1,18 @@
+import api from "../api";
 import { MainContainer } from "../layout/containers/main_container/MainContainer";
 import SubContainer from "../layout/containers/sub_container/SubContainer";
 import { z } from "zod";
 import { useState } from "react";
 import { useLoaderData } from "react-router-dom";
-import api from "../api";
 
-interface LoaderProps {
-  years: string[];
-  months: string[];
+// Types
+interface SummaryItem {
+  year: number;
+  months: number[];
+}
+
+interface LoaderData {
+  summaryData: SummaryItem[];
 }
 
 const formSchema = z.object({
@@ -15,7 +20,7 @@ const formSchema = z.object({
   month: z.string().min(1, "Month is required"),
   date: z.date().refine(date => {
     const today = new Date();
-    today.setHours(0, 0, 0, 0); // Reset time to compare dates only
+    today.setHours(0, 0, 0, 0);
     return date >= today;
   }, {
     message: "Date must be today or later",
@@ -24,7 +29,6 @@ const formSchema = z.object({
 
 type FormData = z.infer<typeof formSchema>;
 
-// Helper function to format date as YYYY-MM-DD (for input[type="date"])
 const formatDateForInput = (date: Date): string => {
   const year = date.getFullYear();
   const month = String(date.getMonth() + 1).padStart(2, '0');
@@ -32,7 +36,6 @@ const formatDateForInput = (date: Date): string => {
   return `${year}-${month}-${day}`;
 };
 
-// Helper to get today's date at midnight (for min date comparison)
 const getTodayAtMidnight = (): Date => {
   const today = new Date();
   today.setHours(0, 0, 0, 0);
@@ -40,33 +43,46 @@ const getTodayAtMidnight = (): Date => {
 };
 
 export default function GeneratePaymentSlip() {
-  const { years, months } = useLoaderData() as LoaderProps;
+  const loaderData = useLoaderData() as LoaderData;
   const [formData, setFormData] = useState<Partial<FormData>>({
     year: "",
     month: "",
     date: getTodayAtMidnight(),
   });
   const [errors, setErrors] = useState<Partial<Record<keyof FormData, string>>>({});
+  const [isGenerating, setIsGenerating] = useState(false);
+
+  // Get unique years from summary data
+  const years = loaderData.summaryData.map(item => item.year.toString());
+
+  // Get months for selected year
+  const selectedYearData = loaderData.summaryData.find(
+    item => item.year.toString() === formData.year
+  );
+  const months = selectedYearData?.months.map(m => m.toString()) || [];
 
   const handleChange = (field: keyof FormData, value: string | Date) => {
     setFormData(prev => ({
       ...prev,
+      ...(field === 'year' ? { month: "" } : {}),
       [field]: value,
     }));
   };
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+    setIsGenerating(true);
+    
     try {
       const validatedData = formSchema.parse({
         year: formData.year,
         month: formData.month,
         date: formData.date,
       });
+      
       setErrors({});
-      console.log("Form submitted:", validatedData);
-      // Add submission logic here
-      const response = await api.get("api/attendence/generatePaySlip" , {
+
+      const response = await api.get("api/attendence/generatePaySlip", {
         params: {
           month: validatedData.month,
           year: validatedData.year,
@@ -74,16 +90,19 @@ export default function GeneratePaymentSlip() {
         },
         responseType: "blob",
       });
-      console.log(response.data);
-      const url = window.URL.createObjectURL(new Blob([response.data], { type: 'text/plain'}));
+
+      // Create download link
+      const url = window.URL.createObjectURL(new Blob([response.data]));
       const a = document.createElement("a");
       a.href = url;
-      a.download = `${validatedData.year}-${validatedData.month} - payment slip.txt`;
+      a.download = `${validatedData.year}-${validatedData.month}-payment-slip.txt`;
       document.body.appendChild(a);
       a.click();
+      
+      // Cleanup
       window.URL.revokeObjectURL(url);
       document.body.removeChild(a);
-
+      
     } catch (error) {
       if (error instanceof z.ZodError) {
         const newErrors = error.errors.reduce((acc, curr) => {
@@ -92,7 +111,11 @@ export default function GeneratePaymentSlip() {
           return acc;
         }, {} as Partial<Record<keyof FormData, string>>);
         setErrors(newErrors);
+      } else {
+        console.error("Error generating payment slip:", error);
       }
+    } finally {
+      setIsGenerating(false);
     }
   };
 
@@ -114,6 +137,7 @@ export default function GeneratePaymentSlip() {
                 value={formData.year}
                 onChange={(e) => handleChange("year", e.target.value)}
                 className={`form-select ${errors.year ? "is-invalid" : ""}`}
+                disabled={isGenerating}
               >
                 <option value="">Select Year</option>
                 {years.map((year, index) => (
@@ -137,6 +161,7 @@ export default function GeneratePaymentSlip() {
                 value={formData.month}
                 onChange={(e) => handleChange("month", e.target.value)}
                 className={`form-select ${errors.month ? "is-invalid" : ""}`}
+                disabled={!formData.year || isGenerating}
               >
                 <option value="">Select Month</option>
                 {months.map((month, index) => (
@@ -151,7 +176,7 @@ export default function GeneratePaymentSlip() {
             </div>
 
             {/* Date Input */}
-            <div className="form-group mb-3">
+            <div className="form-group">
               <label htmlFor="date" className="form-label">
                 Payment Date
               </label>
@@ -162,6 +187,7 @@ export default function GeneratePaymentSlip() {
                 onChange={(e) => handleChange("date", new Date(e.target.value))}
                 className={`form-control ${errors.date ? "is-invalid" : ""}`}
                 min={formatDateForInput(getTodayAtMidnight())}
+                disabled={isGenerating}
               />
               {errors.date && (
                 <div className="invalid-feedback">{errors.date}</div>
@@ -169,8 +195,19 @@ export default function GeneratePaymentSlip() {
             </div>
             
             <div>
-              <button type="submit" className="btn btn-primary">
-                Generate Slip
+              <button 
+                type="submit" 
+                className="btn btn-primary mt-3"
+                disabled={isGenerating}
+              >
+                {isGenerating ? (
+                  <>
+                    <span className="spinner-border spinner-border-sm me-2" role="status" aria-hidden="true"></span>
+                    Generating...
+                  </>
+                ) : (
+                  "Generate Slip"
+                )}
               </button>
             </div>
           </form>
