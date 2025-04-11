@@ -54,6 +54,13 @@ const Sidebar = ({ user }: Props) => {
           active_icon: " bi-file-earmark-arrow-up-fill",
           inactive_icon: "bi-file-earmark-arrow-up",
         },
+        {
+          name: "Generate Payment Slip",
+          regex: /^\/OJT\/attendence\/paymentslipgenerate/i,
+          route: "/OJT/attendence/paymentslipgenerate",
+          active_icon: " bi bi-file-earmark-text-fill",
+          inactive_icon: "bi bi-file-earmark-text",
+        },
       ],
     },
   ];

@@ -40,6 +40,8 @@ import api from "./api.ts";
 import AddUsersPage from "./Pages/Admin/AddUserPage.tsx";
 import ViewUsersPage from "./Pages/Admin/ViewUsersPage.tsx";
 import { inboxLoader } from "./loaders/inboxLoader.ts";
+import GeneratePaymentSlip from "./Pages/GeneratePaymentSlip.tsx";
+import { PaymentSlipLoader } from "./loaders/PaymentSlipLoader.ts";
 
 export const setToken = () => {
   const token = localStorage.getItem("token");
@@ -109,6 +111,11 @@ const router = createBrowserRouter([
             path: "attendence",
             element: <AttendencesPage />,
             loader: viewAttendenceLoader,
+          },
+          {
+            path: "attendence/paymentslipgenerate",
+            element: <GeneratePaymentSlip />,
+            loader: PaymentSlipLoader
           },
           {
             path: "calender",
