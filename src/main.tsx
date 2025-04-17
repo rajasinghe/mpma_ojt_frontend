@@ -40,6 +40,8 @@ import api from "./api.ts";
 import AddUsersPage from "./Pages/Admin/AddUserPage.tsx";
 import ViewUsersPage from "./Pages/Admin/ViewUsersPage.tsx";
 import { inboxLoader } from "./loaders/inboxLoader.ts";
+import NewInterviewPage from "./features/Interview/interviewPage.tsx";
+import ViewInterviewPage from "./features/Interview/viewInterviewPage.tsx";
 
 export const setToken = () => {
   const token = localStorage.getItem("token");
@@ -75,6 +77,14 @@ const router = createBrowserRouter([
                 <div>inbox page</div>
               </>
             ),
+          },
+          {
+            path: "interview/new",
+            element: <NewInterviewPage />,
+          },
+          {
+            path: "interview",
+            element: <ViewInterviewPage />,
           },
           {
             path: "user_profile",

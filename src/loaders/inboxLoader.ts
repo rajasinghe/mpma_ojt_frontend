@@ -1,5 +1,5 @@
 export const inboxLoader = async () => {
-  await new Promise((resolve) => {
+  await new Promise(() => {
     setTimeout(() => {
       return [
         {

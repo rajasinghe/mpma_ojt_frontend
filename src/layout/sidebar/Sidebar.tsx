@@ -74,6 +74,22 @@ const Sidebar = ({ user }: Props) => {
             inactive_icon: "bi-diagram-3",
           },
           {
+            name: "Interview",
+            regex: /^\/OJT\/Interview/i,
+            route: "/OJT/interview",
+            active_icon: "bi-person-rolodex",
+            inactive_icon: "bi-person-bounding-box",
+            subLinks: [
+              {
+                name: "New Interview",
+                regex: /^\/OJT\/interview\/new/i,
+                route: "/OJT/interview/new",
+                active_icon: " bi-person-plus-fill",
+                inactive_icon: "bi-person-plus",
+              },
+            ],
+          },
+          {
             name: "Users",
             regex: /^\/OJT\/users/i,
             route: "/OJT/users",
@@ -95,6 +111,22 @@ const Sidebar = ({ user }: Props) => {
       ) {
         setLinks([
           ...initLinks,
+          {
+            name: "Interview",
+            regex: /^\/OJT\/Interview/i,
+            route: "/OJT/interview",
+            active_icon: "bi-diagram-3-fill",
+            inactive_icon: "bi-diagram-3",
+            subLinks: [
+              {
+                name: "New Interview",
+                regex: /^\/OJT\/interview\/new/i,
+                route: "/OJT/interview/new",
+                active_icon: " bi-file-earmark-arrow-up-fill",
+                inactive_icon: "bi-file-earmark-arrow-up",
+              },
+            ],
+          },
           {
             name: "Departments",
             regex: /^\/OJT\/departments/i,
