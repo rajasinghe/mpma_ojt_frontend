@@ -38,7 +38,6 @@ export default function NewInterviewPage() {
   const [nicValidated, setNicValidated] = useState(false);
   const [nicDisable, setNicDisable] = useState(false);
   const [departmentSummary, setDepartmentSummary] = useState<DepartmentSummary[]>([]);
-  //const [liveSummaries, setLiveSummaries] = useState<Record<number, DepartmentSummary>>({});
 
   const {
     register,
