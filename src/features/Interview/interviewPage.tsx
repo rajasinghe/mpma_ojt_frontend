@@ -16,7 +16,6 @@ interface DepartmentSummary {
   max_count: number;
   active_count: number;
   interview_count: number;
-  lastUpdated: Date;
 }
 
 const schema = z.object({
@@ -33,6 +32,8 @@ const schema = z.object({
   ).min(1, "At least one department selection is required")
 });
 
+type FormData = z.infer<typeof schema>;
+
 export default function NewInterviewPage() {
   const [nic, setNic] = useState<any>(null);
   const [nicValidated, setNicValidated] = useState(false);
@@ -46,7 +47,7 @@ export default function NewInterviewPage() {
     setValue,
     watch,
     reset,
-  } = useForm({
+  } = useForm<FormData>({
     resolver: zodResolver(schema),
     defaultValues: {
       name: "",
@@ -55,11 +56,11 @@ export default function NewInterviewPage() {
         value: 0,
         unit: ""
       },
-      selections: [{ departmentId: 0 }]
+      selections: [{ departmentId: -1 }]
     }
   });
 
-  const selections = watch("selections") || [{ departmentId: 0 }];
+  const selections = watch("selections") || [{ departmentId: -1 }];
 
   useEffect(() => {
     const loadDepartments = async () => {
@@ -79,17 +80,12 @@ export default function NewInterviewPage() {
   }));
 
   const addSelection = () => {
-    setValue("selections", [...selections, { departmentId: 0 }]);
+    setValue("selections", [...selections, { departmentId: -1 }]);
   };
 
   const removeSelection = (index: number) => {
     const newSelections = selections.filter((_, i) => i !== index);
-    setValue("selections", newSelections.length ? newSelections : [{ departmentId: 0 }]);
-  };
-
-  const getDepartmentSummary = (departmentId: number) => {
-    if (!departmentId) return null;
-    return departmentSummary[departmentId] || null;
+    setValue("selections", newSelections.length ? newSelections : [{ departmentId: -1 }]);
   };
 
   const onSubmit = async (data: z.infer<typeof schema>) => {
@@ -126,7 +122,7 @@ export default function NewInterviewPage() {
   };
 
   return (
-    <MainContainer title="Trainee Interview" breadCrumbs={["Interviews", "Interview"]}>
+    <MainContainer title="Add New Interview" breadCrumbs={["Home", "Interview", "New Interview"]}>
       <SubContainer>
         <form onSubmit={handleSubmit(onSubmit)} className="p-4">
           <NIC
@@ -207,38 +203,47 @@ export default function NewInterviewPage() {
               </button>
             </div>
 
-            {selections.map((_, index) => (
+            {selections.map((selection, index) => (
               <div key={index} className="card mb-3">
                 <div className="card-body">
-                  <div className="row g-3">
-                    <div className="col-md-11">
+                  <div className="d-flex align-items-start gap-2">
+                    <div className="flex-grow-1">
                       <Select
                         options={departmentOptions}
-                        onChange={(option) => 
-                          setValue(`selections.${index}.departmentId`, option?.value || 0)
-                        }
+                        value={departmentOptions.find(
+                          option => option.value === selection.departmentId
+                        )|| null}
+                        onChange={(option) => {
+                          setValue(`selections.${index}.departmentId`, option?.value || -1)
+                        }}
                         isDisabled={isSubmitting || !nicValidated}
                         placeholder="Select department..."
+                        isClearable={false}
                       />
-                        {selections[index].departmentId > 0 && (
+                      
+                      {selection.departmentId > 0 && (
                         <div className="mt-2 small">
                           {(() => {
-                          const summary = getDepartmentSummary(selections[index].departmentId);
-                          if (!summary) return <div className="text-muted">Loading summary...</div>;
-                          
-                          return (
-                            <div className="d-flex gap-3 text-muted">
-                            <span>Summary:</span>
-                            <span>Total Interviews: {summary.interview_count}</span>
-                            <span>Active Trainees: {summary.active_count}</span>
-                            <span>Max Capacity: {summary.max_count}</span>
-                            </div>
-                          );
+                            const summary = departmentSummary.find(
+                              dept => dept.dep_id === selection.departmentId
+                            );
+                            
+                            if (!summary) return (
+                              <div className="text-muted">Summary not found</div>
+                            );
+
+                            return (
+                              <div className="d-flex gap-3 text-muted">
+                                <span>Total Interviews: {summary.interview_count}</span>
+                                <span>Active Trainees: {summary.active_count}</span>
+                                <span>Max Capacity: {summary.max_count}</span>
+                              </div>
+                            );
                           })()}
                         </div>
-                        )}
+                      )}
                     </div>
-                    <div className="col-md-1">
+                    <div>
                       <button
                         type="button"
                         onClick={() => removeSelection(index)}
@@ -249,6 +254,11 @@ export default function NewInterviewPage() {
                       </button>
                     </div>
                   </div>
+                  {errors.selections?.[index]?.departmentId && (
+                    <div className="text-danger small mt-1">
+                      {errors.selections[index]?.departmentId?.message}
+                    </div>
+                  )}
                 </div>
               </div>
             ))}
@@ -257,7 +267,11 @@ export default function NewInterviewPage() {
           <div className="d-flex gap-2 justify-content-end">
             <button
               type="button"
-              onClick={() => reset()}
+              onClick={() =>{
+                reset(); 
+                setNic("");
+                setNicValidated(false);
+                setNicDisable(false);}}
               className="btn btn-secondary"
               disabled={!nicValidated || isSubmitting}
             >
