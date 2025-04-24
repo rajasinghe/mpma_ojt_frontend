@@ -42,6 +42,7 @@ import ViewUsersPage from "./Pages/Admin/ViewUsersPage.tsx";
 import { inboxLoader } from "./loaders/inboxLoader.ts";
 import NewInterviewPage from "./features/Interview/interviewPage.tsx";
 import ViewInterviewPage from "./features/Interview/viewInterviewPage.tsx";
+import EditInterviewPage from "./features/Interview/editInterviewPage.tsx";
 
 export const setToken = () => {
   const token = localStorage.getItem("token");
@@ -85,6 +86,10 @@ const router = createBrowserRouter([
           {
             path: "interview",
             element: <ViewInterviewPage />,
+          },
+          {
+            path: "interview/:NIC/edit",
+            element: <EditInterviewPage />,
           },
           {
             path: "user_profile",

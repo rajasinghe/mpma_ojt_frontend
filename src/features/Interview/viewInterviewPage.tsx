@@ -1,4 +1,4 @@
-import { useNavigation } from "react-router-dom";
+import { useNavigation, useNavigate } from "react-router-dom";
 import { useState, useEffect } from "react";
 import { utils, writeFileXLSX } from "xlsx";
 import { MainContainer } from "../../layout/containers/main_container/MainContainer";
@@ -7,6 +7,10 @@ import { formatDate } from "../../helpers";
 import Loader from "../../Components/ui/Loader/Loader";
 import MiniLoader from "../../Components/ui/Loader/MiniLoader";
 import api from "../../api";
+import editIcon from "../../assets/edit.png";
+import removeIcon from "../../assets/remove.png";
+import Swal from "sweetalert2";
+import {dataSample} from "./sampleData.ts"; // Sample data for testing
 
 interface Interview {
   NIC: string;
@@ -24,49 +28,47 @@ export default function ViewInterviewPage() {
   const [showPastInterviews, setShowPastInterviews] = useState<boolean>(false);
 
   const { state } = useNavigation();
+  const navigate = useNavigate();
 
-  const dataSample = [
-    {
-      NIC: "200112345678",
-      name: "John Doe",
-      date: "2025-05-01",
-      duration: "3 weeks",
-      departmentId: [1, 3],
-      department: ["Software Engineering", "AI Research"]
-    },
-    {
-      NIC: "200212345679",
-      name: "Jane Smith",
-      date: "2025-05-03",
-      duration: "1 month",
-      departmentId: [2],
-      department: ["Data Science"]
-    },
-    {
-      NIC: "199812345678",
-      name: "Michael Lee",
-      date: "2025-05-05",
-      duration: "2 weeks",
-      departmentId: [4, 5],
-      department: ["Cybersecurity", "Networking"]
-    },
-    {
-      NIC: "200012345689",
-      name: "Amara Silva",
-      date: "2025-05-07",
-      duration: "6 months",
-      departmentId: [3],
-      department: ["AI Research"]
-    },
-    {
-      NIC: "199912345610",
-      name: "Ravi Perera",
-      date: "2025-05-10",
-      duration: "1 year",
-      departmentId: [1, 2, 4],
-      department: ["Software Engineering", "Data Science", "Cybersecurity"]
-    }
-  ];
+
+
+    const handleDelete = async (NIC: string) => {
+      try {
+        const response = await Swal.fire({
+          title: "Are You Sure",
+          text: "Delete the interview record",
+          html: "<div>This action is not reversible</div>",
+          icon: "warning",
+          showCancelButton: true,
+          confirmButtonText: "Remove from the list",
+        });
+        if (response.isConfirmed) {
+          Swal.fire({
+            title: "Please Wait...",
+            allowOutsideClick: false,
+            didOpen: () => {
+              Swal.showLoading();
+            },
+          });
+          const response = await api.delete(``);
+          console.log(response);
+          //refetchInterviews();
+          Swal.fire({
+            title: "Deleted!",
+            text: "Removed from the List",
+            icon: "success",
+            showCloseButton: true,
+          });
+        }
+      } catch (error: any) {
+        Swal.fire({
+          icon: "error",
+          title: "Oops...",
+          text: error,
+          footer: '<a href="#">Why do I have this issue?</a>',
+        });
+      }
+    };
   
 
   const ViewInterviewPageLoader = async () => {
@@ -84,7 +86,7 @@ export default function ViewInterviewPage() {
       setLoading(true);
       try {
         //const { data: interviews } = await ViewInterviewPageLoader();
-        const interviews = dataSample;
+        const interviews = dataSample; // for testing
         const currentDate = new Date();
         currentDate.setHours(0, 0, 0, 0);
 
@@ -168,6 +170,7 @@ export default function ViewInterviewPage() {
                               <th>Starting Date</th>
                               <th>Duration</th>
                               <th>Departments</th>
+                              <th>Options</th>
                             </tr>
                           </thead>
                           <tbody>
@@ -178,6 +181,28 @@ export default function ViewInterviewPage() {
                                 <td>{formatDate(interview.date)}</td>
                                 <td>{interview.duration}</td>
                                 <td>{interview.department.join(", ")}</td>
+                                <td style={{ verticalAlign: "middle" }}>
+                                  <div className="d-flex justify-content-center" style={{ height: '100%' }}>
+                                    <img
+                                      alt="Edit"
+                                      className="btn btn-sm btn-outline-secondary"
+                                      style={{ width: "auto", height: "34px" }}
+                                      onClick={() => {
+                                        navigate(`${interview.NIC}/edit`);
+                                      }}
+                                      src={editIcon}
+                                    />
+                                    <img
+                                      alt="Delete"
+                                      style={{ width: "auto", height: "34px" }}
+                                      onClick={() => {
+                                      handleDelete(interview.NIC);
+                                      }}
+                                      className="btn ms-2 btn-sm btn-outline-secondary"
+                                      src={removeIcon}
+                                    />
+                                  </div>
+                                </td>
                               </tr>
                             ))}
                           </tbody>
