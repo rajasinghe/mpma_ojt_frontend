@@ -234,7 +234,8 @@ export default function InterviewForm(Interview : InterviewProps) {
                   <div className="d-flex align-items-start gap-2">
                     <div className="flex-grow-1">
                       <Select
-                        options={departmentOptions}
+                        options={departmentOptions.filter(option => 
+                          !selections.some(selection => selection.departmentId === option.value))}
                         value={departmentOptions.find(
                           option => option.value === selection.departmentId
                         )|| null}

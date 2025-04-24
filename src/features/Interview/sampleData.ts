@@ -5,7 +5,7 @@ export const dataSample = [
       date: "2025-05-01",
       duration: "3 weeks",
       departmentId: [1, 3],
-      department: ["Software Engineering", "AI Research"]
+      department: ["Information Systems Division", "ECT project"]
     },
     {
       NIC: "200212345679",
@@ -13,7 +13,7 @@ export const dataSample = [
       date: "2025-05-03",
       duration: "1 month",
       departmentId: [2],
-      department: ["Data Science"]
+      department: ["Electrical and Electronics Engineering Division"]
     },
     {
       NIC: "199812345678",
@@ -21,7 +21,7 @@ export const dataSample = [
       date: "2025-05-05",
       duration: "2 weeks",
       departmentId: [4, 5],
-      department: ["Cybersecurity", "Networking"]
+      department: ["Human Resources Division", "Civil Engineering Division"]
     },
     {
       NIC: "200012345689",
@@ -29,7 +29,7 @@ export const dataSample = [
       date: "2025-05-07",
       duration: "6 months",
       departmentId: [3],
-      department: ["AI Research"]
+      department: ["ECT project"]
     },
     {
       NIC: "199912345610",
@@ -37,7 +37,7 @@ export const dataSample = [
       date: "2025-03-10",
       duration: "1 year",
       departmentId: [1, 2, 4],
-      department: ["Software Engineering", "Data Science", "Cybersecurity"]
+      department: ["Information Systems Division", "Electrical and Electronics Engineering Division", "Human Resources Division"]
     },
     {
         NIC:"973070070V",
@@ -45,6 +45,6 @@ export const dataSample = [
         date:"2025-05-01",
         duration:"3 weeks",
         departmentId:[1, 3],
-        department:["Software Engineering", "AI Research"]
+        department:["Information Systems Division", "ECT project"]
     }
 ];
