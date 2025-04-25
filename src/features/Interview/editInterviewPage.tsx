@@ -30,8 +30,10 @@ export default function EditInterviewPage() {
             <SubContainer>
                 <InterviewForm 
                 NIC={NIC}
-                selections={interviewData.departmentId.map(id => ({
-                    departmentId: id
+                selections={interviewData.departments.map(dept => ({
+                    departmentId: dept.id,
+                    fromDate: dept.fromDate,
+                    toDate: dept.toDate,
                 }))} 
                 duration={{
                     value: parsedDuration.value,

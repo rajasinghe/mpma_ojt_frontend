@@ -4,7 +4,14 @@ export const dataSample = [
       name: "John Doe",
       date: "2025-05-01",
       duration: "3 weeks",
-      departmentId: [1, 3],
+      departments: [{
+        id:1,
+        fromDate: "2025-05-01",
+        toDate: "2025-05-22"},
+        {id:3,
+        fromDate: "2025-05-01",
+        toDate: "2025-05-22"
+        }],
       department: ["Information Systems Division", "ECT project"]
     },
     {
@@ -12,7 +19,11 @@ export const dataSample = [
       name: "Jane Smith",
       date: "2025-05-03",
       duration: "1 month",
-      departmentId: [2],
+      departments: [{
+        id: 2,
+        fromDate: "2025-05-03",
+        toDate: "2025-06-03"
+      }],
       department: ["Electrical and Electronics Engineering Division"]
     },
     {
@@ -20,7 +31,15 @@ export const dataSample = [
       name: "Michael Lee",
       date: "2025-05-05",
       duration: "2 weeks",
-      departmentId: [4, 5],
+      departments: [{
+        id: 4,
+        fromDate: "2025-05-05",
+        toDate: "2025-05-19"
+      },{
+        id: 5,
+        fromDate: "2025-05-05",
+        toDate: "2025-05-19"
+      }],
       department: ["Human Resources Division", "Civil Engineering Division"]
     },
     {
@@ -28,7 +47,11 @@ export const dataSample = [
       name: "Amara Silva",
       date: "2025-05-07",
       duration: "6 months",
-      departmentId: [3],
+      departments: [{
+        id: 3,
+        fromDate: "2025-05-07",
+        toDate: "2025-11-07"
+      }],
       department: ["ECT project"]
     },
     {
@@ -36,7 +59,19 @@ export const dataSample = [
       name: "Ravi Perera",
       date: "2025-03-10",
       duration: "1 year",
-      departmentId: [1, 2, 4],
+      departments: [{
+        id: 1,
+        fromDate: "2025-03-10",
+        toDate: "2026-03-10"
+      },{
+        id: 2,
+        fromDate: "2025-03-10",
+        toDate: "2026-03-10"
+      },{
+        id: 4,
+        fromDate: "2025-03-10",
+        toDate: "2026-03-10"
+      }],
       department: ["Information Systems Division", "Electrical and Electronics Engineering Division", "Human Resources Division"]
     },
     {
@@ -44,7 +79,15 @@ export const dataSample = [
         name:"John cena",
         date:"2025-05-01",
         duration:"3 weeks",
-        departmentId:[1, 3],
+        departments:[{
+          id: 1,
+          fromDate: "2025-05-01",
+          toDate: "2025-05-22"
+        },{
+          id: 3,
+          fromDate: "2025-05-01",
+          toDate: "2025-05-22"
+        }],
         department:["Information Systems Division", "ECT project"]
     }
 ];

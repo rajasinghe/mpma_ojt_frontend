@@ -7,7 +7,7 @@ export default function NewInterviewPage() {
   return (
     <MainContainer title="Add New Interview" breadCrumbs={["Home", "Interview", "New Interview"]}>
       <SubContainer>
-        <InterviewForm NIC={undefined} selections={undefined} duration={undefined} startDate={undefined} name={undefined}
+        <InterviewForm selections={[{ departmentId: -1, fromDate: "", toDate: "" }]}
         nicDisable={false} nicValidated={false}/>
       </SubContainer>
     </MainContainer>

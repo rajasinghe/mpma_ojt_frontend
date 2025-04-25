@@ -27,6 +27,8 @@ const schema = z.object({
   selections: z.array(
     z.object({
       departmentId: z.number().min(1, "Department is required"),
+      fromDate: z.string().min(1, "From date is required"),
+      toDate: z.string().min(1, "To date is required")
     })
   ).min(1, "At least one department selection is required")
 });
@@ -34,11 +36,15 @@ const schema = z.object({
 type FormData = z.infer<typeof schema>;
 
 type InterviewProps = {
-    NIC: string | undefined;
-    selections: ({ departmentId?: number | undefined; } | undefined)[] | undefined;
-    duration: { value?: number | undefined; unit?: string | undefined; } | undefined;
-    startDate: string | undefined;
-    name: string | undefined;
+    NIC?: string | undefined;
+    selections: ({ 
+      departmentId?: number;
+      fromDate?: string;
+      toDate?: string;
+    } | undefined)[] | undefined;
+    duration?: { value: number ; unit: string; } | undefined;
+    startDate?: string | undefined;
+    name?: string | undefined;
     nicValidated: boolean;
     nicDisable: boolean;
     isEditing?: boolean;
@@ -66,11 +72,17 @@ export default function InterviewForm(Interview : InterviewProps) {
             name: Interview.name,
             startDate: Interview.startDate,
             duration: Interview.duration,
-            selections: Interview.selections,
-        } : undefined,
+            selections: Interview.selections
+            ?.filter(sel => sel !== undefined)
+            ?.map(sel => ({
+              departmentId: sel?.departmentId || -1,
+              fromDate: sel?.fromDate || "",
+              toDate: sel?.toDate || ""
+            })) || []
+          } : undefined,
       });
     
-      const selections = watch("selections") || [{ departmentId: -1 }];
+      const selections = watch("selections") || [{ departmentId: -1, fromDate: "", toDate: "" }];
     
       useEffect(() => {
         const loadDepartments = async () => {
@@ -90,12 +102,12 @@ export default function InterviewForm(Interview : InterviewProps) {
       }));
     
       const addSelection = () => {
-        setValue("selections", [...selections, { departmentId: -1 }]);
+        setValue("selections", [...selections, { departmentId: -1, fromDate: "", toDate: "" }]);
       };
     
       const removeSelection = (index: number) => {
         const newSelections = selections.filter((_, i) => i !== index);
-        setValue("selections", newSelections.length ? newSelections : [{ departmentId: -1 }]);
+        setValue("selections", newSelections.length ? newSelections : [{ departmentId: -1, fromDate: "", toDate: "" }]);
       };
     
       const onSubmit = async (data: FormData) => {
@@ -105,7 +117,11 @@ export default function InterviewForm(Interview : InterviewProps) {
             name: data.name,
             startDate: data.startDate,
             duration: `${data.duration.value} ${data.duration.unit}`,
-            departments: data.selections.map(selection => selection.departmentId)
+            departments: data.selections.map(selection => ({
+              id: selection.departmentId,
+              from: selection.fromDate,
+              to: selection.toDate
+            }))
           };
           
           if(isEditing){
@@ -287,6 +303,41 @@ export default function InterviewForm(Interview : InterviewProps) {
                       {errors.selections[index]?.departmentId?.message}
                     </div>
                   )}
+                
+                <div className="row mt-3">
+                  <div className="col-md-6">
+                    <label className="form-label">From Date:</label>
+                    <input
+                      {...register(`selections.${index}.fromDate`)}
+                      type="date"
+                      className={`form-control ${
+                        errors.selections?.[index]?.fromDate ? "is-invalid" : ""
+                      }`}
+                      disabled={!nicValidated || isSubmitting}
+                    />
+                    {errors.selections?.[index]?.fromDate && (
+                      <div className="invalid-feedback">
+                        {errors.selections[index]?.fromDate?.message}
+                      </div>
+                    )}
+                  </div>
+                  <div className="col-md-6">
+                    <label className="form-label">To Date:</label>
+                    <input
+                      {...register(`selections.${index}.toDate`)}
+                      type="date"
+                      className={`form-control ${
+                        errors.selections?.[index]?.toDate ? "is-invalid" : ""
+                      }`}
+                      disabled={!nicValidated || isSubmitting}
+                    />
+                    {errors.selections?.[index]?.toDate && (
+                      <div className="invalid-feedback">
+                        {errors.selections[index]?.toDate?.message}
+                      </div>
+                    )}
+                  </div>
+                </div>     
                 </div>
               </div>
             ))}
@@ -301,7 +352,11 @@ export default function InterviewForm(Interview : InterviewProps) {
                     name: "",
                     startDate: "",
                     duration: { value: 0, unit: "" },
-                    selections: [{ departmentId: -1 }],
+                    selections: [{ 
+                      departmentId: -1, 
+                      fromDate: "", 
+                      toDate: "" 
+                    }],
                   });
                 }else{
                   reset();
