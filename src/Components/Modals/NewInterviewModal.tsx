@@ -19,6 +19,10 @@ interface Props {
 const schema = z.object({
   name: z.string().min(1, { message: "Name is required" }),
   date: z.string().date(),
+  duration: z.object({
+    value: z.number().min(1, "Duration value is required"),
+    unit: z.string().min(1, "Duration unit is required")
+  }),
 });
 
 export default function InterviewModal({
@@ -90,7 +94,9 @@ export default function InterviewModal({
         const response = await api.post("api/interview", {
           NIC: nic,
           depId: department.id,
-          ...formData,
+          duration: `${formData.duration.value} ${formData.duration.unit}`,
+          date: formData.date,
+          name: formData.name,
         });
         console.log(response);
         refetchInterviews();
@@ -200,8 +206,18 @@ export default function InterviewModal({
         />
 
         <form onSubmit={handleSubmit(onSubmit)}>
-          <div>
-            <label className="form-label">Date</label>
+          <div className="mb-3">
+            <label className="form-label">Name</label>
+            <input
+              {...register("name")}
+              disabled={nic == null}
+              className="form-control"
+              type="text"
+            />
+            {errors.name && <p className="text-danger m-0">{errors.name.message}</p>}
+          </div>
+          <div className="mb-3">
+            <label className="form-label">Start Date</label>
             <Select
               isDisabled={nic == null}
               className=""
@@ -234,15 +250,36 @@ export default function InterviewModal({
           )}
 
           <div className="mb-3">
-            <label className="form-label">Name</label>
-            <input
-              {...register("name")}
-              disabled={nic == null}
-              className="form-control"
-              type="text"
-            />
-            {errors.name && <p className="text-danger m-0">{errors.name.message}</p>}
-          </div>
+              <label className="form-label">Duration</label>
+              <div className="input-group">
+                <input
+                  type="number"
+                  placeholder="Value"
+                  {...register("duration.value", { valueAsNumber: true })}
+                  className={`form-control ${errors.duration?.value ? "is-invalid" : ""}`}
+                  disabled={nic == null}
+                />
+                <select
+                  {...register("duration.unit")}
+                  className={`form-select ${errors.duration?.unit ? "is-invalid" : ""}`}
+                  disabled={nic == null}
+                >
+                  <option value="">Select unit</option>
+                  <option value="week">Week(s)</option>
+                  <option value="month">Month(s)</option>
+                  <option value="year">Year(s)</option>
+                </select>
+              </div>
+              <div style={{ display: "flex", gap: "0.5rem" }}>
+                {errors.duration?.value && (
+                  <div className="invalid-feedback d-block">{errors.duration.value.message}</div>
+                )}
+                {errors.duration?.unit && (
+                  <div className="invalid-feedback d-block">{errors.duration.unit.message}</div>
+                )}
+              </div>
+            </div>
+
 
           <div className="d-flex">
             <button disabled={isSubmitting} className="btn btn-primary ms-auto">

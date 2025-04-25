@@ -50,7 +50,7 @@ export default function ViewInterviewPage() {
               Swal.showLoading();
             },
           });
-          const response = await api.delete(``);
+          const response = await api.delete(`${NIC}`);
           console.log(response);
           //refetchInterviews();
           Swal.fire({

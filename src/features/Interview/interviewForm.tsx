@@ -206,12 +206,14 @@ export default function InterviewForm(Interview : InterviewProps) {
                   <option value="year">Year(s)</option>
                 </select>
               </div>
-              {errors.duration?.value && (
-                <div className="invalid-feedback d-block">{errors.duration.value.message}</div>
-              )}
-              {errors.duration?.unit && (
-                <div className="invalid-feedback d-block">{errors.duration.unit.message}</div>
-              )}
+              <div style={{ display: "flex", gap: "0.5rem" }}>
+                {errors.duration?.value && (
+                  <div className="invalid-feedback d-block">{errors.duration.value.message}</div>
+                )}
+                {errors.duration?.unit && (
+                  <div className="invalid-feedback d-block">{errors.duration.unit.message}</div>
+                )}
+              </div>
             </div>
           </div>
 
@@ -301,9 +303,9 @@ export default function InterviewForm(Interview : InterviewProps) {
                     duration: { value: 0, unit: "" },
                     selections: [{ departmentId: -1 }],
                   });
-                  //setNic("");
                 }else{
                   reset();
+                  setNic("");
                 }
                 setNicValidated(Interview.nicValidated);
                 setNicDisable(Interview.nicDisable);
