@@ -306,33 +306,37 @@ export default function InterviewForm(Interview : InterviewProps) {
                 
                 <div className="row mt-3">
                   <div className="col-md-6">
-                    <label className="form-label">From Date:</label>
-                    <input
-                      {...register(`selections.${index}.fromDate`)}
-                      type="date"
-                      className={`form-control ${
-                        errors.selections?.[index]?.fromDate ? "is-invalid" : ""
-                      }`}
-                      disabled={!nicValidated || isSubmitting}
-                    />
+                    <div className="d-flex align-items-center gap-2" style={{ margin: "0.5rem" }}>
+                      <label className="form-label small">From:</label>
+                      <input
+                        {...register(`selections.${index}.fromDate`)}
+                        type="date"
+                        className={`form-control form-control-sm ${
+                          errors.selections?.[index]?.fromDate ? "is-invalid" : ""
+                        }`}
+                        disabled={!nicValidated || isSubmitting}
+                      />
+                    </div>
                     {errors.selections?.[index]?.fromDate && (
-                      <div className="invalid-feedback">
+                      <div className="invalid-feedback small">
                         {errors.selections[index]?.fromDate?.message}
                       </div>
                     )}
                   </div>
                   <div className="col-md-6">
-                    <label className="form-label">To Date:</label>
-                    <input
-                      {...register(`selections.${index}.toDate`)}
-                      type="date"
-                      className={`form-control ${
-                        errors.selections?.[index]?.toDate ? "is-invalid" : ""
-                      }`}
-                      disabled={!nicValidated || isSubmitting}
-                    />
+                    <div className="d-flex align-items-center gap-2" style={{ margin: "0.5rem" }}>
+                      <label className="form-label small">To:</label>
+                      <input
+                        {...register(`selections.${index}.toDate`)}
+                        type="date"
+                        className={`form-control form-control-sm ${
+                          errors.selections?.[index]?.toDate ? "is-invalid" : ""
+                        }`}
+                        disabled={!nicValidated || isSubmitting}
+                      />
+                    </div>
                     {errors.selections?.[index]?.toDate && (
-                      <div className="invalid-feedback">
+                      <div className="invalid-feedback small">
                         {errors.selections[index]?.toDate?.message}
                       </div>
                     )}
