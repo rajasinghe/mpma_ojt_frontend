@@ -1,5 +1,6 @@
 export const dataSample = [
     {
+      id: 1,
       NIC: "200112345678",
       name: "John Doe",
       date: "2025-05-01",
@@ -12,9 +13,9 @@ export const dataSample = [
         fromDate: "2025-05-01",
         toDate: "2025-05-22"
         }],
-      department: ["Information Systems Division", "ECT project"]
     },
     {
+      id: 2,
       NIC: "200212345679",
       name: "Jane Smith",
       date: "2025-05-03",
@@ -24,9 +25,9 @@ export const dataSample = [
         fromDate: "2025-05-03",
         toDate: "2025-06-03"
       }],
-      department: ["Electrical and Electronics Engineering Division"]
     },
     {
+      id: 3,
       NIC: "199812345678",
       name: "Michael Lee",
       date: "2025-05-05",
@@ -40,9 +41,9 @@ export const dataSample = [
         fromDate: "2025-05-05",
         toDate: "2025-05-19"
       }],
-      department: ["Human Resources Division", "Civil Engineering Division"]
     },
     {
+      id: 4,
       NIC: "200012345689",
       name: "Amara Silva",
       date: "2025-05-07",
@@ -52,9 +53,9 @@ export const dataSample = [
         fromDate: "2025-05-07",
         toDate: "2025-11-07"
       }],
-      department: ["ECT project"]
     },
     {
+      id: 5,
       NIC: "199912345610",
       name: "Ravi Perera",
       date: "2025-03-10",
@@ -72,9 +73,9 @@ export const dataSample = [
         fromDate: "2025-03-10",
         toDate: "2026-03-10"
       }],
-      department: ["Information Systems Division", "Electrical and Electronics Engineering Division", "Human Resources Division"]
     },
     {
+        id: 6,
         NIC:"973070070V",
         name:"John cena",
         date:"2025-05-01",
@@ -88,6 +89,5 @@ export const dataSample = [
           fromDate: "2025-05-01",
           toDate: "2025-05-22"
         }],
-        department:["Information Systems Division", "ECT project"]
     }
 ];

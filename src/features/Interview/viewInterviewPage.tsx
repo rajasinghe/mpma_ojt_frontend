@@ -1,4 +1,4 @@
-import { useNavigation, useNavigate } from "react-router-dom";
+import { useNavigation, useNavigate, useLoaderData } from "react-router-dom";
 import { useState, useEffect } from "react";
 import { utils, writeFileXLSX } from "xlsx";
 import { MainContainer } from "../../layout/containers/main_container/MainContainer";
@@ -10,15 +10,26 @@ import api from "../../api";
 import editIcon from "../../assets/edit.png";
 import removeIcon from "../../assets/remove.png";
 import Swal from "sweetalert2";
-import {dataSample} from "./sampleData.ts"; // Sample data for testing
 
 interface Interview {
+  id: number;
   NIC: string;
   name: string;
   date: string;
   duration: string;
-  departmentId: number[];
-  department: string[];
+  departments: {
+    id: number;
+    fromDate: string;
+    toDate: string;
+  }[];
+}
+
+interface DepartmentSummary {
+  name: string;
+  dep_id: number;
+  max_count: number;
+  active_count: number;
+  interview_count: number;
 }
 
 export default function ViewInterviewPage() {
@@ -26,13 +37,15 @@ export default function ViewInterviewPage() {
   const [loading, setLoading] = useState<boolean>(true);
   const [resultCount, setResultCount] = useState<number>(0);
   const [showPastInterviews, setShowPastInterviews] = useState<boolean>(false);
+  const [departmentNames, setDepartmentNames] = useState<{[key: number]: string}>({});
+  const [loadingDepartments, setLoadingDepartments] = useState(true);
 
   const { state } = useNavigation();
   const navigate = useNavigate();
+  const InterviewDetails = useLoaderData() as any;
 
 
-
-    const handleDelete = async (NIC: string) => {
+    const handleDelete = async (id: number) => {
       try {
         const response = await Swal.fire({
           title: "Are You Sure",
@@ -50,15 +63,16 @@ export default function ViewInterviewPage() {
               Swal.showLoading();
             },
           });
-          const response = await api.delete(`${NIC}`);
-          console.log(response);
-          //refetchInterviews();
+          //const response = await api.delete(`${id}`);
+          //console.log(response);
+
           Swal.fire({
             title: "Deleted!",
             text: "Removed from the List",
             icon: "success",
             showCloseButton: true,
           });
+          navigate(0);
         }
       } catch (error: any) {
         Swal.fire({
@@ -69,24 +83,46 @@ export default function ViewInterviewPage() {
         });
       }
     };
-  
 
-  const ViewInterviewPageLoader = async () => {
-    try {
-      const response = await api.get("");
-      return response;
-    } catch (error) {
-      console.error("Loader Error:", error);
-      throw error;
-    }
-  };
+const fetchDepartmentNames = async () => {
+  try {
+    const response = await api.get("api/department/summary");
+    const departments: DepartmentSummary[] = response.data;
+    
+    const deptMap = departments.reduce((acc: {[key: number]: string}, dept) => {
+      // Use dep_id instead of id, and name instead of dname
+      acc[dept.dep_id] = dept.name;
+      return acc;
+    }, {});
+    
+    setDepartmentNames(deptMap);
+  } catch (error) {
+    console.error("Error fetching department names:", error);
+    // Optionally show an error message to the user
+    Swal.fire({
+      icon: 'error',
+      title: 'Error',
+      text: 'Failed to load department information'
+    });
+  } finally {
+    setLoadingDepartments(false);
+  }
+};
+
+
+    useEffect(() => {
+      fetchDepartmentNames();
+    }, []);
+    
+    const getDepartmentName = (departmentId: number) => {
+      return departmentNames[departmentId] || "Unknown Department";
+    };
 
   useEffect(() => {
-    const fetchData = async () => {
+    const fetchData = () => {
       setLoading(true);
       try {
-        //const { data: interviews } = await ViewInterviewPageLoader();
-        const interviews = dataSample; // for testing
+        const interviews  = InterviewDetails;
         const currentDate = new Date();
         currentDate.setHours(0, 0, 0, 0);
 
@@ -118,7 +154,11 @@ export default function ViewInterviewPage() {
       Name: interview.name,
       "Starting Date": formatDate(interview.date),
       "Duration": interview.duration,
-      "Departments": interview.department.join(", ")
+      "Departments": interview.departments
+      .map(dept => `${getDepartmentName(dept.id)} (${formatDate(dept.fromDate)} - ${formatDate(dept.toDate)})`)
+      .join(", "),
+      "From": interview.departments.map(dept => formatDate(dept.fromDate)).join(", "),
+      "To": interview.departments.map(dept => formatDate(dept.toDate)).join(", "),
     }));
 
     const worksheet = utils.json_to_sheet(dataRows, { header: headers });
@@ -175,12 +215,27 @@ export default function ViewInterviewPage() {
                           </thead>
                           <tbody>
                             {matchingInterviews.map((interview) => (
-                              <tr key={`${interview.NIC}-${interview.date}`}>
+                              <tr key={`${interview.id}`}>
                                 <td>{interview.NIC}</td>
                                 <td>{interview.name}</td>
                                 <td>{formatDate(interview.date)}</td>
                                 <td>{interview.duration}</td>
-                                <td>{interview.department.join(", ")}</td>
+                                <td>
+                                {loadingDepartments ? (
+                                <MiniLoader />
+                                ) : (
+                                  interview.departments.map((dep) => (
+                                    <div key={dep.id}>
+                                      {getDepartmentName(dep.id)} 
+                                      {(dep.fromDate && dep.toDate !== '') && (
+                                        <span>
+                                          ({formatDate(dep.fromDate)} - {formatDate(dep.toDate)})
+                                        </span>
+                                      )}
+                                    </div>
+                                  ))
+                                )}
+                                </td>
                                 <td style={{ verticalAlign: "middle" }}>
                                   <div className="d-flex justify-content-center" style={{ height: '100%' }}>
                                     <img
@@ -196,7 +251,7 @@ export default function ViewInterviewPage() {
                                       alt="Delete"
                                       style={{ width: "auto", height: "34px" }}
                                       onClick={() => {
-                                      handleDelete(interview.NIC);
+                                      handleDelete(interview.id);
                                       }}
                                       className="btn ms-2 btn-sm btn-outline-secondary"
                                       src={removeIcon}

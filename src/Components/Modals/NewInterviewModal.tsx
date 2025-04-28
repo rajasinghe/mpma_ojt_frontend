@@ -23,6 +23,8 @@ const schema = z.object({
     value: z.number().min(1, "Duration value is required"),
     unit: z.string().min(1, "Duration unit is required")
   }),
+  fromDate: z.string().optional(),
+  toDate: z.string().optional(),
 });
 
 export default function InterviewModal({
@@ -92,11 +94,15 @@ export default function InterviewModal({
           },
         });
         const response = await api.post("api/interview", {
-          NIC: nic,
-          depId: department.id,
+          nic: nic,
           duration: `${formData.duration.value} ${formData.duration.unit}`,
-          date: formData.date,
+          startDate: formData.date,
           name: formData.name,
+          departments: {
+            id: department.id,
+            fromDate: formData.fromDate,
+            toDate: formData.toDate,
+          }
         });
         console.log(response);
         refetchInterviews();
@@ -140,8 +146,15 @@ export default function InterviewModal({
           },
         });
         const response = await api.put(`api/interview/${interview.id}`, {
-          NIC: nic,
-          ...formData,
+          nic: nic,
+          duration: `${formData.duration.value} ${formData.duration.unit}`,
+          startDate: formData.date,
+          name: formData.name,
+          departments: {
+            id: department.id,
+            fromDate: formData.fromDate,
+            toDate: formData.toDate,
+          }
         });
         console.log(response);
         refetchInterviews(); //fetch the interviews list again
@@ -280,6 +293,30 @@ export default function InterviewModal({
               </div>
             </div>
 
+            <div className="row mt-3">
+                  <div className="col-md-6">
+                    <div className="d-flex align-items-center gap-2" style={{ margin: "0.5rem" }}>
+                      <label className="form-label small">From:</label>
+                      <input
+                        {...register(`fromDate`)}
+                        type="date"
+                        className={`form-control form-control-sm`}
+                        disabled={nic == null}
+                      />
+                    </div>
+                  </div>
+                  <div className="col-md-6">
+                    <div className="d-flex align-items-center gap-2" style={{ margin: "0.5rem" }}>
+                      <label className="form-label small">To:</label>
+                      <input
+                        {...register(`toDate`)}
+                        type="date"
+                        className={`form-control form-control-sm`}
+                        disabled={nic == null}
+                      />
+                    </div>
+                  </div>
+                </div> 
 
           <div className="d-flex">
             <button disabled={isSubmitting} className="btn btn-primary ms-auto">

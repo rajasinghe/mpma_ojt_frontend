@@ -6,7 +6,6 @@ import Select from "react-select";
 import NIC from "../../Components/traineeForm/NIC";
 import api from "../../api";
 import Swal from "sweetalert2";
-import { departmentSummaryLoader } from "../../loaders/DepartmentLoader";
 import { useNavigate } from "react-router-dom";
 
 interface DepartmentSummary {
@@ -27,8 +26,8 @@ const schema = z.object({
   selections: z.array(
     z.object({
       departmentId: z.number().min(1, "Department is required"),
-      fromDate: z.string().min(1, "From date is required"),
-      toDate: z.string().min(1, "To date is required")
+      fromDate: z.string().optional(),
+      toDate: z.string().optional()
     })
   ).min(1, "At least one department selection is required")
 });
@@ -36,12 +35,13 @@ const schema = z.object({
 type FormData = z.infer<typeof schema>;
 
 type InterviewProps = {
+    id?: number;
     NIC?: string | undefined;
     selections: ({ 
       departmentId?: number;
       fromDate?: string;
       toDate?: string;
-    } | undefined)[] | undefined;
+    } | undefined)[];
     duration?: { value: number ; unit: string; } | undefined;
     startDate?: string | undefined;
     name?: string | undefined;
@@ -73,16 +73,21 @@ export default function InterviewForm(Interview : InterviewProps) {
             startDate: Interview.startDate,
             duration: Interview.duration,
             selections: Interview.selections
-            ?.filter(sel => sel !== undefined)
+            //?.filter(sel => sel !== undefined)
             ?.map(sel => ({
               departmentId: sel?.departmentId || -1,
-              fromDate: sel?.fromDate || "",
-              toDate: sel?.toDate || ""
+              fromDate: sel?.fromDate || undefined,
+              toDate: sel?.toDate || undefined
             })) || []
           } : undefined,
       });
     
       const selections = watch("selections") || [{ departmentId: -1, fromDate: "", toDate: "" }];
+
+      const departmentSummaryLoader = async () => {
+        const response = await api.get("api/department/summary");
+        return response.data;
+      };
     
       useEffect(() => {
         const loadDepartments = async () => {
@@ -100,7 +105,7 @@ export default function InterviewForm(Interview : InterviewProps) {
         value: dept.dep_id,
         label: dept.name
       }));
-    
+
       const addSelection = () => {
         setValue("selections", [...selections, { departmentId: -1, fromDate: "", toDate: "" }]);
       };
@@ -112,21 +117,22 @@ export default function InterviewForm(Interview : InterviewProps) {
     
       const onSubmit = async (data: FormData) => {
         try {
-          const body ={
-            nic: nic,
-            name: data.name,
-            startDate: data.startDate,
-            duration: `${data.duration.value} ${data.duration.unit}`,
-            departments: data.selections.map(selection => ({
-              id: selection.departmentId,
-              from: selection.fromDate,
-              to: selection.toDate
-            }))
-          };
+          const  body ={
+              nic: nic,
+              name: data.name? data.name: null,
+              startDate: data.startDate,
+              duration: `${data.duration.value} ${data.duration.unit}`,
+              departments: data.selections.map(selection => ({
+                department_id: selection.departmentId,
+                from: selection.fromDate? selection.fromDate: null,
+                to: selection.toDate? selection.toDate: null
+              }))
+            };
+
           
           if(isEditing){
-            console.log("edit: ", body);
-            //const response = await api.put("",body);
+            console.log("request:",body);
+            //const response = await api.put(`${}`,body);
 
             Swal.fire({
               title: "Success!",
@@ -139,7 +145,7 @@ export default function InterviewForm(Interview : InterviewProps) {
             });
 
           }else{
-            console.log("insert: ", body);
+            console.log(body);
             //const response = await api.post("",body);
     
             Swal.fire({
