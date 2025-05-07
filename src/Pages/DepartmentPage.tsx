@@ -157,10 +157,11 @@ export default function DepartmentPage() {
                           <th></th>
                           <th>name</th>
                           <th>NIC</th>
-                          <th>Scheduled Date</th>
+                          <th>Start Date</th>
                           <th>Interviewed Date</th>
                           <th>Interviewed Time</th>
-                          <th></th>
+                          <th>Options</th>
+                          <th>Duration</th>
                         </tr>
                       </thead>
                       <tbody>
@@ -172,9 +173,11 @@ export default function DepartmentPage() {
                               <td>{interview.name}</td>
                               <td>{interview.NIC}</td>
                               <td>{moment(interview.date).format("YYYY-MM-DD")}</td>
+                              
                               <td>{createdAt.format("YYYY-MM-DD")}</td>
                               <td>{createdAt.format("hh:mm:ss A")}</td>
-                              <td>
+                              <td style={{ verticalAlign: "middle" }}>
+                                <div className="d-flex justify-content-center" style={{ height: '100%' }}>
                                 <img
                                   className="btn btn-sm btn-outline-secondary"
                                   onClick={() => {
@@ -190,6 +193,7 @@ export default function DepartmentPage() {
                                   className="btn ms-2 btn-sm btn-outline-secondary"
                                   src={removeIcon}
                                 />
+                                </div>
                               </td>
                             </tr>
                           );
