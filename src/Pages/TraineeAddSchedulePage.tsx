@@ -62,6 +62,7 @@ export default function TraineeAddSchedulePage() {
 
   const {
     control,
+    reset,
     register,
     setError,
     watch,
@@ -426,12 +427,18 @@ export default function TraineeAddSchedulePage() {
                 >
                   Add Schedule
                 </button>
-                <div className="d-flex">
+                <div className="d-flex mt-2">
+                  <div className="me-auto">
+                    <button type="button" className="btn btn-primary"
+                      onClick={() => navigate(-1)}>
+                      <i className="bi bi-arrow-left"></i>
+                    </button>
+                  </div>
                   <button
                     className="btn btn-danger ms-auto me-3 "
                     type="button"
                     onClick={() => {
-                      console.log(errors);
+                      reset();
                     }}
                   >
                     Reset
