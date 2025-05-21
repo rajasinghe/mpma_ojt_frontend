@@ -28,7 +28,7 @@
   .header {
     transition: all 0.5s;
     z-index: 990;
-    height: 5%  ;
+    height: 55px  ;
     /* box-shadow: 0px 2px 20px rgba(1, 41, 112, 0.1); */
     /* background-color: #fff; */
     background-color: #f1f6ff;
@@ -37,6 +37,13 @@
     top: 0;
     right: 0;
     left: 0;
+  }
+
+  @media (max-width: 1199px) {
+    #name1 {
+      transform: translateX(35px);
+      transition: 0.5s;
+    }
   }
   
   .header .notifi-profile {

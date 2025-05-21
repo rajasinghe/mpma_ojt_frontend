@@ -136,6 +136,20 @@ const Sidebar = ({ user }: Props) => {
           },
         ]);
       }
+      else if (
+        user.accessLevels.find((accessLevel: any) => accessLevel.access == "department:modify")
+      ) {
+        setLinks([
+          ...initLinks,
+          {
+            name: "Departments",
+            regex: /^\/OJT\/departments/i,
+            route: "/OJT/departments",
+            active_icon: "bi-diagram-3-fill",
+            inactive_icon: "bi-diagram-3",
+          },
+        ]);
+      }
     }
   }, [user]);
 

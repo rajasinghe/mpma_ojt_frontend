@@ -102,7 +102,7 @@ export default function DepartmentPage() {
             <div className="container-fluid border border-dark rounded-2 my-2 py-2">
               <div className=" fs-5 fw-bolder">Active Trainees</div>
 
-              <div className="w-75 border border-2 rounded-2 p-1 ">
+              <div className="border border-2 rounded-2 p-1 mx-auto" style={{maxWidth: "1200px"}}>
                 <div>
                   <table className="table table-striped table-sm table-bordered w-100">
                     <thead className="table-dark">
@@ -149,7 +149,7 @@ export default function DepartmentPage() {
               ) : interviews.length == 0 ? (
                 <div className="text-black-50">No pending Interviews</div>
               ) : (
-                <div className="w-75 border border-2 rounded-2 p-1 mt-2">
+                <div className="border border-2 rounded-2 p-1 mt-2 overflow-hidden mx-auto" style={{maxWidth: "1200px"}}>
                   <div>
                     <table className="table table-striped table-sm table-bordered ">
                       <thead className="table-dark">

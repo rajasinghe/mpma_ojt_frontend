@@ -17,10 +17,10 @@ export default function DepartmentsPage() {
       ) : (
         <MainContainer title="Departments" breadCrumbs={["Home", "Departments"]}>
           <SubContainer>
-            <div className=" d-flex flex-column"></div>
+            <div>
             <section
-              style={{ maxHeight: "75vh" }}
-              className="w-75 border border-2 rounded-2 p-1 m-2 overflow-y-auto"
+              style={{ maxHeight: "75vh", maxWidth: "1200px"}}
+              className="border border-2 rounded-2 p-1 m-2 overflow-y-auto mx-auto"
             >
               <table className="table table-striped table-sm table-bordered w-100">
                 <thead className="table-dark position-sticky top-0">
@@ -52,6 +52,7 @@ export default function DepartmentsPage() {
                 </tbody>
               </table>
             </section>
+            </div>
           </SubContainer>
         </MainContainer>
       )}

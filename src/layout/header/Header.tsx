@@ -13,7 +13,7 @@ export default function Header({ user }: Props) {
     <>
       <header id="header" className="header d-flex align-items-center">
         <div className="d-flex me-auto align-items-center justify-content-between ">
-          <div className="logo d-flex align-items-center">
+          <div id="name1" className="logo d-flex align-items-center">
             <img src={logo} alt="logo" />
             <span className="d-lg-block">MPMA</span>
           </div>

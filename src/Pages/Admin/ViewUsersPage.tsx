@@ -122,7 +122,7 @@ export default function ViewUsersPage() {
       ) : (
         <MainContainer title="User Manager" breadCrumbs={["Home", "Users"]}>
           <SubContainer>
-            <section className="w-75 border border-2 rounded-2 p-1 m-2">
+            <section className="border border-2 rounded-2 p-1 m-2 mx-auto" style={{maxWidth: "1200px"}}>
               <div>
                 {isLoading ? (
                   <MiniLoader />
@@ -195,8 +195,8 @@ export default function ViewUsersPage() {
                 )}
               </div>
             </section>
-            <div className="d-flex m-1">
-              <Link to={"/OJT/users/create"} className="ms-auto me-5 btn btn-sm btn-primary">
+            <div className="d-flex m-1 mx-auto" style={{maxWidth: "1200px"}}>
+              <Link to={"/OJT/users/create"} className="ms-auto btn btn-sm btn-primary">
                 Create User
               </Link>
             </div>
