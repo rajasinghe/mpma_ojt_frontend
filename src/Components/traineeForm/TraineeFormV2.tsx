@@ -203,10 +203,11 @@ export default function TraineeForm({
               render={({ field }) => (
                 <Select
                   {...field}
+                  value={field.value || null}
                   isDisabled={periodsDisable}
                   onChange={(value) => {
                     value && setSelectedPeriod(parseInt(value.value));
-                    field.onChange(value);
+                    field.onChange(value || { value: "", label: ""});
                   }}
                   options={periodsList.map((period: any) => {
                     return {
@@ -302,6 +303,7 @@ export default function TraineeForm({
                 setSelectedPeriod(null);
                 setEndDate(null);
                 setPeriodsDisable(false);
+                setPeriods(periods);
     
                 // Reset the reg number states
                 regNoState[1](null);
