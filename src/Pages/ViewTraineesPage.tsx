@@ -69,6 +69,7 @@ export default function ViewTraineesPage() {
   const [searchCount, setSearchCount] = useState<number | null>(null);
 
   const [loading, setLoading] = useState<boolean>(false);
+  const [activeTrainees, setActiveTrainees] = useState<Trainee[]>(loaderData.trainees);
 
   const {
     register,
@@ -92,6 +93,7 @@ export default function ViewTraineesPage() {
     console.log(data);
     setLoading(false);
     setTrainees(data.data);
+    setActiveTrainees(data.data);
 
     //remove the loading state and display the data
   };
@@ -191,6 +193,25 @@ export default function ViewTraineesPage() {
     } catch (error) {
       console.log(error);
     }
+  };
+
+  const hasCurrentDepartment = (trainee: Trainee) => {
+
+    if (!activeTrainees.some((t: Trainee) => t.id === trainee.id)) {
+      return true; // Not consider inactive trainees
+    }
+
+    if (!trainee.schedules || trainee.schedules.length === 0) {
+      return false;
+    }
+
+    const today = new Date();
+
+    return trainee.schedules.some((schedule) => {
+      const startDate = new Date(schedule.start_date);
+      const endDate = new Date(schedule.end_date);
+      return today >= startDate && today <= endDate;
+    });
   };
 
   /* const handleClose = () => setShow(false); */
@@ -390,15 +411,20 @@ export default function ViewTraineesPage() {
                                 <td>{trainee.name}</td>
                                 <td>{trainee.NIC_NO}</td>
                                 <td>{trainee.institute}</td>
-                                <td>{trainee.program}</td>
-
+                                <td>{trainee.program}</td>                                
                                 <td>
-                                  <Link
-                                    className="btn btn-sm btn-warning"
-                                    to={`${trainee.id}/profile`}
-                                  >
-                                    Profile
-                                  </Link>
+                                  <div>
+                                    <Link
+                                      className="btn btn-sm btn-warning position-relative"
+                                      to={`${trainee.id}/profile`}
+                                    >
+                                      Profile                                      
+                                      {!hasCurrentDepartment(trainee) && (
+                                        <span className="position-absolute bg-primary border border-light rounded-circle position">
+                                        </span>
+                                      )}
+                                    </Link>
+                                  </div>
                                 </td>
                               </tr>
                             ))}

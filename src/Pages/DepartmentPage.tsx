@@ -94,12 +94,12 @@ export default function DepartmentPage() {
           breadCrumbs={["Home", "Departments", department.name]}
         >
           <SubContainer>
-            <div className="container-fluid border border-dark rounded-2 my-2 py-2">
+            <div className="container-fluid border border-dark rounded-2 my-2 py-2" style={{maxWidth: "1200px"}}>
               <div className="fw-semibold ">Active Trainees - {department.schedules.length}</div>
               <div className="fw-semibold ">Maximum Capacity - {department.max_count}</div>
               <div className="fw-semibold ">Interviewed - {department.interviews.length}</div>
             </div>
-            <div className="container-fluid border border-dark rounded-2 my-2 py-2">
+            <div className="container-fluid border border-dark rounded-2 my-2 py-2" style={{maxWidth: "1200px"}}>
               <div className=" fs-5 fw-bolder">Active Trainees</div>
 
               <div className="border border-2 rounded-2 p-1 mx-auto" style={{maxWidth: "1200px"}}>
@@ -142,7 +142,7 @@ export default function DepartmentPage() {
                 </div>
               </div>
             </div>
-            <div className="container-fluid border border-dark rounded-2 my-2 py-2">
+            <div className="container-fluid border border-dark rounded-2 my-2 py-2" style={{maxWidth: "1200px"}}>
               <div className=" fs-5 fw-bolder">Interviewed List</div>
               {isInterviewsLoading ? (
                 "Loading"
