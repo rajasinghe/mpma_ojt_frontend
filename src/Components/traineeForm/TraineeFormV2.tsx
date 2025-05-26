@@ -203,10 +203,11 @@ export default function TraineeForm({
               render={({ field }) => (
                 <Select
                   {...field}
+                  value={field.value || null}
                   isDisabled={periodsDisable}
                   onChange={(value) => {
                     value && setSelectedPeriod(parseInt(value.value));
-                    field.onChange(value);
+                    field.onChange(value || { value: "", label: ""});
                   }}
                   options={periodsList.map((period: any) => {
                     return {
@@ -287,6 +288,7 @@ export default function TraineeForm({
             </button>
           </div>
         </div>
+      </fieldset>
 
         <div className=" d-flex">
           <div className="ms-auto d-flex ">
@@ -294,21 +296,36 @@ export default function TraineeForm({
               className="btn btn-danger mt-3"
               type="button"
               onClick={() => {
-                //reset();
+                reset();
+                setNic(null);
+                setProgram(null);
+                setInstitute(null);
+                setSelectedPeriod(null);
+                setEndDate(null);
+                setPeriodsDisable(false);
+                setPeriods(periods);
+    
+                // Reset the reg number states
+                regNoState[1](null);
+                ATT_NOstate[1](null);
+                nicDisable[1](false); 
+
                 console.log(selectedPeriod);
                 console.log(errors);
               }}
+              disabled={!nic || isSubmitting}
             >
               {" "}
+
               Reset
             </button>
 
-            <button disabled={isSubmitting} type="submit" className="btn btn-primary mt-3 ms-2">
+            <button disabled={!nic || isSubmitting || regNo == null && attNo == null} type="submit" className="btn btn-primary mt-3 ms-2">
               {isSubmitting ? "Submiting...." : "Submit"}
             </button>
           </div>
         </div>
-      </fieldset>
+
     </form>
   );
 }

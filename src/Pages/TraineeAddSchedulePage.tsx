@@ -62,6 +62,7 @@ export default function TraineeAddSchedulePage() {
 
   const {
     control,
+    reset,
     register,
     setError,
     watch,
@@ -79,7 +80,7 @@ export default function TraineeAddSchedulePage() {
               "not in the list",
           },
           schedules: trainee.schedules.map((schedule: any) => {
-            console.log(schedule.start_date);
+
             return {
               start_date: formatDateToIso(schedule.start_date),
               end_date: formatDateToIso(schedule.end_date),
@@ -103,16 +104,23 @@ export default function TraineeAddSchedulePage() {
         },
   });
 
-  const startDate = watch("start_date");
-  const period = watch("period");
-
   useEffect(() => {
-    console.log(startDate, "changed");
-    console.log(period);
-    if (period && startDate) {
-      setEndDate(endDateCalculator(periodsList, parseInt(period.value), new Date(startDate)));
+    const startDate = watch("start_date");
+    const selectedPeriod = watch("period");
+
+    if (startDate && selectedPeriod?.value) {
+      try {
+        const newEndDate = endDateCalculator(
+          periodsList,
+          parseInt(selectedPeriod.value),
+          new Date(startDate)
+        );
+        setEndDate(newEndDate);
+      } catch (error) {
+        setError("root", { message: "Invalid period or start date" });
+      }
     }
-  }, [startDate, period]);
+  }, [watch("start_date"), watch("period")]);
 
   const { fields, append, remove } = useFieldArray({ control: control, name: "schedules" });
 
@@ -120,7 +128,46 @@ export default function TraineeAddSchedulePage() {
 
   const navigate = useNavigate();
 
+  const sortAndValidateSchedules = (schedules: formType['schedules']) => {
+  // Sort schedules by start date
+  const sortedSchedules = [...schedules].sort((a, b) => 
+    new Date(a.start_date).getTime() - new Date(b.start_date).getTime()
+  );
+
+  // Check that each schedule's end date is before the next schedule's start date
+  for (let i = 0; i < sortedSchedules.length - 1; i++) {
+    if (new Date(sortedSchedules[i].end_date) >= new Date(sortedSchedules[i + 1].start_date)) {
+      return {
+        isValid: false,
+        message: `Schedule ending on ${new Date(sortedSchedules[i].end_date).toLocaleDateString()} must complete before next schedule starting on ${new Date(sortedSchedules[i + 1].start_date).toLocaleDateString()}`,
+        sortedSchedules: schedules
+      };
+    }
+  }
+
+  return {
+    isValid: true,
+    sortedSchedules: sortedSchedules,
+    message: ''
+    };
+  };
+
   const onSubmit = async (formData: formType) => {
+
+    const validation = sortAndValidateSchedules(formData.schedules);
+    
+    if (!validation.isValid) {
+      Swal.fire({
+        icon: 'error',
+        title: 'Schedule is Clashing',
+        text: validation.message,
+      });
+      return;
+    }
+
+    // Update form data with sorted schedules
+    formData.schedules = validation.sortedSchedules;
+
     console.log(formData);
     let data: any = formData;
     data.period = formData.period.value;
@@ -302,27 +349,6 @@ export default function TraineeAddSchedulePage() {
                         className="form-control"
                         type="date"
                         {...register("start_date")}
-                        onChange={(value) => {
-                          //set the end date acocrdingly
-                          console.log(value.target.value);
-                          const startDate = new Date(value.target.value);
-                          if (period) {
-                            try {
-                              const endDate = endDateCalculator(
-                                periodsList,
-                                parseInt(period.value),
-                                startDate
-                              );
-                              console.log(endDate);
-                              setEndDate(endDate);
-                            } catch (error) {
-                              if (error) setError("root", { message: "check the period" });
-                              console.log(error);
-                            }
-                          } else {
-                            console.log("period not selected");
-                          }
-                        }}
                       />
                       {errors.start_date && (
                         <p className="text-danger">{errors.start_date.message}</p>
@@ -378,13 +404,13 @@ export default function TraineeAddSchedulePage() {
                       <div className="d-flex mt-2">
                         <div className="w-50">
                           <label>Start Date</label>
-
                           <input
                             className="form-control"
                             type="date"
                             {...register(`schedules.${index}.start_date`)}
+                            min={watch('start_date') || ''}
+                            max={endDate ? endDate.toISOString().split("T")[0] : ''}
                           />
-
                           {errors.schedules?.[index]?.start_date && (
                             <p className="text-danger">
                               {errors.schedules[index].start_date?.message}
@@ -393,13 +419,13 @@ export default function TraineeAddSchedulePage() {
                         </div>
                         <div className="w-50 ms-4">
                           <label>End Date</label>
-
                           <input
                             className="form-control"
                             type="date"
                             {...register(`schedules.${index}.end_date`)}
+                            min={watch(`schedules.${index}.start_date`) || watch('start_date') || ''}
+                            max={endDate ? endDate.toISOString().split("T")[0] : ''}
                           />
-
                           {errors.schedules?.[index]?.end_date && (
                             <p className="text-danger">
                               {errors.schedules[index].end_date?.message}
@@ -426,12 +452,18 @@ export default function TraineeAddSchedulePage() {
                 >
                   Add Schedule
                 </button>
-                <div className="d-flex">
+                <div className="d-flex mt-2">
+                  <div className="me-auto">
+                    <button type="button" className="btn btn-primary"
+                      onClick={() => navigate(-1)}>
+                      <i className="bi bi-arrow-left"></i>
+                    </button>
+                  </div>
                   <button
                     className="btn btn-danger ms-auto me-3 "
                     type="button"
                     onClick={() => {
-                      console.log(errors);
+                      reset();
                     }}
                   >
                     Reset

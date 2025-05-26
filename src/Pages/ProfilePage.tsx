@@ -86,6 +86,7 @@ export default function ProfilePage() {
           <div className=" fs-5 fw-bolder">Bank Details</div>
           {trainee.bankDetails ? (
             <>
+              <div className="  fw-semibold">Name - {trainee.bankDetails.name}</div>
               <div className="  fw-semibold">Account Number - {trainee.bankDetails.acc_no}</div>
               <div className="  fw-semibold">Branch Code - {trainee.bankDetails.branch_code}</div>
               <div>

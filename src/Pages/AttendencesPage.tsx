@@ -15,6 +15,7 @@ import FlipableTableCell from "../Components/Tables/FlippableCell/FlipableTableC
 import { MainContainer } from "../layout/containers/main_container/MainContainer";
 import SubContainer from "../layout/containers/sub_container/SubContainer";
 import { FixedSizeGrid as Grid } from 'react-window';
+import { utils, writeFileXLSX } from "xlsx";
 
 
 interface loaderProps {
@@ -223,7 +224,6 @@ export default function AttendencesPage() {
               api.get(`api/calender/${filterParams.year}/${filterParams.month}`),
             ]);
             console.log(workingDaysResponse.data);
-            console.log(attendencesResponse.data);
             /* attendencesResponse.data.array.forEach(element) => {
                 if(element)
             }); */
@@ -328,7 +328,7 @@ export default function AttendencesPage() {
 
   const handleDownload = () => {
     console.log("click");
-    if (workingDays && trainees.length > 0) {
+    if (workingDays && matchingTrainees.length > 0) {
       try {
         const headers = [
           "S/NO",
@@ -342,7 +342,7 @@ export default function AttendencesPage() {
         ]; /* [id,date1,date2,date3] */
         let rows = [headers];
         let sNo = 0;
-        console.log(trainees);
+        console.log(matchingTrainees);
         /* 
         [
           {
@@ -354,7 +354,7 @@ export default function AttendencesPage() {
           }
         ]
         */
-        trainees.forEach((trainee: any) => {
+        matchingTrainees.forEach((trainee: any) => {
           sNo++;
           let row = [sNo, trainee.ATT_NO, trainee.REG_NO, trainee.end_date, trainee.name];
           console.log(trainee);
@@ -374,6 +374,11 @@ export default function AttendencesPage() {
           });
           rows.push(row);
         });
+        const book = utils.book_new();
+
+        const sheet = utils.aoa_to_sheet(rows);
+        utils.book_append_sheet(book, sheet, "Register");
+        writeFileXLSX(book, `attendence report.xlsx`, { bookType: "xlsx" });
         console.log(rows);
       } catch (error: any) {
         Swal.fire({
