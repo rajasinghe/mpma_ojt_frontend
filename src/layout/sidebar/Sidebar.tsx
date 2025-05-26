@@ -73,7 +73,7 @@ const Sidebar = ({ user }: Props) => {
             active_icon: "bi-diagram-3-fill",
             inactive_icon: "bi-diagram-3",
           },
-          {
+          /*{
             name: "Interview",
             regex: /^\/OJT\/Interview/i,
             route: "/OJT/interview",
@@ -88,7 +88,7 @@ const Sidebar = ({ user }: Props) => {
                 inactive_icon: "bi-person-plus",
               },
             ],
-          },
+          },*/
           {
             name: "Users",
             regex: /^\/OJT\/users/i,
@@ -111,7 +111,7 @@ const Sidebar = ({ user }: Props) => {
       ) {
         setLinks([
           ...initLinks,
-          {
+          /*{
             name: "Interview",
             regex: /^\/OJT\/Interview/i,
             route: "/OJT/interview",
@@ -126,7 +126,7 @@ const Sidebar = ({ user }: Props) => {
                 inactive_icon: "bi-file-earmark-arrow-up",
               },
             ],
-          },
+          },*/
           {
             name: "Departments",
             regex: /^\/OJT\/departments/i,
