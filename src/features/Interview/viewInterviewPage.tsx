@@ -45,7 +45,7 @@ export default function ViewInterviewPage() {
   const InterviewDetails = useLoaderData() as any;
 
 
-    const handleDelete = async (id: number) => {
+    const handleDelete = async (/*id: number*/) => {
       try {
         const response = await Swal.fire({
           title: "Are You Sure",
@@ -251,7 +251,7 @@ const fetchDepartmentNames = async () => {
                                       alt="Delete"
                                       style={{ width: "auto", height: "34px" }}
                                       onClick={() => {
-                                      handleDelete(interview.id);
+                                      handleDelete(/*interview.id*/);
                                       }}
                                       className="btn ms-2 btn-sm btn-outline-secondary"
                                       src={removeIcon}
