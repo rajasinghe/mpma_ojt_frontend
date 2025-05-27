@@ -185,8 +185,16 @@ export default function UpdateTraineeDetailsPage() {
                 {errors.TEL_NO && <p className="text-danger">{errors.TEL_NO.message}</p>}
               </div>
             </div>
-            <div className=" d-flex mt-2">
-              <button className="btn ms-auto btn-primary">Update</button>
+            <div className="d-flex mt-2">
+              <div className="me-auto">
+                <button type="button" className="btn btn-primary"
+                  onClick={() => navigate(-1)}>
+                  <i className="bi bi-arrow-left"></i>
+                </button>
+              </div>
+              <div className="ms-auto">
+                <button className="btn btn-primary">Update</button>
+              </div>
             </div>
           </fieldset>
         </form>

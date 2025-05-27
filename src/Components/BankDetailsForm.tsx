@@ -11,6 +11,7 @@ interface props {
   trainee: any;
 }
 const schema = z.object({
+  name: z.string().min(1, "Name is required"),
   accNo: z.string().regex(/^[0-9]+$/),
   branchCode: z.string().regex(/^[0-9]+$/),
 });
@@ -21,6 +22,7 @@ export default function BankDetailsForm({ trainee }: props) {
   const navigate = useNavigate();
   useEffect(() => {
     if (trainee.bankDetails) {
+      setValue("name", trainee.bankDetails.name + "")
       setValue("accNo", trainee.bankDetails.acc_no + "");
       setValue("branchCode", trainee.bankDetails.branch_code + "");
     }
@@ -172,6 +174,11 @@ export default function BankDetailsForm({ trainee }: props) {
       <div className="container-fluid border border-dark rounded-2 my-2">
         <div className=" fs-5 fw-bolder">Bank Details</div>
         <form className="bg-body-tertiary p-2" onSubmit={handleSubmit(onSubmit)}>
+          <div className="mb-3">
+            <label className="form-label">Name</label>
+            <input type="text" className="form-control" {...register("name")} />
+            {errors.name && <p className="text-danger">{errors.name.message}</p>}
+          </div>
           <div className="mb-3">
             <label className="form-label">Account Number</label>
             <input type="text" className="form-control" {...register("accNo")} />

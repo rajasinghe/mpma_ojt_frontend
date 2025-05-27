@@ -6,7 +6,17 @@
     color: #012970;
     position: fixed;
     transition: all 0.3s;
-    padding: 20px;
+    padding: 15px;
+    transform: none;
+  }
+
+  @media (max-width: 1199px) {
+    .toggle-sidebar-btn{
+      transform: translateY(-50px);
+      transition: 0.5s;
+      z-index: 991;
+      top: 40px;
+    }
   }
 
 /*--------------------------------------------------------------

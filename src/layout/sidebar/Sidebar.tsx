@@ -80,6 +80,22 @@ const Sidebar = ({ user }: Props) => {
             active_icon: "bi-diagram-3-fill",
             inactive_icon: "bi-diagram-3",
           },
+          /*{
+            name: "Interview",
+            regex: /^\/OJT\/Interview/i,
+            route: "/OJT/interview",
+            active_icon: "bi-person-rolodex",
+            inactive_icon: "bi-person-bounding-box",
+            subLinks: [
+              {
+                name: "New Interview",
+                regex: /^\/OJT\/interview\/new/i,
+                route: "/OJT/interview/new",
+                active_icon: " bi-person-plus-fill",
+                inactive_icon: "bi-person-plus",
+              },
+            ],
+          },*/
           {
             name: "Users",
             regex: /^\/OJT\/users/i,
@@ -99,6 +115,36 @@ const Sidebar = ({ user }: Props) => {
         ]);
       } else if (
         user.accessLevels.find((accessLevel: any) => accessLevel.access == "interview:modify")
+      ) {
+        setLinks([
+          ...initLinks,
+          /*{
+            name: "Interview",
+            regex: /^\/OJT\/Interview/i,
+            route: "/OJT/interview",
+            active_icon: "bi-diagram-3-fill",
+            inactive_icon: "bi-diagram-3",
+            subLinks: [
+              {
+                name: "New Interview",
+                regex: /^\/OJT\/interview\/new/i,
+                route: "/OJT/interview/new",
+                active_icon: " bi-file-earmark-arrow-up-fill",
+                inactive_icon: "bi-file-earmark-arrow-up",
+              },
+            ],
+          },*/
+          {
+            name: "Departments",
+            regex: /^\/OJT\/departments/i,
+            route: "/OJT/departments",
+            active_icon: "bi-diagram-3-fill",
+            inactive_icon: "bi-diagram-3",
+          },
+        ]);
+      }
+      else if (
+        user.accessLevels.find((accessLevel: any) => accessLevel.access == "department:modify")
       ) {
         setLinks([
           ...initLinks,

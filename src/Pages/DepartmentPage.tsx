@@ -94,15 +94,15 @@ export default function DepartmentPage() {
           breadCrumbs={["Home", "Departments", department.name]}
         >
           <SubContainer>
-            <div className="container-fluid border border-dark rounded-2 my-2 py-2">
+            <div className="container-fluid border border-dark rounded-2 my-2 py-2" style={{maxWidth: "1200px"}}>
               <div className="fw-semibold ">Active Trainees - {department.schedules.length}</div>
               <div className="fw-semibold ">Maximum Capacity - {department.max_count}</div>
               <div className="fw-semibold ">Interviewed - {department.interviews.length}</div>
             </div>
-            <div className="container-fluid border border-dark rounded-2 my-2 py-2">
+            <div className="container-fluid border border-dark rounded-2 my-2 py-2" style={{maxWidth: "1200px"}}>
               <div className=" fs-5 fw-bolder">Active Trainees</div>
 
-              <div className="w-75 border border-2 rounded-2 p-1 ">
+              <div className="border border-2 rounded-2 p-1 mx-auto" style={{maxWidth: "1200px"}}>
                 <div>
                   <table className="table table-striped table-sm table-bordered w-100">
                     <thead className="table-dark">
@@ -142,14 +142,14 @@ export default function DepartmentPage() {
                 </div>
               </div>
             </div>
-            <div className="container-fluid border border-dark rounded-2 my-2 py-2">
+            <div className="container-fluid border border-dark rounded-2 my-2 py-2" style={{maxWidth: "1200px"}}>
               <div className=" fs-5 fw-bolder">Interviewed List</div>
               {isInterviewsLoading ? (
                 "Loading"
               ) : interviews.length == 0 ? (
                 <div className="text-black-50">No pending Interviews</div>
               ) : (
-                <div className="w-75 border border-2 rounded-2 p-1 mt-2">
+                <div className="border border-2 rounded-2 p-1 mt-2 overflow-hidden mx-auto" style={{maxWidth: "1200px"}}>
                   <div>
                     <table className="table table-striped table-sm table-bordered ">
                       <thead className="table-dark">
@@ -157,10 +157,11 @@ export default function DepartmentPage() {
                           <th></th>
                           <th>name</th>
                           <th>NIC</th>
-                          <th>Scheduled Date</th>
+                          <th>Start Date</th>
                           <th>Interviewed Date</th>
                           <th>Interviewed Time</th>
-                          <th></th>
+                          <th>Options</th>
+                          <th>Duration</th>
                         </tr>
                       </thead>
                       <tbody>
@@ -172,9 +173,11 @@ export default function DepartmentPage() {
                               <td>{interview.name}</td>
                               <td>{interview.NIC}</td>
                               <td>{moment(interview.date).format("YYYY-MM-DD")}</td>
+                              
                               <td>{createdAt.format("YYYY-MM-DD")}</td>
                               <td>{createdAt.format("hh:mm:ss A")}</td>
-                              <td>
+                              <td style={{ verticalAlign: "middle" }}>
+                                <div className="d-flex justify-content-center" style={{ height: '100%' }}>
                                 <img
                                   className="btn btn-sm btn-outline-secondary"
                                   onClick={() => {
@@ -190,6 +193,7 @@ export default function DepartmentPage() {
                                   className="btn ms-2 btn-sm btn-outline-secondary"
                                   src={removeIcon}
                                 />
+                                </div>
                               </td>
                             </tr>
                           );
