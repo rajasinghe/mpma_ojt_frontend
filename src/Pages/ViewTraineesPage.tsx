@@ -415,14 +415,11 @@ export default function ViewTraineesPage() {
                                 <td>
                                   <div>
                                     <Link
-                                      className="btn btn-sm btn-warning position-relative"
+                                      className={`btn btn-sm ${!hasCurrentDepartment(trainee) ? 'btn-primary' : 'btn-warning'}`}
                                       to={`${trainee.id}/profile`}
+                                      style={{ width: '57px' }}
                                     >
-                                      Profile                                      
-                                      {!hasCurrentDepartment(trainee) && (
-                                        <span className="position-absolute bg-primary border border-light rounded-circle position">
-                                        </span>
-                                      )}
+                                      {!hasCurrentDepartment(trainee) ? 'Add' : 'Profile'}
                                     </Link>
                                   </div>
                                 </td>

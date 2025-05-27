@@ -208,8 +208,8 @@ export default function TraineeAddSchedulePage() {
             icon: "success",
           });
           //delete the interview record
-          const deleteInterViewResponse = await api.delete(`api/trainee/${trainee.id}/interview`);
-          console.log(deleteInterViewResponse);
+          //const deleteInterViewResponse = await api.delete(`api/trainee/${trainee.id}/interview`);
+          //console.log("Error",deleteInterViewResponse);
           //reset();
           navigate(`/OJT/trainees/${trainee.id}/profile`);
         }
