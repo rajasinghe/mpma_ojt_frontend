@@ -426,7 +426,6 @@ export default function ViewTraineesPage() {
                               </tr>
                             ))}
                           </tbody>
-                          <div></div>
                         </table>
                       )}
                     </div>
