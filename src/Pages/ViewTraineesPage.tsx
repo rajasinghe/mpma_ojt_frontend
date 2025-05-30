@@ -201,11 +201,10 @@ export default function ViewTraineesPage() {
       return true; // Not consider inactive trainees
     }
 
-    if (!trainee.schedules || trainee.schedules.length === 0) {
-      return false;
-    }
+    if (!trainee.schedules?.length) return false;
 
-    const today = new Date();
+    const today = new Date()
+    today.setHours(0, 0, 0, 0); // Set time to midnight for accurate comparison
 
     return trainee.schedules.some((schedule) => {
       const startDate = new Date(schedule.start_date);
@@ -368,7 +367,7 @@ export default function ViewTraineesPage() {
                           <span
                             className="badge bg-primary ms-1"
                             style={{ fontSize: "8px" }}
-                          >{`From ${filterOptions.end_date}`}</span>
+                          >{`To ${filterOptions.end_date}`}</span>
                         ) : (
                           ""
                         )}
@@ -426,7 +425,6 @@ export default function ViewTraineesPage() {
                               </tr>
                             ))}
                           </tbody>
-                          <div></div>
                         </table>
                       )}
                     </div>

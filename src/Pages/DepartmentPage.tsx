@@ -9,6 +9,7 @@ import Swal from "sweetalert2";
 import api from "../api";
 import { MainContainer } from "../layout/containers/main_container/MainContainer";
 import SubContainer from "../layout/containers/sub_container/SubContainer";
+import { utils, writeFileXLSX } from "xlsx";
 export default function DepartmentPage() {
   const { state } = useNavigation();
   const { department, interviewSummary } = useLoaderData() as any;
@@ -43,6 +44,36 @@ export default function DepartmentPage() {
         text: error,
         footer: '<a href="#">Why do I have this issue?</a>',
       });
+    }
+  };
+
+  const handleDownload = async () => {
+    try {
+      const headers = [
+        "Name",
+        "Attendence No",
+        "Registration No",
+        "Start Date",
+        "End Date",
+      ];
+      const dataRows = department.schedules.map((schedule: any) => {
+        return [
+          schedule.trainee.name,
+          schedule.trainee.ATT_NO,
+          schedule.trainee.REG_NO,
+          schedule.start_date,
+          schedule.end_date,
+        ];
+      });
+
+      const rows = [headers, ...dataRows];
+      const book = utils.book_new();
+
+      const sheet = utils.aoa_to_sheet(rows);
+      utils.book_append_sheet(book, sheet, "Register");
+      writeFileXLSX(book, `${department.name} department.xlsx`, { bookType: "xlsx" });
+    } catch (error) {
+      console.log(error);
     }
   };
 
@@ -103,7 +134,7 @@ export default function DepartmentPage() {
               <div className=" fs-5 fw-bolder">Active Trainees</div>
 
               <div className="border border-2 rounded-2 p-1 mx-auto" style={{maxWidth: "1200px"}}>
-                <div>
+                <div className="table-responsive">
                   <table className="table table-striped table-sm table-bordered w-100">
                     <thead className="table-dark">
                       <tr className="small" style={{ fontSize: "" }}>
@@ -139,8 +170,18 @@ export default function DepartmentPage() {
                       ))}
                     </tbody>
                   </table>
-                </div>
+                </div>           
               </div>
+                <div
+                  className="d-flex m-1 mx-auto justify-content-end"
+                  style={{
+                  height: "4vh", maxWidth: "1200px",
+                  }}
+                  >
+                <button className="btn btn-success btn-sm" onClick={handleDownload}>
+                  Download Records
+                </button>
+                </div> 
             </div>
             <div className="container-fluid border border-dark rounded-2 my-2 py-2" style={{maxWidth: "1200px"}}>
               <div className=" fs-5 fw-bolder">Interviewed List</div>
