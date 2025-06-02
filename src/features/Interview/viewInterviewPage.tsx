@@ -10,6 +10,7 @@ import api from "../../api";
 import editIcon from "../../assets/edit.png";
 import removeIcon from "../../assets/remove.png";
 import Swal from "sweetalert2";
+import moment from 'moment';
 
 interface Interview {
   id: number;
@@ -17,6 +18,7 @@ interface Interview {
   name: string;
   date: string;
   duration: string;
+  createdAt: string | Date;
   departments: {
     id: number;
     fromDate: string;
@@ -45,7 +47,7 @@ export default function ViewInterviewPage() {
   const InterviewDetails = useLoaderData() as any;
 
 
-    const handleDelete = async (/*id: number*/) => {
+    const handleDelete = async (nic: string) => {
       try {
         const response = await Swal.fire({
           title: "Are You Sure",
@@ -63,8 +65,8 @@ export default function ViewInterviewPage() {
               Swal.showLoading();
             },
           });
-          //const response = await api.delete(`${id}`);
-          //console.log(response);
+          const response = await api.delete(`api/interview/${nic}`);
+          console.log(response);
 
           Swal.fire({
             title: "Deleted!",
@@ -209,6 +211,8 @@ const fetchDepartmentNames = async () => {
                               <th>Name</th>
                               <th>Starting Date</th>
                               <th>Duration</th>
+                              <th>Interviewed Date</th>
+                              <th>Interviewed Time</th>
                               <th>Departments</th>
                               <th>Options</th>
                             </tr>
@@ -220,6 +224,8 @@ const fetchDepartmentNames = async () => {
                                 <td>{interview.name}</td>
                                 <td>{formatDate(interview.date)}</td>
                                 <td>{interview.duration}</td>
+                                <td>{moment(interview.createdAt).format("YYYY-MM-DD")}</td>
+                                <td>{moment(interview.createdAt).format("hh:mm:ss A")}</td>
                                 <td>
                                 {loadingDepartments ? (
                                 <MiniLoader />
@@ -251,7 +257,7 @@ const fetchDepartmentNames = async () => {
                                       alt="Delete"
                                       style={{ width: "auto", height: "34px" }}
                                       onClick={() => {
-                                      handleDelete(/*interview.id*/);
+                                      handleDelete(interview.NIC);
                                       }}
                                       className="btn ms-2 btn-sm btn-outline-secondary"
                                       src={removeIcon}

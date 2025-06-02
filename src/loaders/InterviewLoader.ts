@@ -1,5 +1,10 @@
 import { dataSample } from "../features/Interview/sampleData";
+import api from "../api";
 
-export const InterviewLoader = () => {
-  return dataSample;
+export const InterviewLoader = async () => {
+
+  const response = await api.get("api/interview");
+
+  console.log("InterviewLoader response", response.data);
+  return response.data.InterviewDetails;
 };
