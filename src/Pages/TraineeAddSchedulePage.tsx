@@ -28,6 +28,7 @@ const schema = z.object({
     })
   ),
   start_date: z.string().date("Select a starting date for the journey"),
+  end_date: z.string().date(),
   period: z.object({
     label: z.string().min(1),
     value: z.string().min(1),
@@ -45,6 +46,7 @@ interface LoaderData {
 export default function TraineeAddSchedulePage() {
   const { trainee, departmentsList, periodsList } = useLoaderData() as LoaderData;
   const params = useSearchParams();
+  
   useEffect(() => {
     console.log(params);
     console.log(trainee);
@@ -59,6 +61,8 @@ export default function TraineeAddSchedulePage() {
   const periodModalVisibilityState = useState<boolean>(false);
   const setPeriodModalVisibility = periodModalVisibilityState[1];
   const [endDate, setEndDate] = useState<Date | null>(null);
+  const [manualEndDate, setManualEndDate] = useState<Date | null>(null);
+  const [isManualEndDate, setIsManualEndDate] = useState<boolean>(false);
 
   const {
     control,
@@ -104,9 +108,27 @@ export default function TraineeAddSchedulePage() {
         },
   });
 
+  const startDate = watch("start_date");
+  const selectedPeriod = watch("period");
+
   useEffect(() => {
-    const startDate = watch("start_date");
-    const selectedPeriod = watch("period");
+
+      const newEndDate = endDateCalculator(
+        periodsList,
+        parseInt(selectedPeriod.value),
+        new Date(startDate)
+      );
+    console.log("Calculated end date:", new Date(newEndDate.setHours(0, 0, 0, 0)));
+    console.log("Trainee's end date:", new Date(new Date(trainee.end_date).setHours(0, 0, 0, 0)));
+
+    if(new Date(new Date(trainee.end_date).setHours(0, 0, 0, 0)) != new Date(newEndDate.setHours(0, 0, 0, 0))) {
+      console.log("Setting end date to trainee's end date");
+      setIsManualEndDate(true);
+      setManualEndDate(new Date(trainee.end_date));
+    }
+  },[]);
+
+  useEffect(() => {
 
     if (startDate && selectedPeriod?.value) {
       try {
@@ -116,6 +138,11 @@ export default function TraineeAddSchedulePage() {
           new Date(startDate)
         );
         setEndDate(newEndDate);
+        
+        // Reset to calculated end date when period or start date changes
+        setIsManualEndDate(false);
+        setManualEndDate(newEndDate);
+        
       } catch (error) {
         setError("root", { message: "Invalid period or start date" });
       }
@@ -172,7 +199,7 @@ export default function TraineeAddSchedulePage() {
     let data: any = formData;
     data.period = formData.period.value;
     if (endDate) {
-      data.end_date = endDate.toISOString().split("T")[0];
+      data.end_date = manualEndDate?.toISOString().split('T')[0];
     }
     data.schedules = data.schedules.map((schedule: any) => {
       return {
@@ -354,14 +381,25 @@ export default function TraineeAddSchedulePage() {
                         <p className="text-danger">{errors.start_date.message}</p>
                       )}
                     </div>
-                    <div className="w-50  ">
+                    <div className="w-50">
                       <label>End Date</label>
                       <input
                         className="form-control"
                         type="date"
-                        value={endDate ? endDate.toISOString().split("T")[0] : ""}
-                        readOnly
+                        value={manualEndDate ? manualEndDate.toISOString().split('T')[0] : ''}
+                        {...register("end_date")}
+                        onChange={(e) => {
+                          setIsManualEndDate(true);
+                          //setManualEndDate(new Date(e.target.value));
+                          setEndDate(new Date(e.target.value));
+                        }}
+                        min={watch('start_date') || ''}
                       />
+                      {isManualEndDate && (
+                        <small className="text-muted">
+                          Manually set. Will reset if period or start date changes.
+                        </small>
+                      )}
                     </div>
                   </div>
                 </div>
