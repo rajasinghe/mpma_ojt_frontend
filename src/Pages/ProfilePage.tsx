@@ -3,9 +3,10 @@ import { Link, useLoaderData } from "react-router-dom";
 import { formatDate, getMonthName } from "../helpers";
 import { MainContainer } from "../layout/containers/main_container/MainContainer";
 import SubContainer from "../layout/containers/sub_container/SubContainer";
+import {getDateDifferenceFormatted} from "../helpers";
 
 export default function ProfilePage() {
-  const { trainee, departments, periods, programs, institutes } = useLoaderData() as any;
+  const { trainee, departments, /*periods,*/ programs, institutes } = useLoaderData() as any;
   useEffect(() => {
     console.log(institutes);
   }, []);
@@ -38,7 +39,8 @@ export default function ProfilePage() {
           <div className=" fs-5 fw-bolder">Training Schedule</div>
           <div className=" fw-semibold">
             Training Period -{" "}
-            {periods.find((period: any) => trainee.training_period_id == period.id).name}
+            {getDateDifferenceFormatted(trainee.start_date, trainee.end_date)}
+            {/*periods.find((period: any) => trainee.training_period_id == period.id).name*/}
           </div>
           <div className=" fw-semibold">start date - {formatDate(trainee.start_date)}</div>
           <div className=" fw-semibold">end date - {formatDate(trainee.end_date)}</div>

@@ -63,6 +63,8 @@ export default function TraineeAddSchedulePage() {
   const [endDate, setEndDate] = useState<Date | null>(null);
   const [manualEndDate, setManualEndDate] = useState<Date | null>(null);
   const [isManualEndDate, setIsManualEndDate] = useState<boolean>(false);
+  const [IsChanged, setIsChanged] = useState<boolean>(false);
+  
 
   const {
     control,
@@ -83,6 +85,7 @@ export default function TraineeAddSchedulePage() {
               periodsList.find((period) => trainee.training_period_id == period.id).name ||
               "not in the list",
           },
+          end_date: formatDateToIso(trainee.end_date),
           schedules: trainee.schedules.map((schedule: any) => {
 
             return {
@@ -113,24 +116,7 @@ export default function TraineeAddSchedulePage() {
 
   useEffect(() => {
 
-      const newEndDate = endDateCalculator(
-        periodsList,
-        parseInt(selectedPeriod.value),
-        new Date(startDate)
-      );
-    console.log("Calculated end date:", new Date(newEndDate.setHours(0, 0, 0, 0)));
-    console.log("Trainee's end date:", new Date(new Date(trainee.end_date).setHours(0, 0, 0, 0)));
-
-    if(new Date(new Date(trainee.end_date).setHours(0, 0, 0, 0)) != new Date(newEndDate.setHours(0, 0, 0, 0))) {
-      console.log("Setting end date to trainee's end date");
-      setIsManualEndDate(true);
-      setManualEndDate(new Date(trainee.end_date));
-    }
-  },[]);
-
-  useEffect(() => {
-
-    if (startDate && selectedPeriod?.value) {
+    if (IsChanged && startDate && selectedPeriod?.value) {
       try {
         const newEndDate = endDateCalculator(
           periodsList,
@@ -148,6 +134,21 @@ export default function TraineeAddSchedulePage() {
       }
     }
   }, [watch("start_date"), watch("period")]);
+
+  useEffect(() => {
+
+    const newEndDate = endDateCalculator(
+      periodsList,
+      parseInt(selectedPeriod.value),
+      new Date(startDate)
+    );
+
+    if(newEndDate.getTime() !== new Date(trainee.end_date).getTime()) {
+      setIsManualEndDate(true);
+      setManualEndDate(new Date(trainee.end_date));
+    } 
+    
+  },[]);
 
   const { fields, append, remove } = useFieldArray({ control: control, name: "schedules" });
 
@@ -347,6 +348,10 @@ export default function TraineeAddSchedulePage() {
                               label: period.name,
                             };
                           })}
+                            onChange={(value) => {
+                              field.onChange(value);
+                              setIsChanged(true);
+                            }}
                           placeholder="Select a training period"
                         />
                       )}
@@ -376,6 +381,10 @@ export default function TraineeAddSchedulePage() {
                         className="form-control"
                         type="date"
                         {...register("start_date")}
+                        onChange={(e) => {
+                          register("start_date").onChange(e);
+                          setIsChanged(true);
+                        }}
                       />
                       {errors.start_date && (
                         <p className="text-danger">{errors.start_date.message}</p>
@@ -390,14 +399,15 @@ export default function TraineeAddSchedulePage() {
                         {...register("end_date")}
                         onChange={(e) => {
                           setIsManualEndDate(true);
-                          //setManualEndDate(new Date(e.target.value));
+                          setManualEndDate(new Date(e.target.value));
                           setEndDate(new Date(e.target.value));
+                          register("end_date").onChange(e);
                         }}
                         min={watch('start_date') || ''}
                       />
                       {isManualEndDate && (
                         <small className="text-muted">
-                          Manually set. Will reset if period or start date changes.
+                          Manually set. (Will reset if period or start date changes)
                         </small>
                       )}
                     </div>
