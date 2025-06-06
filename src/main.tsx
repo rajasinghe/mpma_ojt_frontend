@@ -131,7 +131,7 @@ const router = createBrowserRouter([
             loader: viewAttendenceLoader,
           },
           {
-            path: "attendence/paymentslipgenerate",
+            path: "payments/paymentslipgenerate",
             element: <GeneratePaymentSlip />,
             loader: PaymentSlipLoader
           },

@@ -54,13 +54,6 @@ const Sidebar = ({ user }: Props) => {
           active_icon: " bi-file-earmark-arrow-up-fill",
           inactive_icon: "bi-file-earmark-arrow-up",
         },
-        {
-          name: "Generate Payment Slip",
-          regex: /^\/OJT\/attendence\/paymentslipgenerate/i,
-          route: "/OJT/attendence/paymentslipgenerate",
-          active_icon: " bi bi-file-earmark-text-fill",
-          inactive_icon: "bi bi-file-earmark-text",
-        },
       ],
     },
   ];
@@ -96,6 +89,13 @@ const Sidebar = ({ user }: Props) => {
               },
             ],
           },*/
+          {
+            name: "Payments",
+            regex: /^\/OJT\/payments/i,
+            route: "/OJT/payments/paymentslipgenerate",
+            active_icon: "bi-credit-card-fill",
+            inactive_icon: "bi-credit-card",
+          },
           {
             name: "Users",
             regex: /^\/OJT\/users/i,
@@ -154,6 +154,20 @@ const Sidebar = ({ user }: Props) => {
             route: "/OJT/departments",
             active_icon: "bi-diagram-3-fill",
             inactive_icon: "bi-diagram-3",
+          },
+        ]);
+      }
+      else if (
+        user.accessLevels.find((accessLevel: any) => accessLevel.access == "payments:modify")
+      ) {
+        setLinks([
+          ...initLinks,
+          {
+            name: "Payments",
+            regex: /^\/OJT\/payments/i,
+            route: "/OJT/payments/paymentslipgenerate",
+            active_icon: "bi-credit-card-fill",
+            inactive_icon: "bi-credit-card",
           },
         ]);
       }

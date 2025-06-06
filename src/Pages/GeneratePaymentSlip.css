@@ -1,0 +1,20 @@
+.trainee-grid {
+  display: grid;
+  gap: 0.5rem;
+  /* Single column by default for mobile */
+  grid-template-columns: 1fr;
+}
+
+/* 2 columns for medium screens */
+@media (min-width: 768px) {
+  .trainee-grid {
+    grid-template-columns: repeat(2, 1fr);
+  }
+}
+
+/* 3 columns for large screens */
+@media (min-width: 992px) {
+  .trainee-grid {
+    grid-template-columns: repeat(3, 1fr);
+  }
+}

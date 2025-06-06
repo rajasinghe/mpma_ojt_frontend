@@ -4,6 +4,8 @@ import SubContainer from "../layout/containers/sub_container/SubContainer";
 import { z } from "zod";
 import { useState } from "react";
 import { useLoaderData } from "react-router-dom";
+import "./GeneratePaymentSlip.css";
+import Swal from "sweetalert2";
 
 // Types
 interface SummaryItem {
@@ -13,6 +15,12 @@ interface SummaryItem {
 
 interface LoaderData {
   summaryData: SummaryItem[];
+}
+
+interface Summary {
+  traineeCount: number;
+  traineesWithoutBankDetails: number[];
+  traineeIds: number[];
 }
 
 const formSchema = z.object({
@@ -51,6 +59,10 @@ export default function GeneratePaymentSlip() {
   });
   const [errors, setErrors] = useState<Partial<Record<keyof FormData, string>>>({});
   const [isGenerating, setIsGenerating] = useState(false);
+  const [isCkecking, setIsChecking] = useState(false);
+  const [isChecked, setIsChecked] = useState(false);
+  const [isChanged, setIsChanged] = useState(false);
+  const [summary, setSummary] = useState<Summary | null>(null);
 
   // Get unique years from summary data
   const years = loaderData.summaryData.map(item => item.year.toString());
@@ -69,6 +81,29 @@ export default function GeneratePaymentSlip() {
     }));
   };
 
+  const checkTraineeDetails = async () => {
+
+    setIsChecking(true);
+    setIsChanged(false);
+
+    try {
+      const response = await api.get("api/attendence/generatePaySlip/summary", {
+        params: {
+          month: formData.month,
+          year: formData.year,
+        },
+      });
+      console.log("Trainee details response:", response.data);
+      setSummary(response.data);
+      setErrors({});
+    } catch (error) {
+      console.error("Error fetching trainee details:", error);
+    } finally {
+      setIsChecking(false);
+      setIsChecked(true);
+    }
+  }
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setIsGenerating(true);
@@ -82,13 +117,23 @@ export default function GeneratePaymentSlip() {
       
       setErrors({});
 
-      const response = await api.get("api/attendence/generatePaySlip", {
-        params: {
-          month: validatedData.month,
-          year: validatedData.year,
-          date: validatedData.date.toISOString(),
+      // Show loading alert
+      Swal.fire({
+        title: "Please Wait...",
+        text: "Generating payment slip",
+        allowOutsideClick: false,
+        didOpen: () => {
+          Swal.showLoading();
         },
-        responseType: "blob",
+      });
+
+      const response = await api.post("api/attendence/generatePaySlip", {
+        year: validatedData.year,
+        month: validatedData.month,
+        date: validatedData.date.toISOString(),
+        traineeIds: summary?.traineeIds || []
+      }, {
+        responseType: "blob"
       });
 
       // Create download link
@@ -102,6 +147,14 @@ export default function GeneratePaymentSlip() {
       // Cleanup
       window.URL.revokeObjectURL(url);
       document.body.removeChild(a);
+
+      // Show success alert
+      await Swal.fire({
+        title: "Success!",
+        text: "Payment slip has been generated and downloaded",
+        icon: "success",
+        confirmButtonText: "OK"
+      });
       
     } catch (error) {
       if (error instanceof z.ZodError) {
@@ -111,10 +164,24 @@ export default function GeneratePaymentSlip() {
           return acc;
         }, {} as Partial<Record<keyof FormData, string>>);
         setErrors(newErrors);
+
+        // Show validation error alert
+        await Swal.fire({
+          icon: "error",
+          title: "Validation Error",
+          text: "Please check the form fields for errors",
+        });
       } else {
         console.error("Error generating payment slip:", error);
+        // Show general error alert
+        await Swal.fire({
+          icon: "error",
+          title: "Oops...",
+          text: "Something went wrong while generating the payment slip!",
+          footer: '<a href="#">Why do I have this issue?</a>'
+        });
       }
-    } finally {
+    } finally{
       setIsGenerating(false);
     }
   };
@@ -122,57 +189,124 @@ export default function GeneratePaymentSlip() {
   return (
     <MainContainer 
       title="Generate Payment Slip" 
-      breadCrumbs={["Home", "Attendance", "Generate Payment Slip"]}
+      breadCrumbs={["Home", "Payments", "Generate Payment Slip"]}
     >
       <SubContainer>
         <section className="bg-body-tertiary px-2 mt-1 p-4 rounded">
           <form onSubmit={handleSubmit} className="space-y-4">
-            {/* Year Select */}
-            <div className="form-group">
-              <label htmlFor="year" className="form-label">
-                Year
-              </label>
-              <select
-                id="year"
-                value={formData.year}
-                onChange={(e) => handleChange("year", e.target.value)}
-                className={`form-select ${errors.year ? "is-invalid" : ""}`}
-                disabled={isGenerating}
-              >
-                <option value="">Select Year</option>
-                {years.map((year, index) => (
-                  <option key={index} value={year}>
-                    {year}
-                  </option>
-                ))}
-              </select>
-              {errors.year && (
-                <div className="invalid-feedback">{errors.year}</div>
-              )}
+
+            <div>
+              {/* Year Select */}
+              <div className="form-group">
+                <label htmlFor="year" className="form-label">
+                  Year
+                </label>
+                <select
+                  id="year"
+                  value={formData.year}
+                  onChange={(e) => {
+                    setIsChanged(true);
+                    handleChange("year", e.target.value) }}
+                  className={`form-select ${errors.year ? "is-invalid" : ""}`}
+                  disabled={isGenerating || isCkecking}
+                >
+                  <option value="">Select Year</option>
+                  {years.map((year, index) => (
+                    <option key={index} value={year}>
+                      {year}
+                    </option>
+                  ))}
+                </select>
+                {errors.year && (
+                  <div className="invalid-feedback">{errors.year}</div>
+                )}
+              </div>
+
+              {/* Month Select */}
+              <div className="form-group">
+                <label htmlFor="month" className="form-label">
+                  Month
+                </label>
+                <select
+                  id="month"
+                  value={formData.month}
+                  onChange={(e) => {
+                    setIsChanged(true);
+                    handleChange("month", e.target.value);}}
+                  className={`form-select ${errors.month ? "is-invalid" : ""}`}
+                  disabled={!formData.year || isGenerating || isCkecking}
+                >
+                  <option value="">Select Month</option>
+                  {months.map((month, index) => (
+                    <option key={index} value={month}>
+                      {month}
+                    </option>
+                  ))}
+                </select>
+                {errors.month && (
+                  <div className="invalid-feedback">{errors.month}</div>
+                )}
+              </div>
             </div>
 
-            {/* Month Select */}
-            <div className="form-group">
-              <label htmlFor="month" className="form-label">
-                Month
-              </label>
-              <select
-                id="month"
-                value={formData.month}
-                onChange={(e) => handleChange("month", e.target.value)}
-                className={`form-select ${errors.month ? "is-invalid" : ""}`}
-                disabled={!formData.year || isGenerating}
-              >
-                <option value="">Select Month</option>
-                {months.map((month, index) => (
-                  <option key={index} value={month}>
-                    {month}
-                  </option>
-                ))}
-              </select>
-              {errors.month && (
-                <div className="invalid-feedback">{errors.month}</div>
+
+
+          {
+            <div className="container-fluid border border-secondary rounded-2 my-3 py-2 overflow-auto" 
+              style={{ maxHeight: '30vh', maxWidth: '85%', marginLeft: "0" }}>
+              {!summary ? (
+                <div className="ms-3">Check Slip details...</div>
+              ) : (
+                <div className="ms-5">
+                  <div className={`fw-bold ${summary?.traineeCount === 0 ? 'text-danger' : 
+                    summary?.traineeCount === 350 ? 'text-primary' : 'text-danger'}`}>
+                    {summary?.traineeCount === 0 ? (
+                      'No trainees found'
+                    ) : (
+                      `Trainee count - ${summary?.traineeCount}`
+                    )}
+                  </div>
+                  {summary?.traineeCount > 0 && (
+                    <div className={`fw-bold ${summary.traineesWithoutBankDetails.length > 0 ? 'text-danger' : 'text-primary'}`}>
+                      {summary.traineesWithoutBankDetails.length > 0 ? (
+                        <>
+                          Trainees Without Bank Details (Attendance No.) :
+                          <div className="trainee-grid ms-3">
+                            {summary.traineesWithoutBankDetails.map((traineeId, index) => (
+                              <div key={traineeId}>
+                                {index + 1}. {traineeId}
+                              </div>
+                            ))}
+                          </div>
+                        </>
+                      ) : (
+                        <div>All have Bank details</div>
+                      )}
+                    </div>
+                  )}
+                </div>
               )}
+            </div>
+          }
+  
+            {/* Check button*/}
+            <div className="form-check d-flex justify-content-end"
+              style={{ width: "85%", marginLeft: 0}}>
+              <button
+                type="button"
+                className="btn btn-success"
+                onClick={checkTraineeDetails}
+                disabled={isGenerating || isCkecking || !formData.month }
+              >
+                {isCkecking ? (
+                  <>
+                    <span className="spinner-border spinner-border-sm me-2" role="status" aria-hidden="true"></span>
+                    Checking...
+                  </>
+                ) : (
+                  "Check"
+                )}
+              </button>
             </div>
 
             {/* Date Input */}
@@ -187,7 +321,7 @@ export default function GeneratePaymentSlip() {
                 onChange={(e) => handleChange("date", new Date(e.target.value))}
                 className={`form-control ${errors.date ? "is-invalid" : ""}`}
                 min={formatDateForInput(getTodayAtMidnight())}
-                disabled={isGenerating}
+                disabled={isGenerating || !isChecked || isChanged}
               />
               {errors.date && (
                 <div className="invalid-feedback">{errors.date}</div>
@@ -198,11 +332,10 @@ export default function GeneratePaymentSlip() {
               <button 
                 type="submit" 
                 className="btn btn-primary mt-3"
-                disabled={isGenerating}
+                disabled={isGenerating || !isChecked || isChanged || isCkecking}
               >
                 {isGenerating ? (
                   <>
-                    <span className="spinner-border spinner-border-sm me-2" role="status" aria-hidden="true"></span>
                     Generating...
                   </>
                 ) : (
