@@ -41,11 +41,12 @@ import AddUsersPage from "./Pages/Admin/AddUserPage.tsx";
 import ViewUsersPage from "./Pages/Admin/ViewUsersPage.tsx";
 import { inboxLoader } from "./loaders/inboxLoader.ts";
 import GeneratePaymentSlip from "./Pages/GeneratePaymentSlip.tsx";
-import { PaymentSlipLoader } from "./loaders/PaymentSlipLoader.ts";
+import { PaymentSlipLoader, paymentDetailsLoader } from "./loaders/PaymentSlipLoader.ts";
 import NewInterviewPage from "./features/Interview/interviewPage.tsx";
 import ViewInterviewPage from "./features/Interview/viewInterviewPage.tsx";
 import EditInterviewPage from "./features/Interview/editInterviewPage.tsx";
 import {InterviewLoader} from "./loaders/InterviewLoader.ts";
+import PaymentsPage from "./Pages/PaymentsPage.tsx";
 
 export const setToken = () => {
   const token = localStorage.getItem("token");
@@ -129,6 +130,11 @@ const router = createBrowserRouter([
             path: "attendence",
             element: <AttendencesPage />,
             loader: viewAttendenceLoader,
+          },
+          {
+            path: "payments",
+            element: <PaymentsPage />,
+            loader: paymentDetailsLoader
           },
           {
             path: "payments/paymentslipgenerate",

@@ -321,7 +321,7 @@ export default function GeneratePaymentSlip() {
                 onChange={(e) => handleChange("date", new Date(e.target.value))}
                 className={`form-control ${errors.date ? "is-invalid" : ""}`}
                 min={formatDateForInput(getTodayAtMidnight())}
-                disabled={isGenerating || !isChecked || isChanged}
+                disabled={isGenerating || !isChecked || isChanged || isCkecking}
               />
               {errors.date && (
                 <div className="invalid-feedback">{errors.date}</div>

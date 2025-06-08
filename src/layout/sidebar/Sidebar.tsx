@@ -92,9 +92,18 @@ const Sidebar = ({ user }: Props) => {
           {
             name: "Payments",
             regex: /^\/OJT\/payments/i,
-            route: "/OJT/payments/paymentslipgenerate",
+            route: "/OJT/payments",
             active_icon: "bi-credit-card-fill",
             inactive_icon: "bi-credit-card",
+            subLinks: [
+              {
+                name: "Payment Slip Generate",
+                regex: /^\/OJT\/payments\/paymentslipgenerate/i,
+                route: "/OJT/payments/paymentslipgenerate",
+                active_icon: "bi-credit-card-fill",
+                inactive_icon: "bi-credit-card",
+              },
+            ]
           },
           {
             name: "Users",
@@ -154,6 +163,7 @@ const Sidebar = ({ user }: Props) => {
             route: "/OJT/departments",
             active_icon: "bi-diagram-3-fill",
             inactive_icon: "bi-diagram-3",
+
           },
         ]);
       }
@@ -165,9 +175,18 @@ const Sidebar = ({ user }: Props) => {
           {
             name: "Payments",
             regex: /^\/OJT\/payments/i,
-            route: "/OJT/payments/paymentslipgenerate",
+            route: "/OJT/payments",
             active_icon: "bi-credit-card-fill",
             inactive_icon: "bi-credit-card",
+            subLinks: [
+              {
+                name: "Payment Slip Generate",
+                regex: /^\/OJT\/payments\/paymentslipgenerate/i,
+                route: "/OJT/payments/paymentslipgenerate",
+                active_icon: "bi-credit-card-fill",
+                inactive_icon: "bi-credit-card",
+              },
+            ]
           },
         ]);
       }
