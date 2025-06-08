@@ -14,7 +14,6 @@ import Swal from "sweetalert2";
 import { MainContainer } from "../layout/containers/main_container/MainContainer";
 import SubContainer from "../layout/containers/sub_container/SubContainer";
 import { FixedSizeGrid as Grid } from 'react-window';
-import { utils, writeFileXLSX } from "xlsx";
 
 
 interface loaderProps {
@@ -267,6 +266,43 @@ export default function PaymentsPage() {
     }
   };
 
+const handleDownload = async () => {
+  try {
+    const response = await api.post(
+      "api/attendence/generatePaymentDetails",
+      {
+        params: {
+          month: filterOptions?.month,
+          year: filterOptions?.year,
+          trainees: matchingTrainees.map((trainee: any) => trainee.trainee_id)
+        }
+      },
+      {
+        responseType: 'blob'
+      }
+    );
+
+    // Create blob URL and trigger download
+    const url = window.URL.createObjectURL(new Blob([response.data]));
+    const link = document.createElement('a');
+    link.href = url;
+    link.setAttribute('download', 'payment_records.xlsx');
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+
+    window.URL.revokeObjectURL(url); // Clean up the URL object
+
+  } catch (error: any) {
+    Swal.fire({
+      icon: "error",
+      title: "Oops...",
+      text: error.message || "An unexpected error occurred while downloading the payment records.",
+      footer: '<a href="#">Why do I have this issue?</a>'
+    });
+  }
+};
+  /*
   const handleDownload = () => {
     console.log("click");
     if (workingDays && matchingTrainees.length > 0) {
@@ -280,7 +316,7 @@ export default function PaymentsPage() {
           ...workingDays,
           "ATTN TOTAL",
           "PAY AMOUNT(Rs)",
-        ];  /* [id,date1,date2,date3]*/
+        ];
 
         let rows = [headers];
         let sNo = 0;
@@ -312,7 +348,7 @@ export default function PaymentsPage() {
           // Add attendance total and payment amount
           const payAmount = attendanceTotal * 500;
           row.push(attendanceTotal);
-          row.push(`Rs. ${payAmount}`);
+            row.push(`${payAmount.toLocaleString()}`);
           
           rows.push(row);
         });
@@ -334,7 +370,7 @@ export default function PaymentsPage() {
       console.log(workingDays, trainees);
     }
   };
-
+*/
   let rowCount = matchingTrainees.length+1;
   let columnCount = 7; // Number of headers
 
