@@ -1,4 +1,4 @@
-import { useLoaderData, useNavigation, useSearchParams } from "react-router-dom";
+import { useLoaderData, useNavigation } from "react-router-dom";
 import { Modal } from "react-bootstrap";
 import { useEffect, useState } from "react";
 import Fuse from "fuse.js";
@@ -13,19 +13,12 @@ import MiniLoader from "../Components/ui/Loader/MiniLoader";
 import Swal from "sweetalert2";
 import { MainContainer } from "../layout/containers/main_container/MainContainer";
 import SubContainer from "../layout/containers/sub_container/SubContainer";
-import { FixedSizeGrid as Grid } from 'react-window';
 
 
 interface loaderProps {
   trainees: [];
   workingDays: [];
   summary: [];
-}
-
-interface CellProps {
-  columnIndex: number;
-  rowIndex: number;
-  style: React.CSSProperties;
 }
 
 const filterSchema = z.object({
@@ -46,12 +39,9 @@ export default function PaymentsPage() {
   const loaderData = useLoaderData() as loaderProps;
   /* here the trainees means a object which has the attendences related to each trainee */
   const [trainees, setTrainees] = useState(loaderData.trainees);
-  const [trainee, setTrainee] = useState<any | null>(null);
   const [matchingTrainees, setMatchingTrainees] = useState<any>(loaderData.trainees);
   //const [trainee_id, setTraineeId] = useState<null | number>(null);
   const [keyword, setKeyword] = useState<string>("");
-
-  const [workingDays, setWorkingDays] = useState<string[]>(loaderData.workingDays);
   
 
   //const [show, setShow] = useState(false);
@@ -63,40 +53,9 @@ export default function PaymentsPage() {
   const [searchCount, setSearchCount] = useState<number | null>(null);
 
   const [loading, setLoading] = useState<boolean>(false);
-  const [params] = useSearchParams();
-
-  const columnWidth: number = 150; // Adjusted width to accommodate the new headers
-  const rowHeight: number = 51; // Height of each row in pixels 
-  const [height, setHeight] = useState<number>(0);
-
   const today = new Date();
   const lastMonth = today.getMonth() === 0 ? 12 : today.getMonth();
   const lastMonthYear = today.getMonth() === 0 ? today.getFullYear() - 1 : today.getFullYear();
-  
-  useEffect(() => {
-    const updateHeight = () => {
-      // Calculate height based on number of rows plus header row
-      const numberOfRows = matchingTrainees.length + 1; 
-      const calculatedHeight = (numberOfRows * rowHeight) + 15;
-      
-      // Get viewport height
-      const viewportHeight = window.innerHeight;
-      // Maximum height should be 53vh
-      const maxHeight = Math.floor(viewportHeight * 0.53);
-      
-      // Use the smaller of calculated height or maxHeight
-      const newHeight = Math.min(calculatedHeight, maxHeight);
-      
-      setHeight(newHeight);
-    };
-
-    updateHeight();
-    window.addEventListener('resize', updateHeight);
-
-    return () => {
-      window.removeEventListener('resize', updateHeight);
-    };
-  }, [matchingTrainees.length]); // Re-run when number of rows changes
 
   const {
     formState: { errors },
@@ -115,8 +74,6 @@ export default function PaymentsPage() {
   });
 
   const { state } = useNavigation();
-
-  const [gridWidth, setGridWidth] = useState<number>(0);
 
   useEffect(() => {
     if (!filterOptions) {
@@ -177,7 +134,6 @@ export default function PaymentsPage() {
               )
               .filter(Boolean);            
 
-            setWorkingDays(workingDaysResponse.data);
             setTrainees(filteredTrainees);
           }
           setLoading(false);
@@ -195,20 +151,6 @@ export default function PaymentsPage() {
       }
     }
   }, [filterOptions]);
-
-  const updateGridWidth = () => {
-
-    const containerWidth = window.innerWidth;
-    setGridWidth(containerWidth);
-  };
-
-  useEffect(() => {
-    updateGridWidth();
-    window.addEventListener("resize", updateGridWidth);
-    return () => {
-      window.removeEventListener("resize", updateGridWidth);
-    };
-  }, []);
 
   const handleSearch = (keyword: string) => {
     if (keyword.trim() != "") {
@@ -281,12 +223,17 @@ const handleDownload = async () => {
         responseType: 'blob'
       }
     );
+  
+    const contentDisposition = response.headers['content-disposition'];
+    const filename = contentDisposition
+      ? contentDisposition.split('filename=')[1].replace(/['"]/g, '')
+      : `Attendance_${filterOptions?.year?.value}_${filterOptions?.month?.value}.xlsx`;
 
     // Create blob URL and trigger download
     const url = window.URL.createObjectURL(new Blob([response.data]));
     const link = document.createElement('a');
     link.href = url;
-    link.setAttribute('download', 'payment_records.xlsx');
+    link.setAttribute('download',filename );
     document.body.appendChild(link);
     link.click();
     document.body.removeChild(link);
@@ -294,6 +241,7 @@ const handleDownload = async () => {
     window.URL.revokeObjectURL(url); // Clean up the URL object
 
   } catch (error: any) {
+    console.error("Error downloading payment records:", error);
     Swal.fire({
       icon: "error",
       title: "Oops...",
@@ -302,149 +250,6 @@ const handleDownload = async () => {
     });
   }
 };
-  /*
-  const handleDownload = () => {
-    console.log("click");
-    if (workingDays && matchingTrainees.length > 0) {
-      try {
-        const headers = [
-          "S/NO",
-          "ATTN NO",
-          "REG NO",
-          "END DATE",
-          "NAME",
-          ...workingDays,
-          "ATTN TOTAL",
-          "PAY AMOUNT(Rs)",
-        ];
-
-        let rows = [headers];
-        let sNo = 0;
-        console.log(matchingTrainees);
-
-        matchingTrainees.forEach((trainee: any) => {
-          sNo++;
-          let row = [sNo, trainee.ATT_NO, trainee.REG_NO, trainee.end_date.split('T')[0], trainee.name];
-          
-          // Track attendance total for this trainee
-          let attendanceTotal = 0;
-          
-          workingDays.forEach((day) => {
-            const attendence = trainee.attendences.find(
-              (attendence: any) => attendence.date == day
-            );
-            if (attendence) {
-              row.push(attendence.status);
-              if (attendence.status === 1) {
-                attendanceTotal++;
-              }
-            } else {
-              throw new Error(
-                `mismatch occured no attendece record  trainee-id-${trainee.id} for day-${day}!`
-              );
-            }
-          });
-
-          // Add attendance total and payment amount
-          const payAmount = attendanceTotal * 500;
-          row.push(attendanceTotal);
-            row.push(`${payAmount.toLocaleString()}`);
-          
-          rows.push(row);
-        });
-        const book = utils.book_new();
-
-        const sheet = utils.aoa_to_sheet(rows);
-        utils.book_append_sheet(book, sheet, "Register");
-        writeFileXLSX(book, `attendence report.xlsx`, { bookType: "xlsx" });
-
-      } catch (error: any) {
-        Swal.fire({
-          icon: "error",
-          title: "Oops...",
-          text: error.message || "un expected error occured",
-          footer: '<a href="#">Why do I have this issue?</a>',
-        });
-      }
-    } else {
-      console.log(workingDays, trainees);
-    }
-  };
-*/
-  let rowCount = matchingTrainees.length+1;
-  let columnCount = 7; // Number of headers
-
-  const Cell = ({ columnIndex, rowIndex, style }: CellProps) => {
-    const trainee = matchingTrainees?.[rowIndex - 1] || {};
-    const headers = ["S/NO", "ATT_NO", "REG NO", "END DATE", "NAME", "ATTN TOTAL", "PAY AMOUNT(Rs)"];
-
-    // Header row
-    if (rowIndex === 0) {
-      return (
-        <div style={{ 
-          ...style,
-          width: columnWidth,
-          whiteSpace: "nowrap",
-          textOverflow: "ellipsis",
-          overflow: "hidden",
-          border: "1px solid #ddd",
-          padding: "8px",
-          backgroundColor: '#212529',
-          color: '#fff',
-          fontWeight: 'bold',
-          display: 'flex',
-          alignItems: 'center',
-          justifyContent: 'center'
-        }}>
-          {headers[columnIndex]}
-        </div>
-      );
-    }
-
-    // Calculate attendance total and pay amount
-    const attendanceTotal = trainee.attendences?.reduce((total: number, att: any) => {
-      return total + (att.status === 1 ? 1 : 0);
-    }, 0) || 0;
-
-    const payAmount = attendanceTotal * 500; // Rs. 500 per day
-
-    let cellContent = "";
-    switch (columnIndex) {
-      case 0:
-        cellContent = rowIndex.toString();
-        break;
-      case 1:
-        cellContent = trainee.ATT_NO || '';
-        break;
-      case 2:
-        cellContent = trainee.REG_NO || '';
-        break;
-      case 3:
-        cellContent = trainee.end_date ? trainee.end_date.split('T')[0] : '';
-        break;
-      case 4:
-        cellContent = trainee.name || '';
-        break;
-      case 5:
-        cellContent = attendanceTotal.toString();
-        break;
-      case 6:
-        cellContent = `Rs. ${payAmount}`;
-        break;
-    }
-    return (
-      <div style={{
-        ...style,
-        border: "1px solid #ddd",
-        display: 'flex',
-        alignItems: 'center',
-        justifyContent: 'center',
-        padding: '4px'
-      }}>
-        {cellContent}
-      </div>
-    );
-  };
 
   return (
     <>
@@ -497,14 +302,6 @@ const handleDownload = async () => {
                   ) : (
                     ""
                   )}
-                  {filterOptions && trainee && trainee.id ? (
-                    <span
-                      className="badge bg-primary ms-1"
-                      style={{ fontSize: "8px" }}
-                    >{`${trainee.ATT_NO} `}</span>
-                  ) : (
-                    ""
-                  )}
                 </div>
                 <div className="ms-auto">
                   <div className="">Total Count - {resultCount}</div>
@@ -515,25 +312,50 @@ const handleDownload = async () => {
             <div className="border border-2 rounded-2 p-1">
               <div
                 className=" table-responsive rounded-2"
-                style={{ maxHeight: "53vh", overflow: "hidden"}}
+                style={{ maxHeight: "53vh", overflow: "auto"}}
               >
                 {loading ? (
                   <MiniLoader />
                 ) : (
-                <div style={{ overflow: "hidden" }}>
-                <Grid
-                  className="table table-sm table-bordered w-100"
-                  columnCount={columnCount}
-                  columnWidth={columnWidth}
-                  height={height}
-                  rowCount={rowCount}
-                  rowHeight={rowHeight}
-                  width={gridWidth}
-                >
-                  {Cell}
-                </Grid>
-
-                </div>
+                  <table className="table table-sm table-bordered w-100">
+                  <thead style={{ position: "sticky", top: 0, zIndex: 1 }}>
+                    <tr>
+                      <th scope="col" className="bg-dark text-white">NO</th>
+                      <th scope="col" className="bg-dark text-white">ATT_NO</th>
+                      <th scope="col" className="bg-dark text-white">REG NO</th>
+                      <th scope="col" className="bg-dark text-white">END DATE</th>
+                      <th scope="col" className="bg-dark text-white">NAME</th>
+                      <th scope="col" className="bg-dark text-white">ATTN TOTAL</th>
+                      <th scope="col" className="bg-dark text-white">PAY AMOUNT(Rs)</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {matchingTrainees.map((trainee: any, index: number) => {
+                      const attendanceTotal = trainee.attendences?.reduce(
+                        (total: number, att: any) => total + (att.status === 1 ? 1 : 0),
+                        0
+                      ) || 0;
+                      
+                      const payAmount = attendanceTotal * 500;
+                      
+                      return (
+                        <tr key={index}>
+                          <td>{index + 1}</td>
+                          <td>{trainee.ATT_NO || ''}</td>
+                          <td>{trainee.REG_NO || ''}</td>
+                          <td>
+                            {trainee.end_date 
+                              ? trainee.end_date.split('T')[0] 
+                              : ''}
+                          </td>
+                          <td>{trainee.name || ''}</td>
+                          <td>{attendanceTotal}</td>
+                          <td>{payAmount.toLocaleString()}</td>
+                        </tr>
+                      );
+                    })}
+                  </tbody>
+                </table>
                 )}
               </div>
             </div>
