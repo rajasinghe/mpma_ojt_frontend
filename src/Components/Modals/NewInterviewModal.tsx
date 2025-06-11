@@ -6,7 +6,7 @@ import { useEffect, useState } from "react";
 import { zodResolver } from "@hookform/resolvers/zod";
 import Swal from "sweetalert2";
 import api from "../../api";
-import Select from "react-select";
+import moment from "moment";
 
 interface Props {
   showState: [boolean, React.Dispatch<React.SetStateAction<boolean>>];
@@ -30,7 +30,6 @@ const schema = z.object({
 export default function InterviewModal({
   showState,
   interview,
-  interviewSummary,
   department,
   refetchInterviews,
 }: Props) {
@@ -47,20 +46,6 @@ export default function InterviewModal({
     resetAll();
   }, [show]);
 
-  useEffect(() => {
-    console.log("interview changed", interview);
-    resetAll();
-    if (interview) {
-      setNic(interview.NIC);
-      console.log("here");
-      setValue("name", interview.name);
-      console.log(interview);
-    } else {
-      setNic(null);
-      setValue("name", "");
-    }
-  }, [interview]);
-
   const {
     register,
     setError,
@@ -70,7 +55,16 @@ export default function InterviewModal({
     handleSubmit,
   } = useForm<formType>({
     resolver: zodResolver(schema),
-    defaultValues: interview ? { name: interview.name } : {},
+    defaultValues: interview ? 
+    { name: interview.name,
+      date: interview.date,
+      duration: {
+        value: parseInt(interview.duration.split(" ")[0]),
+        unit: interview.duration?.split(" ")[1]?.toLowerCase(),
+      },
+      fromDate: interview.departments?.find((dept: any) => dept.departmentId === department.id)?.from || "",
+      toDate: interview.departments?.find((dept: any) => dept.departmentId === department.id)?.to || "",
+     } : {},
   });
 
   const handleClose = () => {
@@ -98,11 +92,11 @@ export default function InterviewModal({
           duration: `${formData.duration.value} ${formData.duration.unit}`,
           startDate: formData.date,
           name: formData.name,
-          departments: {
-            id: department.id,
-            fromDate: formData.fromDate,
-            toDate: formData.toDate,
-          }
+          departments: [{
+            department_id: department.id,
+            from: formData.fromDate,
+            to: formData.toDate,
+          }]
         });
         console.log(response);
         refetchInterviews();
@@ -145,16 +139,15 @@ export default function InterviewModal({
             Swal.showLoading();
           },
         });
-        const response = await api.put(`api/interview/${interview.id}`, {
-          nic: nic,
+        const response = await api.put(`api/interview/${interview.NIC}`, {
           duration: `${formData.duration.value} ${formData.duration.unit}`,
           startDate: formData.date,
           name: formData.name,
-          departments: {
-            id: department.id,
-            fromDate: formData.fromDate,
-            toDate: formData.toDate,
-          }
+          departments: [{
+            department_id: department.id,
+            from: formData.fromDate,
+            to: formData.toDate,
+          }]
         });
         console.log(response);
         refetchInterviews(); //fetch the interviews list again
@@ -181,12 +174,37 @@ export default function InterviewModal({
     }
   };
 
-  const resetAll = () => {
+const resetAll = () => {
+  if (interview) {
+    // Reset to original interview values
+    setNic(interview.NIC);
+    setValue("name", interview.name);
+    // Convert date to YYYY-MM-DD format
+    setValue("date", moment(interview.date).format("YYYY-MM-DD"));
+    
+    const durationParts = interview.duration.split(' ');
+    setValue("duration.value", parseInt(durationParts[0]));
+    setValue("duration.unit", durationParts[1]?.toLowerCase());
+    
+    // Format department dates
+    const fromDate = interview.from
+      ? moment(interview.from).format("YYYY-MM-DD")
+      : "";
+    const toDate = interview.to
+      ? moment(interview.to).format("YYYY-MM-DD")
+      : "";
+      
+    setValue("fromDate",  fromDate);
+    setValue("toDate",  toDate);
+    nicDisableState[1](true);
+  } else {
+    // Reset to empty form
     reset();
     setSummary(null);
     nicDisableState[1](false);
     setNic(null);
-  };
+  }
+};
 
   const onSubmit = async (formData: formType) => {
     try {
@@ -223,7 +241,7 @@ export default function InterviewModal({
             <label className="form-label">Name</label>
             <input
               {...register("name")}
-              disabled={nic == null}
+              disabled={!interview && nic == null}
               className="form-control"
               type="text"
             />
@@ -231,22 +249,12 @@ export default function InterviewModal({
           </div>
           <div className="mb-3">
             <label className="form-label">Start Date</label>
-            <Select
-              isDisabled={nic == null}
-              className=""
-              onChange={(item: any) => {
-                setValue("date", item.value);
-                console.log("here");
-                const summary = interviewSummary.find((summary) => item.value == summary.date);
-                setSummary(summary);
-              }}
-              options={interviewSummary.map((summary) => {
-                return {
-                  value: summary.date,
-                  label: summary.date,
-                };
-              })}
-            />
+              <input
+                {...register("date")}
+                type="date"
+                className={`form-control ${errors.date ? "is-invalid" : ""}`}
+                disabled={!interview && (isSubmitting || nic == null)}
+              />
             {errors.date && <p className="text-danger m-0">{errors.date.message}</p>}
           </div>
 
@@ -270,12 +278,12 @@ export default function InterviewModal({
                   placeholder="Value"
                   {...register("duration.value", { valueAsNumber: true })}
                   className={`form-control ${errors.duration?.value ? "is-invalid" : ""}`}
-                  disabled={nic == null}
+                  disabled={!interview && nic == null}
                 />
                 <select
                   {...register("duration.unit")}
                   className={`form-select ${errors.duration?.unit ? "is-invalid" : ""}`}
-                  disabled={nic == null}
+                  disabled={!interview && nic == null}
                 >
                   <option value="">Select unit</option>
                   <option value="week">Week(s)</option>
@@ -301,7 +309,7 @@ export default function InterviewModal({
                         {...register(`fromDate`)}
                         type="date"
                         className={`form-control form-control-sm`}
-                        disabled={nic == null}
+                        disabled={!interview && nic == null}
                       />
                     </div>
                   </div>
@@ -312,7 +320,7 @@ export default function InterviewModal({
                         {...register(`toDate`)}
                         type="date"
                         className={`form-control form-control-sm`}
-                        disabled={nic == null}
+                        disabled={!interview && nic == null}
                       />
                     </div>
                   </div>

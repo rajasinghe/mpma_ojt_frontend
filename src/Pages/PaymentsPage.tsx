@@ -440,7 +440,10 @@ const handleDownload = async () => {
                   className=" btn btn-danger btn-sm"
                   onClick={() => {
                     reset();
-                    setFilterOptions(null);
+                    setFilterOptions({
+                      month: { value: lastMonth.toString(), label: lastMonth.toString() },
+                      year: { value: lastMonthYear.toString(), label: lastMonthYear.toString() }
+                    });
                     setFilterVisible(false);
                   }}
                 >

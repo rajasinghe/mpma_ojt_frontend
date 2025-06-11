@@ -70,7 +70,7 @@ export default function InterviewForm(Interview : InterviewProps) {
         resolver: zodResolver(schema),
         defaultValues: Interview ?{
             name: Interview.name,
-            startDate: Interview.startDate,
+            startDate: Interview.startDate?.split("T")[0] || "",
             duration: Interview.duration,
             selections: Interview.selections
             //?.filter(sel => sel !== undefined)
@@ -132,7 +132,8 @@ export default function InterviewForm(Interview : InterviewProps) {
           
           if(isEditing){
             console.log("request:",body);
-            //const response = await api.put(`${}`,body);
+            const response = await api.put(`api/interview/${Interview.NIC}`,body);
+            console.log(response);
 
             Swal.fire({
               title: "Success!",
@@ -145,8 +146,8 @@ export default function InterviewForm(Interview : InterviewProps) {
             });
 
           }else{
-            console.log(body);
-            //const response = await api.post("",body);
+            const response = await api.post("/api/interview",body);
+            console.log(response);
     
             Swal.fire({
               title: "Success!",
@@ -242,14 +243,6 @@ export default function InterviewForm(Interview : InterviewProps) {
           <div className="mb-4">
             <div className="d-flex align-items-center mb-3">
               <label className="me-auto">Departments</label>
-              <button
-                type="button"
-                onClick={addSelection}
-                className="btn btn-sm btn-primary"
-                disabled={!nicValidated || isSubmitting}
-              >
-                Add Department
-              </button>
             </div>
 
             {selections.map((selection, index) => (
@@ -353,6 +346,18 @@ export default function InterviewForm(Interview : InterviewProps) {
             ))}
           </div>
 
+          <div className="d-flex justify-content-between align-items-center mb-3">
+            <div className="d-flex align-items-center mb-3">
+              <button
+                type="button"
+                onClick={addSelection}
+                className="btn btn-sm btn-primary"
+                disabled={!nicValidated || isSubmitting}
+              >
+                Add Department
+              </button>
+            </div>
+
           <div className="d-flex gap-2 justify-content-end">
             <button
               type="button"
@@ -387,6 +392,7 @@ export default function InterviewForm(Interview : InterviewProps) {
             >
               {isSubmitting ? "Submitting..." : "Submit"}
             </button>
+          </div>
           </div>
         </form>
     );
