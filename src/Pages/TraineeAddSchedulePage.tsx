@@ -71,6 +71,7 @@ export default function TraineeAddSchedulePage() {
     reset,
     register,
     setError,
+    setValue,
     watch,
     handleSubmit,
     formState: { errors },
@@ -101,6 +102,7 @@ export default function TraineeAddSchedulePage() {
         }
       : {
           start_date: formatDateToIso(trainee.start_date),
+          end_date: formatDateToIso(trainee.end_date),
           period: {
             value: trainee.training_period_id + "",
             label:
@@ -124,6 +126,7 @@ export default function TraineeAddSchedulePage() {
           new Date(startDate)
         );
         setEndDate(newEndDate);
+        setValue("end_date", newEndDate.toISOString().split('T')[0]);
         
         // Reset to calculated end date when period or start date changes
         setIsManualEndDate(false);
@@ -395,7 +398,7 @@ export default function TraineeAddSchedulePage() {
                       <input
                         className="form-control"
                         type="date"
-                        value={manualEndDate ? manualEndDate.toISOString().split('T')[0] : ''}
+                        value={manualEndDate ? manualEndDate.toISOString().split('T')[0] : trainee.end_date}
                         {...register("end_date")}
                         onChange={(e) => {
                           setIsManualEndDate(true);
@@ -457,7 +460,7 @@ export default function TraineeAddSchedulePage() {
                             type="date"
                             {...register(`schedules.${index}.start_date`)}
                             min={watch('start_date') || ''}
-                            max={endDate ? endDate.toISOString().split("T")[0] : ''}
+                            max={watch("end_date") || ''}
                           />
                           {errors.schedules?.[index]?.start_date && (
                             <p className="text-danger">
@@ -472,7 +475,7 @@ export default function TraineeAddSchedulePage() {
                             type="date"
                             {...register(`schedules.${index}.end_date`)}
                             min={watch(`schedules.${index}.start_date`) || watch('start_date') || ''}
-                            max={endDate ? endDate.toISOString().split("T")[0] : ''}
+                            max={watch("end_date") || ''}
                           />
                           {errors.schedules?.[index]?.end_date && (
                             <p className="text-danger">

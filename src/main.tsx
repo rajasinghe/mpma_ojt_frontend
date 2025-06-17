@@ -47,6 +47,7 @@ import ViewInterviewPage from "./features/Interview/viewInterviewPage.tsx";
 import EditInterviewPage from "./features/Interview/editInterviewPage.tsx";
 import {InterviewLoader} from "./loaders/InterviewLoader.ts";
 import PaymentsPage from "./Pages/PaymentsPage.tsx";
+import ViewPaymentDetails from "./Pages/ViewPaymentDetails.tsx";
 
 export const setToken = () => {
   const token = localStorage.getItem("token");
@@ -140,6 +141,10 @@ const router = createBrowserRouter([
             path: "payments/paymentslipgenerate",
             element: <GeneratePaymentSlip />,
             loader: PaymentSlipLoader
+          },
+          {
+            path: "payments/:id/view",
+            element: <ViewPaymentDetails />,
           },
           {
             path: "calender",

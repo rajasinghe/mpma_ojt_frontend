@@ -67,7 +67,7 @@ export default function BankDetailsForm({ trainee }: props) {
             },
           });
 
-          const response = await api.put(`/api/trainee/${trainee.id}/payment`, formData);
+          const response = await api.put(`/api/payments/${trainee.id}`, formData);
           console.log(response);
           Swal.fire({
             title: "created!",
@@ -75,7 +75,7 @@ export default function BankDetailsForm({ trainee }: props) {
             icon: "success",
           });
           reset();
-          navigate(`/OJT/trainees/${trainee.id}/profile`);
+          navigate(-1);
         }
       })
       .catch((errors) => {
@@ -124,7 +124,7 @@ export default function BankDetailsForm({ trainee }: props) {
             traineeId: trainee.id,
           };
           console.log(data);
-          const response = await api.post("/api/trainee/payment", data);
+          const response = await api.post("/api/payments", data);
           console.log(response);
           Swal.fire({
             title: "created!",
@@ -132,7 +132,7 @@ export default function BankDetailsForm({ trainee }: props) {
             icon: "success",
           });
           reset();
-          navigate(`/OJT/trainees/${trainee.id}/profile`);
+          navigate(-1);
         }
       })
       .catch((errors) => {

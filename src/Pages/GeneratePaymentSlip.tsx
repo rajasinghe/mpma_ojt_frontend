@@ -19,7 +19,7 @@ interface LoaderData {
 
 interface Summary {
   traineeCount: number;
-  traineesWithoutBankDetails: number[];
+  traineesWithoutBank350: number[];
   traineeIds: number[];
 }
 
@@ -87,7 +87,7 @@ export default function GeneratePaymentSlip() {
     setIsChanged(false);
 
     try {
-      const response = await api.get("api/attendence/generatePaySlip/summary", {
+      const response = await api.get("api/payments/generatePaySlip/summary", {
         params: {
           month: formData.month,
           year: formData.year,
@@ -127,7 +127,7 @@ export default function GeneratePaymentSlip() {
         },
       });
 
-      const response = await api.post("api/attendence/generatePaySlip", {
+      const response = await api.post("api/payments/generatePaySlip", {
         year: validatedData.year,
         month: validatedData.month,
         date: validatedData.date.toISOString(),
@@ -192,7 +192,7 @@ export default function GeneratePaymentSlip() {
       breadCrumbs={["Home", "Payments", "Generate Payment Slip"]}
     >
       <SubContainer>
-        <section className="bg-body-tertiary px-2 mt-1 p-4 rounded">
+        <section className="bg-body-tertiary px-2 mt-1 p-4 rounded" style={{ maxWidth: "85%" }}>
           <form onSubmit={handleSubmit} className="space-y-4">
 
             <div>
@@ -267,12 +267,12 @@ export default function GeneratePaymentSlip() {
                     )}
                   </div>
                   {summary?.traineeCount > 0 && (
-                    <div className={`fw-bold ${summary.traineesWithoutBankDetails.length > 0 ? 'text-danger' : 'text-primary'}`}>
-                      {summary.traineesWithoutBankDetails.length > 0 ? (
+                    <div className={`fw-bold ${summary.traineesWithoutBank350.length > 0 ? 'text-danger' : 'text-primary'}`}>
+                      {summary.traineesWithoutBank350.length > 0 ? (
                         <>
                           Trainees Without Bank Details (Attendance No.) :
                           <div className="trainee-grid ms-3">
-                            {summary.traineesWithoutBankDetails.map((traineeId, index) => (
+                            {summary.traineesWithoutBank350.map((traineeId, index) => (
                               <div key={traineeId}>
                                 {index + 1}. {traineeId}
                               </div>

@@ -29,7 +29,7 @@ export const paymentDetailsLoader = async () => {
     }),
     api.get("api/attendence/summary"),
     api.get(`api/calender/${year}/${lastMonth}`),
-    api.get("api/attendence/generatePaySlip/summary", {
+    api.get("api/payments/generatePaySlip/summary", {
       params: {
         month: lastMonth,
         year: year,
@@ -43,10 +43,28 @@ export const paymentDetailsLoader = async () => {
       (trainee: { trainee_id: number }) => trainee.trainee_id === id
     )
   ).filter(Boolean);
+  
+  const GOVTrainees = selectedTrainees.data.allGOVTrainees
+  .map((govTrainee: { trainee_id: number, AttCount: number }) => {
+    const traineeData = attendecesResposne.data.find(
+      (trainee: { trainee_id: number }) => trainee.trainee_id === govTrainee.trainee_id
+    );
+    
+    // Return combined data with AttCount
+    return traineeData ? {
+      ...traineeData,
+      AttCount: govTrainee.AttCount
+    } : null;
+  })
+  .filter(Boolean);
+
+  console.log("GOVTrainees", GOVTrainees);
 
   return {
     summary: attendenceSummaryResponse.data,
     trainees: filteredTrainees,
     workingDays: workingDaysResponse.data,
+    traineesWIthoutBankDetails: selectedTrainees.data.traineesWithoutBankDetails,
+    GOVTrainees: GOVTrainees,
   };
 }

@@ -1,4 +1,4 @@
-import { useLoaderData, useNavigation } from "react-router-dom";
+import { Link, useLoaderData, useNavigation } from "react-router-dom";
 import { Modal } from "react-bootstrap";
 import { useEffect, useState } from "react";
 import Fuse from "fuse.js";
@@ -16,9 +16,11 @@ import SubContainer from "../layout/containers/sub_container/SubContainer";
 
 
 interface loaderProps {
-  trainees: [];
+  trainees: number[];
   workingDays: [];
   summary: [];
+  traineesWIthoutBankDetails: number[];
+  GOVTrainees: any[];
 }
 
 const filterSchema = z.object({
@@ -42,6 +44,8 @@ export default function PaymentsPage() {
   const [matchingTrainees, setMatchingTrainees] = useState<any>(loaderData.trainees);
   //const [trainee_id, setTraineeId] = useState<null | number>(null);
   const [keyword, setKeyword] = useState<string>("");
+  const [paymentSummary, setPaymentSummary] = useState<number[]>(loaderData.traineesWIthoutBankDetails);
+  const [otherTrainees, setOtherTrainees] = useState<any[]>(loaderData.GOVTrainees);
   
 
   //const [show, setShow] = useState(false);
@@ -116,7 +120,7 @@ export default function PaymentsPage() {
                 },
               }),
               api.get(`api/calender/${filterParams.year}/${filterParams.month}`),
-              api.get("api/attendence/generatePaySlip/summary", {
+              api.get("api/payments/generatePaySlip/summary", {
                 params: {
                   month: filterParams.month,
                   year: filterParams.year,
@@ -124,6 +128,8 @@ export default function PaymentsPage() {
               }),
             ]);
             console.log(workingDaysResponse.data);
+
+            setPaymentSummary(selectedTrainee.data.traineesWithoutBankDetails);
 
             // Filter and sort trainees based on selectedTrainees order
             const filteredTrainees = selectedTrainee.data.traineeIds
@@ -135,6 +141,25 @@ export default function PaymentsPage() {
               .filter(Boolean);            
 
             setTrainees(filteredTrainees);
+
+            const GOVTrainees = selectedTrainee.data.allGOVTrainees
+            .map((govTrainee: { trainee_id: number, AttCount: number }) => {
+              const traineeData = attendencesResponse.data.find(
+                (trainee: { trainee_id: number }) => trainee.trainee_id === govTrainee.trainee_id
+              );
+              
+              // Return combined data with AttCount
+              return traineeData ? {
+                ...traineeData,
+                AttCount: govTrainee.AttCount
+              } : null;
+            })
+            .filter(Boolean);
+
+            const other = getUniqueGOVTrainees(selectedTrainee.data.traineeIds, GOVTrainees);
+
+            setOtherTrainees(other);
+
           }
           setLoading(false);
         };
@@ -151,6 +176,11 @@ export default function PaymentsPage() {
       }
     }
   }, [filterOptions]);
+
+  useEffect(() => {
+
+
+  },[])
 
   const handleSearch = (keyword: string) => {
     if (keyword.trim() != "") {
@@ -211,7 +241,7 @@ export default function PaymentsPage() {
 const handleDownload = async () => {
   try {
     const response = await api.post(
-      "api/attendence/generatePaymentDetails",
+      "api/payments/downloadPaymentDetails",
       {
         params: {
           month: filterOptions?.month,
@@ -250,6 +280,52 @@ const handleDownload = async () => {
     });
   }
 };
+
+  const handleRemove = async (traineeId: number) => {
+
+    try{
+      console.log("remove:",traineeId);
+
+      const response = await api.post("api/payments/removeFromPaymentList", {
+        year: Number(filterOptions?.year?.value),
+        month: Number(filterOptions?.month?.value),
+        id: traineeId
+      })
+
+      console.log("response",response);
+    } catch(error){
+      console.log(error);
+    }
+
+  }
+
+  const handleAdd = async (traineeId: number) => {
+
+    try{
+      console.log("Add:",traineeId);
+
+      const response = await api.post("api/payments/addToPaymentList", {
+        year: Number(filterOptions?.year?.value),
+        month: Number(filterOptions?.month?.value),
+        id: traineeId
+      })
+
+      console.log("response",response);
+    } catch(error){
+      console.log(error);
+    }
+
+  }
+
+
+  const getUniqueGOVTrainees = (selectedTraineeIds: number[], allGOVTrainees: any[]) => {
+    // Filter GOV trainees that are not in the selected trainees array
+    return allGOVTrainees.filter((govTrainee) => 
+      !selectedTraineeIds.includes(govTrainee.trainee_id)
+    );
+  };
+
+
 
   return (
     <>
@@ -314,19 +390,21 @@ const handleDownload = async () => {
                 className=" table-responsive rounded-2"
                 style={{ maxHeight: "53vh", overflow: "auto"}}
               >
+                <h4>Payment List</h4>
                 {loading ? (
                   <MiniLoader />
                 ) : (
                   <table className="table table-sm table-bordered w-100">
                   <thead style={{ position: "sticky", top: 0, zIndex: 1 }}>
-                    <tr>
+                    <tr className="small">
                       <th scope="col" className="bg-dark text-white">NO</th>
                       <th scope="col" className="bg-dark text-white">ATT_NO</th>
                       <th scope="col" className="bg-dark text-white">REG NO</th>
                       <th scope="col" className="bg-dark text-white">END DATE</th>
                       <th scope="col" className="bg-dark text-white">NAME</th>
                       <th scope="col" className="bg-dark text-white">ATTN TOTAL</th>
-                      <th scope="col" className="bg-dark text-white">PAY AMOUNT(Rs)</th>
+                      <th scope="col" className="bg-dark text-white">PAYMENT</th>
+                      <th scope="col" className="bg-dark text-white">Options</th>
                     </tr>
                   </thead>
                   <tbody>
@@ -350,12 +428,85 @@ const handleDownload = async () => {
                           </td>
                           <td>{trainee.name || ''}</td>
                           <td>{attendanceTotal}</td>
-                          <td>{payAmount.toLocaleString()}</td>
+                          <td>RS. {payAmount.toLocaleString()}</td>
+                          <td>
+                            <div className="d-flex gap-2 justify-content-center">
+                                <Link style={{ width: "80px" }}
+                                to={`/OJT/payments/${trainee.trainee_id}/view`}
+                                className={`btn btn-sm ${paymentSummary.includes(Number(trainee.ATT_NO)) ? 'btn-primary' : 'btn-warning'} sm-2`}
+                                >
+                                {paymentSummary.includes(Number(trainee.ATT_NO)) ? 'Add' : 'View'}
+                                </Link>
+                                {paymentSummary.includes(Number(trainee.ATT_NO)) && (
+                                  <button
+                                    onClick={() => handleRemove(trainee.trainee_id)}
+                                    /*disabled={isRemoving}*/
+                                    className="btn btn-sm btn-danger sm-2"
+                                  >
+                                    {/*isRemoving*/ 0 ? 'Removing...' : 'Remove'}
+                                  </button>
+                                )}
+                            </div>
+                          </td>
                         </tr>
                       );
                     })}
                   </tbody>
                 </table>
+                )}
+
+                <h4>Other Trainees</h4>
+                {loading ? (
+                  <MiniLoader />
+                ) : (
+                  <table className="table table-sm table-bordered w-100">
+                    <thead style={{ position: "sticky", top: 0, zIndex: 1 }}>
+                      <tr className="small">
+                        <th scope="col" className="bg-dark text-white">NO</th>
+                        <th scope="col" className="bg-dark text-white">ATT_NO</th>
+                        <th scope="col" className="bg-dark text-white">REG NO</th>
+                        <th scope="col" className="bg-dark text-white">END DATE</th>
+                        <th scope="col" className="bg-dark text-white">NAME</th>
+                        <th scope="col" className="bg-dark text-white">ATTN COUNT</th>
+                        <th scope="col" className="bg-dark text-white">Options</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      {otherTrainees.map((trainee: any, index: number) => (
+                        <tr key={index}>
+                          <td>{index + 1}</td>
+                          <td>{trainee.ATT_NO || ''}</td>
+                          <td>{trainee.REG_NO || ''}</td>
+                          <td>
+                            {trainee.end_date 
+                              ? trainee.end_date.split('T')[0] 
+                              : ''}
+                          </td>
+                          <td>{trainee.name || ''}</td>
+                          <td>{trainee.AttCount || 0}</td>
+                          <td>
+                            <div className="d-flex gap-2 justify-content-center">
+                              <Link 
+                                style={{ width: "80px" }}
+                                to={`/OJT/payments/${trainee.trainee_id}/view`}
+                                className={`btn btn-sm ${paymentSummary.includes(Number(trainee.ATT_NO)) ? 'btn-primary' : 'btn-warning'} sm-2`}
+                              >
+                                {paymentSummary.includes(Number(trainee.ATT_NO)) ? 'Add' : 'View'}
+                              </Link>
+                              {!paymentSummary.includes(Number(trainee.ATT_NO)) && (
+                                <button
+                                  onClick={() => handleAdd(trainee.trainee_id)}
+                                  className="btn btn-sm btn-success sm-2"
+                                >
+                                  list
+                                </button>
+                              )}
+                            </div>
+                          </td>
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
                 )}
               </div>
             </div>
