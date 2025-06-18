@@ -31,6 +31,13 @@ const Sidebar = ({ user }: Props) => {
           active_icon: "bi-person-plus-fill",
           inactive_icon: "bi-person-plus",
         },
+        {
+          name: "Details",
+          route: "/OJT/trainees/details",
+          regex: /^\/OJT\/trainees\/details/i,
+          active_icon: "bi-folder-fill",
+          inactive_icon: "bi-folder",
+        },
       ],
     },
     {

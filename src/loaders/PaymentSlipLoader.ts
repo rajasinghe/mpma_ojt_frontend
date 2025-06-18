@@ -27,7 +27,7 @@ export const paymentDetailsLoader = async () => {
         year: year,
       },
     }),
-    api.get("api/attendence/summary"),
+    api.get("/api/attendence/getDateSummary"),
     api.get(`api/calender/${year}/${lastMonth}`),
     api.get("api/payments/generatePaySlip/summary", {
       params: {
@@ -58,7 +58,7 @@ export const paymentDetailsLoader = async () => {
   })
   .filter(Boolean);
 
-  console.log("GOVTrainees", GOVTrainees);
+  console.log("GOVTrainees", attendenceSummaryResponse.data);
 
   return {
     summary: attendenceSummaryResponse.data,

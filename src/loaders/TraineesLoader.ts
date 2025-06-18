@@ -110,3 +110,11 @@ export const traineeBankDetailsLoader = async ({ params }: any) => {
     ...trainee,
   };
 };
+
+export const traineeDetailsPageLoader = async () => {
+  const [traineeDetails] = await Promise.all([
+    api.get("api/attendence/traineeDetails"),
+  ]);
+
+  return traineeDetails.data;
+};

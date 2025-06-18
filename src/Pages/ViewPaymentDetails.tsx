@@ -89,22 +89,22 @@ export default function TraineeBankDetailsUpdatePage() {
         >
             <section className=" m-1 border border-dark-subtle border-2 rounded bg-body-tertiary px-2"
                 style={{ minHeight: "50vh", maxWidth: "1200px"}}>
-            <div className="container-fluid border border-dark rounded-2 my-2">
+            <div className="container-fluid border border-dark rounded-2 my-2 py-2">
                 <div className=" fs-5 fw-bolder">Trainee Details</div>
                 <div className="">
-                <div className=" fw-semibold">Reg NO - {trainee?.REG_NO}</div>
-                <div className="fw-semibold">ATT NO - {trainee?.ATT_NO}</div>
-                <div className="fw-semibold">NIC NO - {trainee?.NIC_NO}</div>
+                <div className=" fw-semibold py-1">Reg NO - {trainee?.REG_NO}</div>
+                <div className="fw-semibold py-1">ATT NO - {trainee?.ATT_NO}</div>
+                <div className="fw-semibold py-1">NIC NO - {trainee?.NIC_NO}</div>
                 </div>
             </div>
             <div className="container-fluid border border-dark rounded-2 my-2 py-2">
             <div className=" fs-5 fw-bolder">Bank Details</div>
             {trainee?.acc_no ? (
                 <>
-                <div className="  fw-semibold">Name - {trainee.bankName}</div>
-                <div className="  fw-semibold">Account Number - {trainee.acc_no}</div>
-                <div className="  fw-semibold">Branch Code - {trainee.branch_code}</div>
-                <div>
+                <div className="  fw-semibold py-1">Name - {trainee.bankName}</div>
+                <div className="  fw-semibold py-1">Account Number - {trainee.acc_no}</div>
+                <div className="  fw-semibold py-1">Branch Code - {trainee.branch_code}</div>
+                <div className="py-2">
                     <Link
                     to={`/OJT/trainees/${id}/bank_details/update`}
                     className="btn  btn-sm btn-warning"
@@ -114,12 +114,14 @@ export default function TraineeBankDetailsUpdatePage() {
                 </div>
                 </>
             ) : (
+                <div className="pt-3">
                 <Link
                 to={`/OJT/trainees/${id}/bank_details`}
                 className="btn btn-sm btn-primary"
                 >
                 Add Bank Details
                 </Link>
+                </div>
             )}
             </div>
             </section>
