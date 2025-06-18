@@ -13,10 +13,16 @@ import MiniLoader from "../Components/ui/Loader/MiniLoader";
 import Swal from "sweetalert2";
 import { MainContainer } from "../layout/containers/main_container/MainContainer";
 import SubContainer from "../layout/containers/sub_container/SubContainer";
+import { Accordion } from 'react-bootstrap';
 
+
+interface Trainee {
+  trainee_id: number;
+  ATT_NO: number;
+}
 
 interface loaderProps {
-  trainees: number[];
+  trainees: Trainee[];
   workingDays: [];
   summary: [];
   traineesWIthoutBankDetails: number[];
@@ -40,7 +46,7 @@ type filterFormValues = z.infer<typeof filterSchema>;
 export default function PaymentsPage() {
   const loaderData = useLoaderData() as loaderProps;
   /* here the trainees means a object which has the attendences related to each trainee */
-  const [trainees, setTrainees] = useState(loaderData.trainees);
+  const [trainees, setTrainees] = useState<Trainee[]>(loaderData.trainees);
   const [matchingTrainees, setMatchingTrainees] = useState<any>(loaderData.trainees);
   //const [trainee_id, setTraineeId] = useState<null | number>(null);
   const [keyword, setKeyword] = useState<string>("");
@@ -281,41 +287,141 @@ const handleDownload = async () => {
   }
 };
 
+  const refreshData = async () => {
+    try {
+      setLoading(true);
+      const [attendencesResponse, selectedTrainee] = await Promise.all([
+        api.get("api/attendence", {
+          params: {
+            month: filterOptions?.month?.value,
+            year: filterOptions?.year?.value,
+          },
+        }),
+        api.get("api/payments/generatePaySlip/summary", {
+          params: {
+            month: filterOptions?.month?.value,
+            year: filterOptions?.year?.value,
+          },
+        }),
+      ]);
+
+      setPaymentSummary(selectedTrainee.data.traineesWithoutBankDetails);
+
+      // Update main trainees list
+      const filteredTrainees = selectedTrainee.data.traineeIds
+        .map((id: number) => 
+          attendencesResponse.data.find(
+            (trainee: { trainee_id: number }) => trainee.trainee_id === id
+          )
+        )
+        .filter(Boolean);
+      
+      setTrainees(filteredTrainees);
+
+      // Update other trainees list
+      const GOVTrainees = selectedTrainee.data.allGOVTrainees
+        .map((govTrainee: { trainee_id: number, AttCount: number }) => {
+          const traineeData = attendencesResponse.data.find(
+            (trainee: { trainee_id: number }) => trainee.trainee_id === govTrainee.trainee_id
+          );
+          return traineeData ? {
+            ...traineeData,
+            AttCount: govTrainee.AttCount
+          } : null;
+        })
+        .filter(Boolean);
+
+      const other = getUniqueGOVTrainees(selectedTrainee.data.traineeIds, GOVTrainees);
+      setOtherTrainees(other);
+
+    } catch (error) {
+      console.error("Error refreshing data:", error);
+      Swal.fire({
+        icon: 'error',
+        title: 'Failed to refresh data',
+        text: 'Please try again later'
+      });
+    } finally {
+      setLoading(false);
+    }
+  };
+
   const handleRemove = async (traineeId: number) => {
-
-    try{
-      console.log("remove:",traineeId);
-
+    try {
       const response = await api.post("api/payments/removeFromPaymentList", {
         year: Number(filterOptions?.year?.value),
         month: Number(filterOptions?.month?.value),
         id: traineeId
-      })
+      });
 
-      console.log("response",response);
-    } catch(error){
+      if (response.status === 200) {
+        // Update the trainees list by filtering out the removed trainee
+        setTrainees(prevTrainees => 
+          prevTrainees.filter(trainee => trainee.trainee_id !== traineeId)
+        );
+
+        // Add the trainee to otherTrainees list
+        const removedTrainee = trainees.find(t => t.trainee_id === traineeId);
+        if (removedTrainee) {
+          setOtherTrainees(prev => [...prev, removedTrainee]);
+        }
+
+        // Update paymentSummary to reflect the change
+        setPaymentSummary(prev => 
+          prev.filter(attNo => 
+            attNo !== Number(removedTrainee?.ATT_NO)
+          )
+        );
+        refreshData();
+      }
+    } catch (error) {
       console.log(error);
+      // Show error message to user
+      Swal.fire({
+        icon: 'error',
+        title: 'Failed to remove trainee',
+        text: 'Please try again later'
+      });
     }
-
-  }
+  };
 
   const handleAdd = async (traineeId: number) => {
-
-    try{
-      console.log("Add:",traineeId);
-
+    try {
       const response = await api.post("api/payments/addToPaymentList", {
         year: Number(filterOptions?.year?.value),
         month: Number(filterOptions?.month?.value),
         id: traineeId
-      })
+      });
 
-      console.log("response",response);
-    } catch(error){
+      if (response.status === 200) {
+        // Find the trainee being added
+        const addedTrainee = otherTrainees.find(t => t.trainee_id === traineeId);
+        
+        if (addedTrainee) {
+          // Remove from otherTrainees
+          setOtherTrainees(prev => 
+            prev.filter(trainee => trainee.trainee_id !== traineeId)
+          );
+
+          // Add to main trainees list
+          setTrainees(prev => [...prev, addedTrainee]);
+
+          // Update payment summary
+          setPaymentSummary(prev => [...prev, Number(addedTrainee.ATT_NO)]);
+
+        }
+        refreshData();
+      }
+    } catch (error) {
       console.log(error);
+      // Show error message
+      Swal.fire({
+        icon: 'error',
+        title: 'Failed to add trainee',
+        text: 'Please try again later'
+      });
     }
-
-  }
+  };
 
 
   const getUniqueGOVTrainees = (selectedTraineeIds: number[], allGOVTrainees: any[]) => {
@@ -343,6 +449,7 @@ const handleDownload = async () => {
                 <input
                   className=" form-control"
                   type="text"
+                  placeholder="Search..."
                   value={keyword}
                   onChange={(e) => {
                     setKeyword(e.target.value);
@@ -385,131 +492,141 @@ const handleDownload = async () => {
                 </div>
               </div>
             </div>
-            <div className="border border-2 rounded-2 p-1">
-              <div
-                className=" table-responsive rounded-2"
-                style={{ maxHeight: "53vh", overflow: "auto"}}
-              >
-                <h4>Payment List</h4>
-                {loading ? (
-                  <MiniLoader />
-                ) : (
-                  <table className="table table-sm table-bordered w-100">
-                  <thead style={{ position: "sticky", top: 0, zIndex: 1 }}>
-                    <tr className="small">
-                      <th scope="col" className="bg-dark text-white">NO</th>
-                      <th scope="col" className="bg-dark text-white">ATT_NO</th>
-                      <th scope="col" className="bg-dark text-white">REG NO</th>
-                      <th scope="col" className="bg-dark text-white">END DATE</th>
-                      <th scope="col" className="bg-dark text-white">NAME</th>
-                      <th scope="col" className="bg-dark text-white">ATTN TOTAL</th>
-                      <th scope="col" className="bg-dark text-white">PAYMENT</th>
-                      <th scope="col" className="bg-dark text-white">Options</th>
-                    </tr>
-                  </thead>
-                  <tbody>
-                    {matchingTrainees.map((trainee: any, index: number) => {
-                      const attendanceTotal = trainee.attendences?.reduce(
-                        (total: number, att: any) => total + (att.status === 1 ? 1 : 0),
-                        0
-                      ) || 0;
-                      
-                      const payAmount = attendanceTotal * 500;
-                      
-                      return (
-                        <tr key={index}>
-                          <td>{index + 1}</td>
-                          <td>{trainee.ATT_NO || ''}</td>
-                          <td>{trainee.REG_NO || ''}</td>
-                          <td>
-                            {trainee.end_date 
-                              ? trainee.end_date.split('T')[0] 
-                              : ''}
-                          </td>
-                          <td>{trainee.name || ''}</td>
-                          <td>{attendanceTotal}</td>
-                          <td>RS. {payAmount.toLocaleString()}</td>
-                          <td>
-                            <div className="d-flex gap-2 justify-content-center">
-                                <Link style={{ width: "80px" }}
-                                to={`/OJT/payments/${trainee.trainee_id}/view`}
-                                className={`btn btn-sm ${paymentSummary.includes(Number(trainee.ATT_NO)) ? 'btn-primary' : 'btn-warning'} sm-2`}
-                                >
-                                {paymentSummary.includes(Number(trainee.ATT_NO)) ? 'Add' : 'View'}
-                                </Link>
-                                {paymentSummary.includes(Number(trainee.ATT_NO)) && (
-                                  <button
-                                    onClick={() => handleRemove(trainee.trainee_id)}
-                                    /*disabled={isRemoving}*/
-                                    className="btn btn-sm btn-danger sm-2"
-                                  >
-                                    {/*isRemoving*/ 0 ? 'Removing...' : 'Remove'}
-                                  </button>
-                                )}
-                            </div>
-                          </td>
-                        </tr>
-                      );
-                    })}
-                  </tbody>
-                </table>
-                )}
+            <div className="border border-2 rounded-2 p-1 mx-auto" style={{ maxHeight: "53vh", overflowY: "auto", maxWidth: "1200px"}}>
+                <Accordion defaultActiveKey={["0","0"]} alwaysOpen>
+                  {/* Payment List */}
+                  <Accordion.Item eventKey="0">
+                    <Accordion.Header style={{position:'sticky',top:0,zIndex:3, backgroundColor: '#fff'}}>Payment List</Accordion.Header>
+                    <Accordion.Body>
+                      <div className="table-responsive rounded shadow-sm p-1 bg-white">
+                        {loading ? (
+                          <MiniLoader />
+                        ) : (
+                          <table className="table table-hover table-bordered table-striped align-middle text-center">
+                            <thead className="table-dark sticky-top small" style={{position:'sticky',top:0,zIndex:2, backgroundColor: '#212529'}}>
+                              <tr className="small">
+                                <th className="bg-dark text-white">NO</th>
+                                <th className="bg-dark text-white">ATT_NO</th>
+                                <th className="bg-dark text-white">REG NO</th>
+                                <th className="bg-dark text-white">END DATE</th>
+                                <th className="bg-dark text-white">NAME</th>
+                                <th className="bg-dark text-white">ATTN COUNT</th>
+                                <th className="bg-dark text-white">PAYMENT</th>
+                                <th className="bg-dark text-white">Options</th>
+                              </tr>
+                            </thead>
+                            <tbody>
+                              {matchingTrainees.map((trainee:any, index:number) => {
+                                const attendanceTotal = trainee.attendences?.reduce(
+                                  (total:number, att:any) => total + (att.status === 1 ? 1 : 0),
+                                  0
+                                ) || 0;
 
-                <h4>Other Trainees</h4>
-                {loading ? (
-                  <MiniLoader />
-                ) : (
-                  <table className="table table-sm table-bordered w-100">
-                    <thead style={{ position: "sticky", top: 0, zIndex: 1 }}>
-                      <tr className="small">
-                        <th scope="col" className="bg-dark text-white">NO</th>
-                        <th scope="col" className="bg-dark text-white">ATT_NO</th>
-                        <th scope="col" className="bg-dark text-white">REG NO</th>
-                        <th scope="col" className="bg-dark text-white">END DATE</th>
-                        <th scope="col" className="bg-dark text-white">NAME</th>
-                        <th scope="col" className="bg-dark text-white">ATTN COUNT</th>
-                        <th scope="col" className="bg-dark text-white">Options</th>
-                      </tr>
-                    </thead>
-                    <tbody>
-                      {otherTrainees.map((trainee: any, index: number) => (
-                        <tr key={index}>
-                          <td>{index + 1}</td>
-                          <td>{trainee.ATT_NO || ''}</td>
-                          <td>{trainee.REG_NO || ''}</td>
-                          <td>
-                            {trainee.end_date 
-                              ? trainee.end_date.split('T')[0] 
-                              : ''}
-                          </td>
-                          <td>{trainee.name || ''}</td>
-                          <td>{trainee.AttCount || 0}</td>
-                          <td>
-                            <div className="d-flex gap-2 justify-content-center">
-                              <Link 
-                                style={{ width: "80px" }}
-                                to={`/OJT/payments/${trainee.trainee_id}/view`}
-                                className={`btn btn-sm ${paymentSummary.includes(Number(trainee.ATT_NO)) ? 'btn-primary' : 'btn-warning'} sm-2`}
-                              >
-                                {paymentSummary.includes(Number(trainee.ATT_NO)) ? 'Add' : 'View'}
-                              </Link>
-                              {!paymentSummary.includes(Number(trainee.ATT_NO)) && (
-                                <button
-                                  onClick={() => handleAdd(trainee.trainee_id)}
-                                  className="btn btn-sm btn-success sm-2"
-                                >
-                                  list
-                                </button>
-                              )}
-                            </div>
-                          </td>
-                        </tr>
-                      ))}
-                    </tbody>
-                  </table>
-                )}
+                                const payAmount = attendanceTotal * 500;
+
+                                return (
+                                  <tr key={index}>
+                                    <td>{index + 1}</td>
+                                    <td>{trainee.ATT_NO || ''}</td>
+                                    <td>{trainee.REG_NO || ''}</td>
+                                    <td>{trainee.end_date?.split('T')[0] || ''}</td>
+                                    <td>{trainee.name || ''}</td>
+                                    <td>{attendanceTotal}</td>
+                                    <td>RS. {payAmount.toLocaleString()}</td>
+                                    <td>
+                                      <div className="d-flex gap-2 justify-content-center">
+                                      <Link
+                                        to={`/OJT/payments/${trainee.trainee_id}/view`}
+                                        className={`btn btn-sm d-flex align-items-center justify-content-center px-2 py-1 ${paymentSummary.includes(Number(trainee.ATT_NO)) ? 'btn-primary' : 'btn-outline-warning'}`}
+                                        title={paymentSummary.includes(Number(trainee.ATT_NO)) ? 'Add details' : 'View details'}
+                                      >
+                                        <i className={`bi ${paymentSummary.includes(Number(trainee.ATT_NO)) ? 'bi-plus-circle' : 'bi bi-file-earmark-text'}`}></i>
+                                      </Link>
+                                      {paymentSummary.includes(Number(trainee.ATT_NO)) && (
+                                        <button
+                                          onClick={() => handleRemove(trainee.trainee_id)}
+                                          className="btn btn-sm btn-outline-danger d-flex align-items-center justify-content-center px-2 py-1"
+                                          title="Remove from list"
+                                        >
+                                          <i className="bi bi-x-circle"></i>
+                                        </button>
+                                      )}
+
+                                      </div>
+                                    </td>
+                                  </tr>
+                                );
+                              })}
+                            </tbody>
+                          </table>
+                        )}
+                      </div>
+                    </Accordion.Body>
+                  </Accordion.Item>
+
+                  {/* Other Trainees */}
+                  <Accordion.Item eventKey="1">
+                    <Accordion.Header style={{position:'sticky',top:0,zIndex:3, backgroundColor: '#fff'}}>Others</Accordion.Header>
+                    <Accordion.Body>
+                      <div className="table-responsive rounded shadow-sm p-1 bg-white">
+                        {loading ? (
+                          <MiniLoader />
+                        ) : (
+                          <table className="table table-hover table-bordered table-striped align-middle text-center">
+                            <thead className="table-dark sticky-top small" style={{ position: "sticky", top: 0, zIndex: 1 }}>
+                              <tr className="small">
+                                <th className="bg-dark text-white">NO</th>
+                                <th className="bg-dark text-white">ATT_NO</th>
+                                <th className="bg-dark text-white">REG NO</th>
+                                <th className="bg-dark text-white">END DATE</th>
+                                <th className="bg-dark text-white">NAME</th>
+                                <th className="bg-dark text-white">ATTN COUNT</th>
+                                <th className="bg-dark text-white">Options</th>
+                              </tr>
+                            </thead>
+                            <tbody>
+                              {otherTrainees.map((trainee, index) => (
+                                <tr key={index}>
+                                  <td>{index + 1}</td>
+                                  <td>{trainee.ATT_NO || ''}</td>
+                                  <td>{trainee.REG_NO || ''}</td>
+                                  <td>{trainee.end_date?.split('T')[0] || ''}</td>
+                                  <td>{trainee.name || ''}</td>
+                                  <td>{trainee.AttCount || 0}</td>
+                                  <td>
+                                    <div className="d-flex gap-2 justify-content-center">
+                                    {/* View/Add Link Button */}
+                                    <Link
+                                      to={`/OJT/payments/${trainee.trainee_id}/view`}
+                                      className={`btn btn-sm d-flex align-items-center justify-content-center px-2 py-1 ${paymentSummary.includes(Number(trainee.ATT_NO)) ? 'btn-primary' : 'btn-outline-warning'}`}
+                                      title={paymentSummary.includes(Number(trainee.ATT_NO)) ? 'Add details' : 'View trainee'}
+                                    >
+                                      <i className={`bi ${paymentSummary.includes(Number(trainee.ATT_NO)) ? 'bi-plus-circle' : 'bi bi-file-earmark-text'}`}></i>
+                                    </Link>
+
+                                    {/* Add Button (only if not already in paymentSummary) */}
+                                    {!paymentSummary.includes(Number(trainee.ATT_NO)) && (
+                                      <button
+                                        onClick={() => handleAdd(trainee.trainee_id)}
+                                        className="btn btn-sm btn-outline-success d-flex align-items-center justify-content-center px-2 py-1"
+                                        title="Add to payment list"
+                                      >
+                                        <i className="bi bi-arrow-bar-up"></i>
+                                      </button>
+                                    )}
+
+                                    </div>
+                                  </td>
+                                </tr>
+                              ))}
+                            </tbody>
+                          </table>
+                        )}
+                      </div>
+                    </Accordion.Body>
+                  </Accordion.Item>
+                </Accordion>
               </div>
-            </div>
             <div className=" d-flex mt-2 ">
               <button
                 type="button"
@@ -608,3 +725,4 @@ const handleDownload = async () => {
     </>
   );
 }
+

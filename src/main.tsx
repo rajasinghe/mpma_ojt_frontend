@@ -6,6 +6,7 @@ import TraineeDetailsAddPage from "./Pages/TraineeDetailsAddPage.tsx";
 import "bootstrap/dist/css/bootstrap.css";
 import "bootstrap-icons/font/bootstrap-icons.css";
 import "bootstrap/dist/js/bootstrap.bundle.min";
+import '@fortawesome/fontawesome-free/css/all.min.css';
 import ViewTraineesPage from "./Pages/ViewTraineesPage.tsx";
 import {
   newTraineesInsertPageLoader,
@@ -46,8 +47,10 @@ import NewInterviewPage from "./features/Interview/interviewPage.tsx";
 import ViewInterviewPage from "./features/Interview/viewInterviewPage.tsx";
 import EditInterviewPage from "./features/Interview/editInterviewPage.tsx";
 import {InterviewLoader} from "./loaders/InterviewLoader.ts";
+import {traineeDetailsPageLoader} from "./loaders/TraineesLoader.ts";
 import PaymentsPage from "./Pages/PaymentsPage.tsx";
 import ViewPaymentDetails from "./Pages/ViewPaymentDetails.tsx";
+import TraineeDetailsPage from "./Pages/TraineeDetailsPage.tsx";
 
 export const setToken = () => {
   const token = localStorage.getItem("token");
@@ -122,6 +125,11 @@ const router = createBrowserRouter([
             path: "trainees/:id/add_schedules",
             element: <TraineeAddSchedulePage />,
             loader: traineeAddSchedulePageLoader,
+          },
+          {
+            path: "trainees/details",
+            element: <TraineeDetailsPage />,
+            loader: traineeDetailsPageLoader,
           },
           {
             path: "attendence/new",
