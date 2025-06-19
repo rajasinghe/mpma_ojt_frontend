@@ -1,12 +1,12 @@
 import { Modal } from "react-bootstrap";
 import { useForm } from "react-hook-form";
 import { z } from "zod";
-import NIC from "../traineeForm/NIC";
 import { useEffect, useState } from "react";
 import { zodResolver } from "@hookform/resolvers/zod";
 import Swal from "sweetalert2";
 import api from "../../api";
 import moment from "moment";
+import InterviewNic from "../../features/Interview/interviewNic";
 
 interface Props {
   showState: [boolean, React.Dispatch<React.SetStateAction<boolean>>];
@@ -34,9 +34,11 @@ export default function InterviewModal({
   refetchInterviews,
 }: Props) {
   const [show, setShow] = showState;
-  const [nic, setNic] = useState<string | null>(null);
+  const [nic, setNic] = useState<string | null>(interview? interview.NIC : null);
   const nicDisableState = useState<boolean>(false);
   const [summary, setSummary] = useState<any | null>(null);
+  //const [nicValidated, setNicValidated] = useState<boolean>(!!interview);
+  const [nicDisable, setNicDisable] = useState<boolean>(!!interview);
 
   type formType = z.infer<typeof schema>;
 
@@ -179,6 +181,7 @@ const resetAll = () => {
     // Reset to original interview values
     setNic(interview.NIC);
     setValue("name", interview.name);
+    setNicDisable(true);
     // Convert date to YYYY-MM-DD format
     setValue("date", moment(interview.date).format("YYYY-MM-DD"));
     
@@ -203,6 +206,7 @@ const resetAll = () => {
     setSummary(null);
     nicDisableState[1](false);
     setNic(null);
+    setNicDisable(false)
   }
 };
 
@@ -229,11 +233,14 @@ const resetAll = () => {
         <Modal.Title>{interview ? "Update Interview" : "Interview New Trainee"}</Modal.Title>
       </Modal.Header>
       <Modal.Body>
-        <NIC
-          nic={interview ? interview.NIC : undefined}
-          className=""
-          nicDisableState={nicDisableState}
-          setNIC_NO={setNic}
+        <InterviewNic
+          value={nic ?? ""}
+          onValidated={(nicValue) => {
+            setNic(nicValue);
+            setNicDisable(true);
+          }}
+          disabled={nicDisable}
+          setNicDisable={setNicDisable}
         />
 
         <form onSubmit={handleSubmit(onSubmit)}>
@@ -324,7 +331,7 @@ const resetAll = () => {
                       />
                     </div>
                   </div>
-                </div> 
+                </div>
 
           <div className="d-flex">
             <button disabled={isSubmitting} className="btn btn-primary ms-auto">

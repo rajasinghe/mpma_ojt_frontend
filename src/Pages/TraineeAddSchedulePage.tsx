@@ -183,6 +183,7 @@ export default function TraineeAddSchedulePage() {
     };
   };
 
+
   const onSubmit = async (formData: formType) => {
 
     const validation = sortAndValidateSchedules(formData.schedules);
@@ -214,6 +215,26 @@ export default function TraineeAddSchedulePage() {
 
     console.log(data);
 
+    // DELETE previous interviews for this trainee before updating schedule
+  try {
+    await api.delete(`/api/interview/${trainee.NIC_NO}`);
+    console.log("Previous interviews deleted for NIC:", trainee.NIC_NO);
+  } catch (error: any) {
+    if (error.response && error.response.status === 404) {
+      // No previous interviews found, this is fine
+      console.log("No previous interviews to delete for NIC:", trainee.NIC_NO);
+    } else {
+      // Other errors should be handled
+      console.error("Failed to delete previous interviews:", error);
+      Swal.fire({
+        icon: "error",
+        title: "Error",
+        text: "Failed to delete previous interviews for this trainee.",
+      });
+      return;
+    }
+  }
+
     // API call to create a new schedule entry
     Swal.fire({
       title: "Are you Sure?",
@@ -238,10 +259,7 @@ export default function TraineeAddSchedulePage() {
             text: "schedule has been updated at the database .",
             icon: "success",
           });
-          //delete the interview record
-          //const deleteInterViewResponse = await api.delete(`api/trainee/${trainee.id}/interview`);
-          //console.log("Error",deleteInterViewResponse);
-          //reset();
+          
           navigate(`/OJT/trainees/${trainee.id}/profile`);
         }
       })
