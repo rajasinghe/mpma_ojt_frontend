@@ -493,10 +493,10 @@ const handleDownload = async () => {
               </div>
             </div>
             <div className="border border-2 rounded-2 p-1 mx-auto" style={{ maxHeight: "53vh", overflowY: "auto", maxWidth: "1200px"}}>
-                <Accordion defaultActiveKey={["0","0"]} alwaysOpen>
+                <Accordion defaultActiveKey="0" alwaysOpen>
                   {/* Payment List */}
                   <Accordion.Item eventKey="0">
-                    <Accordion.Header style={{position:'sticky',top:0,zIndex:3, backgroundColor: '#fff'}}>Payment List</Accordion.Header>
+                    <Accordion.Header>Payment List</Accordion.Header>
                     <Accordion.Body>
                       <div className="table-responsive rounded shadow-sm p-1 bg-white">
                         {loading ? (
