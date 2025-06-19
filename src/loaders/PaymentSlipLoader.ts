@@ -38,11 +38,16 @@ export const paymentDetailsLoader = async () => {
   ]);
 
   // Sort filteredTrainees to match selectedTraineeIds order
-  const filteredTrainees = selectedTrainees.data.traineeIds.map((id: number) => 
-    attendecesResposne.data.find(
-      (trainee: { trainee_id: number }) => trainee.trainee_id === id
-    )
-  ).filter(Boolean);
+const filteredTrainees = selectedTrainees.data.traineeIds
+  .map((data: { trainee_id: number; payment: number }) => {
+    const filterTraineeData = attendecesResposne.data.find(
+      (trainee: { trainee_id: number }) => trainee.trainee_id === data.trainee_id
+    );
+    return filterTraineeData
+      ? { ...filterTraineeData, payment: data.payment }
+      : null;
+  })
+  .filter(Boolean);
   
   const GOVTrainees = selectedTrainees.data.allGOVTrainees
   .map((govTrainee: { trainee_id: number, AttCount: number }) => {
@@ -59,6 +64,7 @@ export const paymentDetailsLoader = async () => {
   .filter(Boolean);
 
   console.log("GOVTrainees", attendenceSummaryResponse.data);
+  console.log("filterTraineeData", selectedTrainees);
 
   return {
     summary: attendenceSummaryResponse.data,

@@ -19,6 +19,10 @@ import { Accordion } from 'react-bootstrap';
 interface Trainee {
   trainee_id: number;
   ATT_NO: number;
+  REG_NO: string;
+  end_date: string;
+  name: string;
+  payment?: number;
 }
 
 interface loaderProps {
@@ -47,11 +51,16 @@ export default function PaymentsPage() {
   const loaderData = useLoaderData() as loaderProps;
   /* here the trainees means a object which has the attendences related to each trainee */
   const [trainees, setTrainees] = useState<Trainee[]>(loaderData.trainees);
+  const [traineesInmodel, setTraineesInModel] = useState<Trainee[]>(loaderData.trainees);
   const [matchingTrainees, setMatchingTrainees] = useState<any>(loaderData.trainees);
   //const [trainee_id, setTraineeId] = useState<null | number>(null);
   const [keyword, setKeyword] = useState<string>("");
   const [paymentSummary, setPaymentSummary] = useState<number[]>(loaderData.traineesWIthoutBankDetails);
   const [otherTrainees, setOtherTrainees] = useState<any[]>(loaderData.GOVTrainees);
+  const [showModel, setShowModel] = useState<boolean>(false);
+
+  const [removedTrainees, setRemovedTrainees] = useState<any[]>([]);
+  const [payAmountperDay, setPayAmount] = useState<number>(500);
   
 
   //const [show, setShow] = useState(false);
@@ -138,13 +147,16 @@ export default function PaymentsPage() {
             setPaymentSummary(selectedTrainee.data.traineesWithoutBankDetails);
 
             // Filter and sort trainees based on selectedTrainees order
-            const filteredTrainees = selectedTrainee.data.traineeIds
-              .map((id: number) => 
-                attendencesResponse.data.find(
-                  (trainee: { trainee_id: number }) => trainee.trainee_id === id
-                )
-              )
-              .filter(Boolean);            
+          const filteredTrainees = selectedTrainee.data.traineeIds
+            .map((data: { trainee_id: number; payment: number }) => {
+              const filterTraineeData = attendencesResponse.data.find(
+                (trainee: { trainee_id: number }) => trainee.trainee_id === data.trainee_id
+              );
+              return filterTraineeData
+                ? { ...filterTraineeData, payment: data.payment }
+                : null;
+            })
+            .filter(Boolean);           
 
             setTrainees(filteredTrainees);
 
@@ -182,11 +194,6 @@ export default function PaymentsPage() {
       }
     }
   }, [filterOptions]);
-
-  useEffect(() => {
-
-
-  },[])
 
   const handleSearch = (keyword: string) => {
     if (keyword.trim() != "") {
@@ -309,14 +316,18 @@ const handleDownload = async () => {
 
       // Update main trainees list
       const filteredTrainees = selectedTrainee.data.traineeIds
-        .map((id: number) => 
-          attendencesResponse.data.find(
-            (trainee: { trainee_id: number }) => trainee.trainee_id === id
-          )
-        )
+        .map((data: { trainee_id: number; payment: number }) => {
+          const filterTraineeData = attendencesResponse.data.find(
+            (trainee: { trainee_id: number }) => trainee.trainee_id === data.trainee_id
+          );
+          return filterTraineeData
+            ? { ...filterTraineeData, payment: data.payment }
+            : null;
+        })
         .filter(Boolean);
       
       setTrainees(filteredTrainees);
+      setTraineesInModel(filteredTrainees);
 
       // Update other trainees list
       const GOVTrainees = selectedTrainee.data.allGOVTrainees
@@ -356,22 +367,6 @@ const handleDownload = async () => {
 
       if (response.status === 200) {
         // Update the trainees list by filtering out the removed trainee
-        setTrainees(prevTrainees => 
-          prevTrainees.filter(trainee => trainee.trainee_id !== traineeId)
-        );
-
-        // Add the trainee to otherTrainees list
-        const removedTrainee = trainees.find(t => t.trainee_id === traineeId);
-        if (removedTrainee) {
-          setOtherTrainees(prev => [...prev, removedTrainee]);
-        }
-
-        // Update paymentSummary to reflect the change
-        setPaymentSummary(prev => 
-          prev.filter(attNo => 
-            attNo !== Number(removedTrainee?.ATT_NO)
-          )
-        );
         refreshData();
       }
     } catch (error) {
@@ -424,10 +419,11 @@ const handleDownload = async () => {
   };
 
 
-  const getUniqueGOVTrainees = (selectedTraineeIds: number[], allGOVTrainees: any[]) => {
+  const getUniqueGOVTrainees = (selectedTraineeIds: any[], allGOVTrainees: any[]) => {
     // Filter GOV trainees that are not in the selected trainees array
     return allGOVTrainees.filter((govTrainee) => 
-      !selectedTraineeIds.includes(govTrainee.trainee_id)
+      !selectedTraineeIds.map((data: { trainee_id: number; }) => data.trainee_id)
+        .includes(govTrainee.trainee_id)
     );
   };
 
@@ -493,10 +489,10 @@ const handleDownload = async () => {
               </div>
             </div>
             <div className="border border-2 rounded-2 p-1 mx-auto" style={{ maxHeight: "53vh", overflowY: "auto", maxWidth: "1200px"}}>
-                <Accordion defaultActiveKey={["0","0"]} alwaysOpen>
+                <Accordion defaultActiveKey={["0"]} alwaysOpen>
                   {/* Payment List */}
                   <Accordion.Item eventKey="0">
-                    <Accordion.Header style={{position:'sticky',top:0,zIndex:3, backgroundColor: '#fff'}}>Payment List</Accordion.Header>
+                    <Accordion.Header style={{ position: 'sticky', top: 0, zIndex: 3, backgroundColor: '#fff' }}>Payment List</Accordion.Header>
                     <Accordion.Body>
                       <div className="table-responsive rounded shadow-sm p-1 bg-white">
                         {loading ? (
@@ -517,12 +513,8 @@ const handleDownload = async () => {
                             </thead>
                             <tbody>
                               {matchingTrainees.map((trainee:any, index:number) => {
-                                const attendanceTotal = trainee.attendences?.reduce(
-                                  (total:number, att:any) => total + (att.status === 1 ? 1 : 0),
-                                  0
-                                ) || 0;
 
-                                const payAmount = attendanceTotal * 500;
+                                //const payAmount = attendanceTotal * payAmountperDay;
 
                                 return (
                                   <tr key={index}>
@@ -531,8 +523,8 @@ const handleDownload = async () => {
                                     <td>{trainee.REG_NO || ''}</td>
                                     <td>{trainee.end_date?.split('T')[0] || ''}</td>
                                     <td>{trainee.name || ''}</td>
-                                    <td>{attendanceTotal}</td>
-                                    <td>RS. {payAmount.toLocaleString()}</td>
+                                    <td>{trainee.AttCount}</td>
+                                    <td>RS. {trainee.payment}</td>
                                     <td>
                                       <div className="d-flex gap-2 justify-content-center">
                                       <Link
@@ -563,7 +555,9 @@ const handleDownload = async () => {
                       </div>
                     </Accordion.Body>
                   </Accordion.Item>
+                </Accordion>
 
+                <Accordion defaultActiveKey={["1"]} alwaysOpen>
                   {/* Other Trainees */}
                   <Accordion.Item eventKey="1">
                     <Accordion.Header style={{position:'sticky',top:0,zIndex:3, backgroundColor: '#fff'}}>Others</Accordion.Header>
@@ -627,14 +621,28 @@ const handleDownload = async () => {
                   </Accordion.Item>
                 </Accordion>
               </div>
-            <div className=" d-flex mt-2 ">
-              <button
-                type="button"
-                className="btn btn-success btn-sm ms-2"
-                onClick={handleDownload}
-              >
-                Download Payment Records
-              </button>
+
+            <div className="d-flex justify-content-between align-items-center mt-2 mb-2">
+              <div>
+                <button
+                  type="button"
+                  className="btn btn-success btn-sm ms-2"
+                  onClick={handleDownload}
+                >
+                  Download Payment Records
+                </button>
+              </div>
+              <div>
+                <button
+                  type="button"
+                  className="btn btn-sm btn-primary"
+                  onClick={() => {
+                    setShowModel(true);}}
+                  disabled={loading}
+                >
+                  Change list
+                </button>
+              </div>
             </div>
 
             {/* filter model */}
@@ -716,6 +724,145 @@ const handleDownload = async () => {
                   }}
                 >
                   Reset
+                </button>
+              </Modal.Footer>
+            </Modal>
+
+            {/*Payment list Change*/}
+            <Modal
+              show={showModel}
+              onHide={() => {
+                setShowModel(false);
+                setRemovedTrainees([]);
+                refreshData();
+              }}
+              backdrop="static"
+
+            >
+              <Modal.Header closeButton>
+                <div className=" fw-bold  w-100 ">Change Payment List</div>
+              </Modal.Header>
+                <Modal.Body>
+                <form className="d-flex flex-column gap-2">
+                  <div className="form-group">
+                  <label htmlFor="amount" className="form-label">Amount per day</label>
+                  <input
+                    type="number"
+                    className="form-control"
+                    id="amount"
+                    placeholder="Enter amount per day"
+                    value={payAmountperDay}
+                    onChange={e => {setPayAmount(Number(e.target.value))
+                    }}
+                  />
+                  </div>
+                </form>
+                {/* Add space between form and table */}
+                <div style={{ height: "16px" }} />
+                <div className="border border-2 rounded-2 p-1 mx-auto" style={{ maxHeight: "53vh", overflowY: "auto", maxWidth: "1200px"}}>
+                  <table className="table table-hover table-bordered table-striped align-middle text-center">
+                  <thead className="table-dark sticky-top small" style={{position:'sticky',top:0,zIndex:2, backgroundColor: '#212529'}}>
+                    <tr className="small">
+                    <th className="bg-dark text-white">NO</th>
+                    <th className="bg-dark text-white">ATT_NO</th>
+                    <th className="bg-dark text-white">NAME</th>
+                    <th className="bg-dark text-white">ATTN COUNT</th>
+                    <th className="bg-dark text-white">Options</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {traineesInmodel.map((trainee:any, index:number) => {
+                    const attendanceTotal = trainee.attendences?.reduce(
+                      (total:number, att:any) => total + (att.status === 1 ? 1 : 0),
+                      0
+                    ) || 0;
+
+                    return (
+                      <tr key={index}>
+                      <td>{index + 1}</td>
+                      <td>{trainee.ATT_NO || ''}</td>
+                      <td>{trainee.name || ''}</td>
+                      <td>{attendanceTotal}</td>
+                      <td>
+                        <div className="d-flex gap-2 justify-content-center">
+                        <button
+                          onClick={() => {
+                            const removedTrainee = trainees.find(t => t.trainee_id === trainee.trainee_id);
+                            if (removedTrainee) {
+                              setRemovedTrainees(prev => [...prev, removedTrainee]); 
+                            }
+                            
+                            setTraineesInModel(prevTrainees => 
+                              prevTrainees.filter(t => t.trainee_id !== trainee.trainee_id)
+                            );
+                          }}
+                          className="btn btn-sm btn-outline-danger d-flex align-items-center justify-content-center px-2 py-1"
+                          title="Remove from list"
+                        >
+                          <i className="bi bi-x-circle"></i>
+                        </button>
+                        </div>
+                      </td>
+                      </tr>
+                    );
+                    })}
+                  </tbody>
+                  </table>
+                </div>
+                </Modal.Body>
+              <Modal.Footer>
+              <button
+                className=" ms-auto btn btn-sm  btn-success"
+                onClick={async () => {
+                  if (removedTrainees.length === 0) {
+                    Swal.fire({
+                      icon: "info",
+                      title: "No changes",
+                      text: "No changes were happened.",
+                    });
+                    return;
+                  }
+                  try {
+                    setLoading(true);
+                    await Promise.all(
+                      removedTrainees.map(trainee =>
+                        api.post("api/payments/removeFromPaymentList", {
+                          year: Number(filterOptions?.year?.value),
+                          month: Number(filterOptions?.month?.value),
+                          id: trainee.trainee_id,
+                          payAmount: payAmountperDay,
+                        })
+                      )
+                    );
+                    Swal.fire({
+                      icon: "success",
+                      title: "Saved",
+                      text: "Removed trainees and pay amount updated.",
+                    });
+                    setRemovedTrainees([]);
+                    setShowModel(false);
+                    refreshData();
+                  } catch (error) {
+                    Swal.fire({
+                      icon: "error",
+                      title: "Failed",
+                      text: "Could not update payment list.",
+                    });
+                  } finally {
+                    setLoading(false);
+                  }
+                }}
+              >
+                Save
+              </button>
+                <button
+                  className="btn btn-danger btn-sm"
+                  onClick={() => {
+                    setShowModel(false);
+                    setRemovedTrainees([]);
+                    refreshData();
+                  }}>
+                  Close
                 </button>
               </Modal.Footer>
             </Modal>

@@ -20,7 +20,7 @@ interface LoaderData {
 interface Summary {
   traineeCount: number;
   traineesWithoutBank350: number[];
-  traineeIds: number[];
+  traineeIds: any[];
 }
 
 const formSchema = z.object({
@@ -131,7 +131,7 @@ export default function GeneratePaymentSlip() {
         year: validatedData.year,
         month: validatedData.month,
         date: validatedData.date.toISOString(),
-        traineeIds: summary?.traineeIds || []
+        traineeIds: summary?.traineeIds.map((data: { trainee_id: number; }) => data.trainee_id) || []
       }, {
         responseType: "blob"
       });
