@@ -14,23 +14,24 @@ import Swal from "sweetalert2";
 import { MainContainer } from "../layout/containers/main_container/MainContainer";
 import SubContainer from "../layout/containers/sub_container/SubContainer";
 import { Accordion } from 'react-bootstrap';
-
+import "./GeneratePaymentSlip.css";
 
 interface Trainee {
   trainee_id: number;
-  ATT_NO: number;
+  trainee_attNO: number;
   REG_NO: string;
-  end_date: string;
+  endDate: string;
   name: string;
-  payment?: number;
+  AttCount: number;
+  payment: number;
 }
 
 interface loaderProps {
-  trainees: Trainee[];
-  workingDays: [];
-  summary: [];
+  selectTrainees: Trainee[];
+  summary: any[];
   traineesWIthoutBankDetails: number[];
-  GOVTrainees: any[];
+  allGOVTrainees: any[];
+  meanPayment: number;
 }
 
 const filterSchema = z.object({
@@ -50,17 +51,18 @@ type filterFormValues = z.infer<typeof filterSchema>;
 export default function PaymentsPage() {
   const loaderData = useLoaderData() as loaderProps;
   /* here the trainees means a object which has the attendences related to each trainee */
-  const [trainees, setTrainees] = useState<Trainee[]>(loaderData.trainees);
-  const [traineesInmodel, setTraineesInModel] = useState<Trainee[]>(loaderData.trainees);
-  const [matchingTrainees, setMatchingTrainees] = useState<any>(loaderData.trainees);
+  const [trainees, setTrainees] = useState<Trainee[]>(loaderData.selectTrainees);
+  const [traineesInmodel, setTraineesInModel] = useState<Trainee[]>(loaderData.selectTrainees);
+  const [matchingTrainees, setMatchingTrainees] = useState<any>(loaderData.selectTrainees);
   //const [trainee_id, setTraineeId] = useState<null | number>(null);
   const [keyword, setKeyword] = useState<string>("");
   const [paymentSummary, setPaymentSummary] = useState<number[]>(loaderData.traineesWIthoutBankDetails);
-  const [otherTrainees, setOtherTrainees] = useState<any[]>(loaderData.GOVTrainees);
+  const [otherTrainees, setOtherTrainees] = useState<any[]>(loaderData.allGOVTrainees);
   const [showModel, setShowModel] = useState<boolean>(false);
 
   const [removedTrainees, setRemovedTrainees] = useState<any[]>([]);
-  const [payAmountperDay, setPayAmount] = useState<number>(500);
+  const [payAmountperDay, setPayAmount] = useState<number>(loaderData.meanPayment);
+  const [prePayAmount, setprePayAmount] = useState<number>(loaderData.meanPayment);
   
 
   //const [show, setShow] = useState(false);
@@ -68,7 +70,7 @@ export default function PaymentsPage() {
   const [filterVisible, setFilterVisible] = useState(false);
 
   const [filterOptions, setFilterOptions] = useState<filterFormValues | null>(null);
-  const [resultCount, setResultCount] = useState<number>(loaderData.trainees.length);
+  const [resultCount, setResultCount] = useState<number>(loaderData.selectTrainees.length);
   const [searchCount, setSearchCount] = useState<number | null>(null);
 
   const [loading, setLoading] = useState<boolean>(false);
@@ -126,15 +128,7 @@ export default function PaymentsPage() {
           console.log(filterParams);
           setLoading(true);
           if (filterParams.month && filterParams.year) {
-            const [attendencesResponse, workingDaysResponse, selectedTrainee] = await Promise.all([
-              api.get("api/attendence", {
-                params: {
-                  month: filterParams.month,
-                  year: filterParams.year,
-                  trainee_id: filterParams.traineeId,
-                },
-              }),
-              api.get(`api/calender/${filterParams.year}/${filterParams.month}`),
+            const [ paymentSummary] = await Promise.all([
               api.get("api/payments/generatePaySlip/summary", {
                 params: {
                   month: filterParams.month,
@@ -142,39 +136,15 @@ export default function PaymentsPage() {
                 },
               }),
             ]);
-            console.log(workingDaysResponse.data);
 
-            setPaymentSummary(selectedTrainee.data.traineesWithoutBankDetails);
+            setPaymentSummary(paymentSummary.data.traineesWithoutBankDetails); 
 
-            // Filter and sort trainees based on selectedTrainees order
-          const filteredTrainees = selectedTrainee.data.traineeIds
-            .map((data: { trainee_id: number; payment: number }) => {
-              const filterTraineeData = attendencesResponse.data.find(
-                (trainee: { trainee_id: number }) => trainee.trainee_id === data.trainee_id
-              );
-              return filterTraineeData
-                ? { ...filterTraineeData, payment: data.payment }
-                : null;
-            })
-            .filter(Boolean);           
+            setTrainees(paymentSummary.data.selectTrainees);
+            setTraineesInModel(paymentSummary.data.selectTrainees);
+            setPayAmount(paymentSummary.data.meanPayment);
+            setprePayAmount(paymentSummary.data.meanPayment);
 
-            setTrainees(filteredTrainees);
-
-            const GOVTrainees = selectedTrainee.data.allGOVTrainees
-            .map((govTrainee: { trainee_id: number, AttCount: number }) => {
-              const traineeData = attendencesResponse.data.find(
-                (trainee: { trainee_id: number }) => trainee.trainee_id === govTrainee.trainee_id
-              );
-              
-              // Return combined data with AttCount
-              return traineeData ? {
-                ...traineeData,
-                AttCount: govTrainee.AttCount
-              } : null;
-            })
-            .filter(Boolean);
-
-            const other = getUniqueGOVTrainees(selectedTrainee.data.traineeIds, GOVTrainees);
+            const other = getUniqueGOVTrainees(paymentSummary.data.selectTrainees,paymentSummary.data.allGOVTrainees);
 
             setOtherTrainees(other);
 
@@ -297,13 +267,7 @@ const handleDownload = async () => {
   const refreshData = async () => {
     try {
       setLoading(true);
-      const [attendencesResponse, selectedTrainee] = await Promise.all([
-        api.get("api/attendence", {
-          params: {
-            month: filterOptions?.month?.value,
-            year: filterOptions?.year?.value,
-          },
-        }),
+      const [paymentSummary] = await Promise.all([
         api.get("api/payments/generatePaySlip/summary", {
           params: {
             month: filterOptions?.month?.value,
@@ -312,37 +276,14 @@ const handleDownload = async () => {
         }),
       ]);
 
-      setPaymentSummary(selectedTrainee.data.traineesWithoutBankDetails);
-
-      // Update main trainees list
-      const filteredTrainees = selectedTrainee.data.traineeIds
-        .map((data: { trainee_id: number; payment: number }) => {
-          const filterTraineeData = attendencesResponse.data.find(
-            (trainee: { trainee_id: number }) => trainee.trainee_id === data.trainee_id
-          );
-          return filterTraineeData
-            ? { ...filterTraineeData, payment: data.payment }
-            : null;
-        })
-        .filter(Boolean);
+      setPaymentSummary(paymentSummary.data.traineesWithoutBankDetails);
       
-      setTrainees(filteredTrainees);
-      setTraineesInModel(filteredTrainees);
+      setTrainees(paymentSummary.data.selectTrainees);
+      setTraineesInModel(paymentSummary.data.selectTrainees);
+      setPayAmount(paymentSummary.data.meanPayment);
+      setprePayAmount(paymentSummary.data.meanPayment);
 
-      // Update other trainees list
-      const GOVTrainees = selectedTrainee.data.allGOVTrainees
-        .map((govTrainee: { trainee_id: number, AttCount: number }) => {
-          const traineeData = attendencesResponse.data.find(
-            (trainee: { trainee_id: number }) => trainee.trainee_id === govTrainee.trainee_id
-          );
-          return traineeData ? {
-            ...traineeData,
-            AttCount: govTrainee.AttCount
-          } : null;
-        })
-        .filter(Boolean);
-
-      const other = getUniqueGOVTrainees(selectedTrainee.data.traineeIds, GOVTrainees);
+      const other = getUniqueGOVTrainees(paymentSummary.data.selectTrainees,paymentSummary.data.allGOVTrainees);
       setOtherTrainees(other);
 
     } catch (error) {
@@ -514,14 +455,12 @@ const handleDownload = async () => {
                             <tbody>
                               {matchingTrainees.map((trainee:any, index:number) => {
 
-                                //const payAmount = attendanceTotal * payAmountperDay;
-
                                 return (
                                   <tr key={index}>
                                     <td>{index + 1}</td>
-                                    <td>{trainee.ATT_NO || ''}</td>
+                                    <td>{trainee.trainee_attNO || ''}</td>
                                     <td>{trainee.REG_NO || ''}</td>
-                                    <td>{trainee.end_date?.split('T')[0] || ''}</td>
+                                    <td>{trainee.endDate?.split('T')[0] || ''}</td>
                                     <td>{trainee.name || ''}</td>
                                     <td>{trainee.AttCount}</td>
                                     <td>RS. {trainee.payment}</td>
@@ -529,12 +468,12 @@ const handleDownload = async () => {
                                       <div className="d-flex gap-2 justify-content-center">
                                       <Link
                                         to={`/OJT/payments/${trainee.trainee_id}/view`}
-                                        className={`btn btn-sm d-flex align-items-center justify-content-center px-2 py-1 ${paymentSummary.includes(Number(trainee.ATT_NO)) ? 'btn-primary' : 'btn-outline-warning'}`}
-                                        title={paymentSummary.includes(Number(trainee.ATT_NO)) ? 'Add details' : 'View details'}
+                                        className={`btn btn-sm d-flex align-items-center justify-content-center px-2 py-1 ${paymentSummary.includes(Number(trainee.trainee_attNO)) ? 'btn-primary' : 'btn-outline-warning'}`}
+                                        title={paymentSummary.includes(Number(trainee.trainee_attNO)) ? 'Add details' : 'View details'}
                                       >
-                                        <i className={`bi ${paymentSummary.includes(Number(trainee.ATT_NO)) ? 'bi-plus-circle' : 'bi bi-file-earmark-text'}`}></i>
+                                        <i className={`bi ${paymentSummary.includes(Number(trainee.trainee_attNO)) ? 'bi-plus-circle' : 'bi bi-file-earmark-text'}`}></i>
                                       </Link>
-                                      {paymentSummary.includes(Number(trainee.ATT_NO)) && (
+                                      {paymentSummary.includes(Number(trainee.trainee_attNO)) && (
                                         <button
                                           onClick={() => handleRemove(trainee.trainee_id)}
                                           className="btn btn-sm btn-outline-danger d-flex align-items-center justify-content-center px-2 py-1"
@@ -582,9 +521,9 @@ const handleDownload = async () => {
                               {otherTrainees.map((trainee, index) => (
                                 <tr key={index}>
                                   <td>{index + 1}</td>
-                                  <td>{trainee.ATT_NO || ''}</td>
+                                  <td>{trainee.AttNo || ''}</td>
                                   <td>{trainee.REG_NO || ''}</td>
-                                  <td>{trainee.end_date?.split('T')[0] || ''}</td>
+                                  <td>{trainee.endDate?.split('T')[0] || ''}</td>
                                   <td>{trainee.name || ''}</td>
                                   <td>{trainee.AttCount || 0}</td>
                                   <td>
@@ -592,14 +531,14 @@ const handleDownload = async () => {
                                     {/* View/Add Link Button */}
                                     <Link
                                       to={`/OJT/payments/${trainee.trainee_id}/view`}
-                                      className={`btn btn-sm d-flex align-items-center justify-content-center px-2 py-1 ${paymentSummary.includes(Number(trainee.ATT_NO)) ? 'btn-primary' : 'btn-outline-warning'}`}
-                                      title={paymentSummary.includes(Number(trainee.ATT_NO)) ? 'Add details' : 'View trainee'}
+                                      className={`btn btn-sm d-flex align-items-center justify-content-center px-2 py-1 ${paymentSummary.includes(Number(trainee.AttNo)) ? 'btn-primary' : 'btn-outline-warning'}`}
+                                      title={paymentSummary.includes(Number(trainee.AttNo)) ? 'Add details' : 'View trainee'}
                                     >
-                                      <i className={`bi ${paymentSummary.includes(Number(trainee.ATT_NO)) ? 'bi-plus-circle' : 'bi bi-file-earmark-text'}`}></i>
+                                      <i className={`bi ${paymentSummary.includes(Number(trainee.AttNo)) ? 'bi-plus-circle' : 'bi bi-file-earmark-text'}`}></i>
                                     </Link>
 
                                     {/* Add Button (only if not already in paymentSummary) */}
-                                    {!paymentSummary.includes(Number(trainee.ATT_NO)) && (
+                                    {!paymentSummary.includes(Number(trainee.AttNo)) && (
                                       <button
                                         onClick={() => handleAdd(trainee.trainee_id)}
                                         className="btn btn-sm btn-outline-success d-flex align-items-center justify-content-center px-2 py-1"
@@ -737,7 +676,7 @@ const handleDownload = async () => {
                 refreshData();
               }}
               backdrop="static"
-
+              dialogClassName="min-width-modal"
             >
               <Modal.Header closeButton>
                 <div className=" fw-bold  w-100 ">Change Payment List</div>
@@ -752,14 +691,14 @@ const handleDownload = async () => {
                     id="amount"
                     placeholder="Enter amount per day"
                     value={payAmountperDay}
-                    onChange={e => {setPayAmount(Number(e.target.value))
+                    onChange={e => {setPayAmount(Number(e.target.value));
                     }}
                   />
                   </div>
                 </form>
                 {/* Add space between form and table */}
                 <div style={{ height: "16px" }} />
-                <div className="border border-2 rounded-2 p-1 mx-auto" style={{ maxHeight: "53vh", overflowY: "auto", maxWidth: "1200px"}}>
+                <div className="border border-2 rounded-2 p-1 mx-auto shadow-sm bg-white" style={{ maxHeight: "53vh", overflowY: "auto" }}>
                   <table className="table table-hover table-bordered table-striped align-middle text-center">
                   <thead className="table-dark sticky-top small" style={{position:'sticky',top:0,zIndex:2, backgroundColor: '#212529'}}>
                     <tr className="small">
@@ -772,17 +711,12 @@ const handleDownload = async () => {
                   </thead>
                   <tbody>
                     {traineesInmodel.map((trainee:any, index:number) => {
-                    const attendanceTotal = trainee.attendences?.reduce(
-                      (total:number, att:any) => total + (att.status === 1 ? 1 : 0),
-                      0
-                    ) || 0;
-
                     return (
                       <tr key={index}>
                       <td>{index + 1}</td>
-                      <td>{trainee.ATT_NO || ''}</td>
+                      <td>{trainee.trainee_attNO || ''}</td>
                       <td>{trainee.name || ''}</td>
-                      <td>{attendanceTotal}</td>
+                      <td>{trainee.AttCount}</td>
                       <td>
                         <div className="d-flex gap-2 justify-content-center">
                         <button
@@ -814,30 +748,60 @@ const handleDownload = async () => {
               <button
                 className=" ms-auto btn btn-sm  btn-success"
                 onClick={async () => {
-                  if (removedTrainees.length === 0) {
+                    // Check if there are no removed trainees and pay amount per day hasn't changed
+                    if (
+                    removedTrainees.length === 0 &&
+                    payAmountperDay === prePayAmount
+                    ) {
                     Swal.fire({
                       icon: "info",
                       title: "No changes",
                       text: "No changes were happened.",
                     });
                     return;
-                  }
+                    }
+                    const confirmResult = await Swal.fire({
+                      title: "Are you sure?",
+                      text: "Do you want to save these changes?",
+                      icon: "warning",
+                      showCancelButton: true,
+                      confirmButtonText: "Yes, save it!",
+                      cancelButtonText: "Cancel"
+                    });
+                    if (!confirmResult.isConfirmed) {
+                      setLoading(false);
+                      return;
+                    }
                   try {
                     setLoading(true);
-                    await Promise.all(
-                      removedTrainees.map(trainee =>
+                    const requests = [];
+
+                    if (removedTrainees.length > 0){
+                      requests.push(...removedTrainees.map(trainee =>
                         api.post("api/payments/removeFromPaymentList", {
                           year: Number(filterOptions?.year?.value),
                           month: Number(filterOptions?.month?.value),
-                          id: trainee.trainee_id,
-                          payAmount: payAmountperDay,
+                          id: trainee.trainee_id
                         })
-                      )
-                    );
+                      ));
+                    }
+                    
+                    if (payAmountperDay !== prePayAmount) {
+                      requests.push(
+                        api.post("api/payments/updatePaymentPerDay", {
+                          year: Number(filterOptions?.year?.value),
+                          month: Number(filterOptions?.month?.value),
+                          newAmount: payAmountperDay,
+                        })
+                      );
+                    }
+
+                    await Promise.all(requests);
+
                     Swal.fire({
                       icon: "success",
                       title: "Saved",
-                      text: "Removed trainees and pay amount updated.",
+                      text: "Payment list updated.",
                     });
                     setRemovedTrainees([]);
                     setShowModel(false);

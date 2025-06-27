@@ -95,7 +95,7 @@ export default function DepartmentPage() {
             Swal.showLoading();
           },
         });
-        const response = await api.delete(`api/interview/${id}`);
+        const response = await api.delete(`api/interview/by-id/${id}`);
         console.log(response);
         refetchInterviews();
         Swal.fire({

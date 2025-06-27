@@ -18,3 +18,18 @@
     grid-template-columns: repeat(3, 1fr);
   }
 }
+
+.min-width-modal .modal-dialog {
+  width: fit-content !important;
+  min-width: unset !important;
+  max-width: 98vw !important;
+  margin: auto;
+}
+
+.min-width-modal .modal-content,
+.min-width-modal .modal-body {
+  width: fit-content !important;
+  min-width: unset !important;
+  max-width: 98vw !important;
+  padding: 0.5rem 1rem;
+}

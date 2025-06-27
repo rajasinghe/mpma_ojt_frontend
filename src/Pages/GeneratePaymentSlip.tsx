@@ -18,9 +18,8 @@ interface LoaderData {
 }
 
 interface Summary {
-  traineeCount: number;
   traineesWithoutBank350: number[];
-  traineeIds: any[];
+  selectTrainees: any[];
 }
 
 const formSchema = z.object({
@@ -131,7 +130,7 @@ export default function GeneratePaymentSlip() {
         year: validatedData.year,
         month: validatedData.month,
         date: validatedData.date.toISOString(),
-        traineeIds: summary?.traineeIds.map((data: { trainee_id: number; }) => data.trainee_id) || []
+        traineeIds: summary?.selectTrainees.map((data: { trainee_id: number; }) => data.trainee_id) || []
       }, {
         responseType: "blob"
       });
@@ -258,15 +257,15 @@ export default function GeneratePaymentSlip() {
                 <div className="ms-3">Check Slip details...</div>
               ) : (
                 <div className="ms-5">
-                  <div className={`fw-bold ${summary?.traineeCount === 0 ? 'text-danger' : 
-                    summary?.traineeCount === 350 ? 'text-primary' : 'text-danger'}`}>
-                    {summary?.traineeCount === 0 ? (
+                  <div className={`fw-bold ${summary?.selectTrainees.length === 0 ? 'text-danger' : 
+                    summary?.selectTrainees.length === 350 ? 'text-primary' : 'text-danger'}`}>
+                    {summary?.selectTrainees.length === 0 ? (
                       'No trainees found'
                     ) : (
-                      `Trainee count - ${summary?.traineeCount}`
+                      `Trainee count - ${summary?.selectTrainees.length}`
                     )}
                   </div>
-                  {summary?.traineeCount > 0 && (
+                  {summary?.selectTrainees.length > 0 && (
                     <div className={`fw-bold ${summary.traineesWithoutBank350.length > 0 ? 'text-danger' : 'text-primary'}`}>
                       {summary.traineesWithoutBank350.length > 0 ? (
                         <>
