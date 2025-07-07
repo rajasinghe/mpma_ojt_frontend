@@ -11,27 +11,39 @@ export const PaymentSlipLoader = async () => {
 };
 
 export const paymentDetailsLoader = async () => {
+  const attendenceSummaryResponse = await api.get("/api/attendence/getDateSummary");
 
-  const today = new Date();
-  const lastMonth = today.getMonth() === 0 ? 12 : today.getMonth();
-  const year = today.getMonth() === 0 ? today.getFullYear() - 1 : today.getFullYear();
+  // Extract max year and month from the summary data
+  const summaryData = attendenceSummaryResponse.data;
 
-  const [
-    attendenceSummaryResponse,
-    paymentSummary
-  ] = await Promise.all([
+  // Assuming summaryData is an array of objects with year and month properties
+  let maxYear = 0;
+  let maxMonth = 0;
 
-    api.get("/api/attendence/getDateSummary"),
-    api.get("api/payments/generatePaySlip/summary", {
-      params: {
-        month: lastMonth,
-        year: year,
-      },
-    })
-  ]);
+if (Array.isArray(summaryData) && summaryData.length > 0) {
+  summaryData.forEach((item: { year: number; months?: number[] }) => {
+    if (item.year > maxYear) {
+      maxYear = item.year;
+    }
+  });
+
+  // Find the item with maxYear and get its max month
+  const yearItem = summaryData.find((item: { year: number }) => item.year === maxYear);
+  if (yearItem && Array.isArray(yearItem.months) && yearItem.months.length > 0) {
+    maxMonth = Math.max(...yearItem.months);
+  }
+}
+
+  // Fetch payment summary using max year and month
+  const paymentSummary = await api.get("api/payments/generatePaySlip/summary", {
+    params: {
+      month: maxMonth,
+      year: maxYear,
+    },
+  });
 
   return {
-    summary: attendenceSummaryResponse.data,
+    summary: summaryData,
     traineesWIthoutBankDetails: paymentSummary.data.traineesWithoutBankDetails,
     traineesWithoutBank350: paymentSummary.data.traineesWithoutBank350,
     selectTrainees: paymentSummary.data.selectTrainees,

@@ -17,6 +17,7 @@ interface Props {
 }
 
 const schema = z.object({
+  id: z.number().optional(),
   name: z.string().min(1, { message: "Name is required" }),
   date: z.string().date(),
   duration: z.object({
@@ -141,17 +142,31 @@ export default function InterviewModal({
             Swal.showLoading();
           },
         });
-        const response = await api.put(`api/interview/${interview.NIC}`, {
-          duration: `${formData.duration.value} ${formData.duration.unit}`,
-          startDate: formData.date,
-          name: formData.name,
-          departments: [{
-            department_id: department.id,
-            from: formData.fromDate,
-            to: formData.toDate,
-          }]
-        });
-        console.log(response);
+
+        if(false){
+          await api.put(`api/interview/${interview.NIC}`, {
+            duration: `${formData.duration.value} ${formData.duration.unit}`,
+            startDate: formData.date,
+            name: formData.name,
+            departments: {
+              department_id: department.id,
+              from: formData.fromDate,
+              to: formData.toDate,
+            }
+          });
+        } else {
+          await api.put(`api/interview/by-id/${interview.id}`, {
+            duration: `${formData.duration.value} ${formData.duration.unit}`,
+            startDate: formData.date,
+            name: formData.name,
+            departments: {
+              department_id: department.id,
+              from: formData.fromDate,
+              to: formData.toDate,
+            }
+          });
+        }
+        console.log("response",response);
         refetchInterviews(); //fetch the interviews list again
         Swal.close();
         Swal.fire({
@@ -212,6 +227,7 @@ const resetAll = () => {
 
   const onSubmit = async (formData: formType) => {
     try {
+      console.log("Form Data:", formData);
       if (nic == null) {
         return setError("root", { message: "Validate a Nic before Submission" });
       }
@@ -334,7 +350,7 @@ const resetAll = () => {
                 </div>
 
           <div className="d-flex">
-            <button disabled={isSubmitting} className="btn btn-primary ms-auto">
+            <button type="submit" disabled={isSubmitting} className="btn btn-primary ms-auto">
               {isSubmitting ? "Submiting..." : "Submit"}
             </button>
             <button

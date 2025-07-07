@@ -124,6 +124,15 @@ export default function TraineeBankDetailsUpdatePage() {
                 </div>
             )}
             </div>
+            <div className="py-2">
+                <button
+                    type="button"
+                    className="btn btn-sm btn-warning"
+                    onClick={() => navigate(-1)}
+                >
+                    Back
+                </button>
+            </div>
             </section>
         </MainContainer>
       )}

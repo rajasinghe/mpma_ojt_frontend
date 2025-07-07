@@ -33,3 +33,23 @@
   max-width: 98vw !important;
   padding: 0.5rem 1rem;
 }
+
+.small-accordion-header .accordion-button {
+  padding-top: 0.2rem;
+  padding-bottom: 0.2rem;
+  min-height: 1.5rem;
+  font-size: 1.1rem; /* optional, for consistency */
+}
+
+.sticky-bottom-accordion {
+  position: sticky;
+  bottom: 0;
+  z-index: 10;
+  background: #fff;
+}
+
+.custom-accordion-header .accordion-button {
+  background-color: #9ecdfc !important;
+  color: rgb(54, 52, 52) !important;
+  font-weight: bold;
+}

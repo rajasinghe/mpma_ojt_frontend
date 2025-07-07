@@ -30,6 +30,7 @@ interface loaderProps {
   selectTrainees: Trainee[];
   summary: any[];
   traineesWIthoutBankDetails: number[];
+  traineesWithoutBank350: number[];
   allGOVTrainees: any[];
   meanPayment: number;
 }
@@ -57,26 +58,26 @@ export default function PaymentsPage() {
   //const [trainee_id, setTraineeId] = useState<null | number>(null);
   const [keyword, setKeyword] = useState<string>("");
   const [paymentSummary, setPaymentSummary] = useState<number[]>(loaderData.traineesWIthoutBankDetails);
+  const [paymentListSummary, setPaymentListSummary] = useState<number[]>(loaderData.traineesWithoutBank350);
   const [otherTrainees, setOtherTrainees] = useState<any[]>(loaderData.allGOVTrainees);
   const [showModel, setShowModel] = useState<boolean>(false);
 
   const [removedTrainees, setRemovedTrainees] = useState<any[]>([]);
   const [payAmountperDay, setPayAmount] = useState<number>(loaderData.meanPayment);
   const [prePayAmount, setprePayAmount] = useState<number>(loaderData.meanPayment);
-  
-
-  //const [show, setShow] = useState(false);
 
   const [filterVisible, setFilterVisible] = useState(false);
 
   const [filterOptions, setFilterOptions] = useState<filterFormValues | null>(null);
   const [resultCount, setResultCount] = useState<number>(loaderData.selectTrainees.length);
   const [searchCount, setSearchCount] = useState<number | null>(null);
-
   const [loading, setLoading] = useState<boolean>(false);
-  const today = new Date();
-  const lastMonth = today.getMonth() === 0 ? 12 : today.getMonth();
-  const lastMonthYear = today.getMonth() === 0 ? today.getFullYear() - 1 : today.getFullYear();
+
+  const { year: maxYear, months: maxYearMonths } = loaderData.summary.reduce((max, current) =>
+    current.year > max.year ? current : max
+  );
+
+  const maxMonth = Math.max(...maxYearMonths);
 
   const {
     formState: { errors },
@@ -88,8 +89,8 @@ export default function PaymentsPage() {
     handleSubmit,
   } = useForm<filterFormValues>({
     defaultValues: {
-      month: filterOptions?.month || { value: lastMonth.toString(), label: lastMonth.toString() },
-      year: filterOptions?.year || { value: lastMonthYear.toString(), label: lastMonthYear.toString() },
+      month: filterOptions?.month || { value: maxMonth.toString(), label: maxMonth.toString() },
+      year: filterOptions?.year || { value: maxYear.toString(), label: maxYear.toString() },
       traineeId: filterOptions?.traineeId
     }
   });
@@ -99,8 +100,8 @@ export default function PaymentsPage() {
   useEffect(() => {
     if (!filterOptions) {
       setFilterOptions({
-        month: { value: lastMonth.toString(), label: lastMonth.toString() },
-        year: { value: lastMonthYear.toString(), label: lastMonthYear.toString() }
+        month: { value: maxMonth.toString(), label: maxMonth.toString() },
+        year: { value: maxYear.toString(), label: maxYear.toString() }
       });
     }
   }, []);
@@ -138,6 +139,7 @@ export default function PaymentsPage() {
             ]);
 
             setPaymentSummary(paymentSummary.data.traineesWithoutBankDetails); 
+            setPaymentListSummary(paymentSummary.data.traineesWithoutBank350);
 
             setTrainees(paymentSummary.data.selectTrainees);
             setTraineesInModel(paymentSummary.data.selectTrainees);
@@ -177,6 +179,7 @@ export default function PaymentsPage() {
     } else {
       setResultCount(trainees.length);
       setMatchingTrainees(trainees);
+      setSearchCount(null);
     }
   };
 
@@ -197,7 +200,14 @@ export default function PaymentsPage() {
   }, [year]);
 
   const fuse = new Fuse(trainees, {
-    keys: ["ATT_NO", "REG_NO", "name"],
+    keys: [
+      {
+        name: "trainee_attNO",
+        getFn: (obj) => obj.trainee_attNO?.toString() ?? "",
+      },
+      "REG_NO",
+      "name"
+    ],
     isCaseSensitive: false,
     includeScore: true,
     includeMatches: true,
@@ -277,6 +287,7 @@ const handleDownload = async () => {
       ]);
 
       setPaymentSummary(paymentSummary.data.traineesWithoutBankDetails);
+      setPaymentListSummary(paymentSummary.data.traineesWithoutBank350);
       
       setTrainees(paymentSummary.data.selectTrainees);
       setTraineesInModel(paymentSummary.data.selectTrainees);
@@ -348,14 +359,23 @@ const handleDownload = async () => {
         }
         refreshData();
       }
-    } catch (error) {
+      console.log(response);
+    } catch (error: any) {
       console.log(error);
       // Show error message
-      Swal.fire({
-        icon: 'error',
-        title: 'Failed to add trainee',
-        text: 'Please try again later'
-      });
+      if (error.response && error.response.status === 400) {
+        Swal.fire({
+          icon: 'error',
+          title: 'Failed to add trainee',
+          text: `${error.response.data.message || 'Please try again later'}`
+        });
+      } else {
+        Swal.fire({
+          icon: 'error',
+          title: 'Failed to add trainee',
+          text: 'Please try again later'
+        });
+      }
     }
   };
 
@@ -412,7 +432,7 @@ const handleDownload = async () => {
                   fontSize: "12px",
                 }}
               >
-                <div>
+                <div className="d-flex align-items-center">
                   <div>Filters Applied :-</div>
                   {filterOptions && filterOptions.month && filterOptions.year ? (
                     <span
@@ -423,17 +443,17 @@ const handleDownload = async () => {
                     ""
                   )}
                 </div>
-                <div className="ms-auto">
-                  <div className="">Total Count - {resultCount}</div>
+                <div className="ms-auto d-flex gap-2">
+                  <div className="">Total Count - {resultCount} ,</div>
                   <div>Search Count - {searchCount}</div>
                 </div>
               </div>
             </div>
-            <div className="border border-2 rounded-2 p-1 mx-auto" style={{ maxHeight: "53vh", overflowY: "auto", maxWidth: "1200px"}}>
-                <Accordion defaultActiveKey={["0"]} alwaysOpen>
+            <div className="border border-2 rounded-2 p-1 mx-auto" style={{ maxHeight: "56vh", overflowY: "scroll", maxWidth: "1200px"}}>
+                <Accordion defaultActiveKey="0">
                   {/* Payment List */}
-                  <Accordion.Item eventKey="0">
-                    <Accordion.Header style={{ position: 'sticky', top: 0, zIndex: 3, backgroundColor: '#fff' }}>Payment List</Accordion.Header>
+                  <Accordion.Item eventKey="0" className="small-accordion-header">
+                    <Accordion.Header className="custom-accordion-header" style={{ position: 'sticky', top: 0, zIndex: 3, backgroundColor: '#fff', }}>Payment List</Accordion.Header>
                     <Accordion.Body>
                       <div className="table-responsive rounded shadow-sm p-1 bg-white">
                         {loading ? (
@@ -453,53 +473,123 @@ const handleDownload = async () => {
                               </tr>
                             </thead>
                             <tbody>
-                              {matchingTrainees.map((trainee:any, index:number) => {
+                              {(() => {
+                                const traineeWithoutBank = matchingTrainees.filter(
+                                  (trainee: any) => paymentListSummary.includes(Number(trainee.trainee_attNO))
+                                );
+                                const traineeWithBank = matchingTrainees.filter(
+                                  (trainee: any) => !paymentListSummary.includes(Number(trainee.trainee_attNO))
+                                );
 
                                 return (
-                                  <tr key={index}>
-                                    <td>{index + 1}</td>
-                                    <td>{trainee.trainee_attNO || ''}</td>
-                                    <td>{trainee.REG_NO || ''}</td>
-                                    <td>{trainee.endDate?.split('T')[0] || ''}</td>
-                                    <td>{trainee.name || ''}</td>
-                                    <td>{trainee.AttCount}</td>
-                                    <td>RS. {trainee.payment}</td>
-                                    <td>
-                                      <div className="d-flex gap-2 justify-content-center">
-                                      <Link
-                                        to={`/OJT/payments/${trainee.trainee_id}/view`}
-                                        className={`btn btn-sm d-flex align-items-center justify-content-center px-2 py-1 ${paymentSummary.includes(Number(trainee.trainee_attNO)) ? 'btn-primary' : 'btn-outline-warning'}`}
-                                        title={paymentSummary.includes(Number(trainee.trainee_attNO)) ? 'Add details' : 'View details'}
-                                      >
-                                        <i className={`bi ${paymentSummary.includes(Number(trainee.trainee_attNO)) ? 'bi-plus-circle' : 'bi bi-file-earmark-text'}`}></i>
-                                      </Link>
-                                      {paymentSummary.includes(Number(trainee.trainee_attNO)) && (
-                                        <button
-                                          onClick={() => handleRemove(trainee.trainee_id)}
-                                          className="btn btn-sm btn-outline-danger d-flex align-items-center justify-content-center px-2 py-1"
-                                          title="Remove from list"
-                                        >
-                                          <i className="bi bi-x-circle"></i>
-                                        </button>
-                                      )}
+                                  <>
+                                    {/* Trainees IN paymentListSummary */}
+                                    {traineeWithoutBank.map((trainee: any, index: number) => (
+                                      <tr key={`in-list-${index}`}>
+                                        <td>{index + 1}</td>
+                                        <td>{trainee.trainee_attNO || ''}</td>
+                                        <td>{trainee.REG_NO || ''}</td>
+                                        <td>{trainee.endDate?.split('T')[0] || ''}</td>
+                                        <td>{trainee.name || ''}</td>
+                                        <td>{trainee.AttCount}</td>
+                                        <td>Rs. {trainee.payment}</td>
+                                        <td>
+                                          <div className="d-flex gap-2 justify-content-center">
+                                            <Link
+                                              to={`/OJT/payments/${trainee.trainee_id}/view`}
+                                              className={`btn btn-sm d-flex align-items-center justify-content-center px-2 py-1 ${
+                                                paymentSummary.includes(Number(trainee.trainee_attNO))
+                                                  ? 'btn-primary'
+                                                  : 'btn-outline-warning'
+                                              }`}
+                                              title={
+                                                paymentSummary.includes(Number(trainee.trainee_attNO))
+                                                  ? 'Add details'
+                                                  : 'View details'
+                                              }
+                                            >
+                                              <i
+                                                className={`bi ${
+                                                  paymentSummary.includes(Number(trainee.trainee_attNO))
+                                                    ? 'bi-plus-circle'
+                                                    : 'bi bi-file-earmark-text'
+                                                }`}
+                                              ></i>
+                                            </Link>
+                                            {paymentSummary.includes(Number(trainee.trainee_attNO)) && (
+                                              <button
+                                                onClick={() => handleRemove(trainee.trainee_id)}
+                                                className="btn btn-sm btn-outline-danger d-flex align-items-center justify-content-center px-2 py-1"
+                                                title="Remove from list"
+                                              >
+                                                <i className="bi bi-x-circle"></i>
+                                              </button>
+                                            )}
+                                          </div>
+                                        </td>
+                                      </tr>
+                                    ))}
 
-                                      </div>
-                                    </td>
-                                  </tr>
+                                    {/* Trainees NOT IN paymentListSummary */}
+                                    {traineeWithBank.map((trainee: any, index: number) => (
+                                      <tr key={`not-in-list-${index}`}>
+                                        <td>{traineeWithoutBank.length + index + 1}</td>
+                                        <td>{trainee.trainee_attNO || ''}</td>
+                                        <td>{trainee.REG_NO || ''}</td>
+                                        <td>{trainee.endDate?.split('T')[0] || ''}</td>
+                                        <td>{trainee.name || ''}</td>
+                                        <td>{trainee.AttCount}</td>
+                                        <td>Rs. {trainee.payment}</td>
+                                        <td>
+                                          <div className="d-flex gap-2 justify-content-center">
+                                            <Link
+                                              to={`/OJT/payments/${trainee.trainee_id}/view`}
+                                              className={`btn btn-sm d-flex align-items-center justify-content-center px-2 py-1 ${
+                                                paymentSummary.includes(Number(trainee.trainee_attNO))
+                                                  ? 'btn-primary'
+                                                  : 'btn-outline-warning'
+                                              }`}
+                                              title={
+                                                paymentSummary.includes(Number(trainee.trainee_attNO))
+                                                  ? 'Add details'
+                                                  : 'View details'
+                                              }
+                                            >
+                                              <i
+                                                className={`bi ${
+                                                  paymentSummary.includes(Number(trainee.trainee_attNO))
+                                                    ? 'bi-plus-circle'
+                                                    : 'bi bi-file-earmark-text'
+                                                }`}
+                                              ></i>
+                                            </Link>
+                                            {paymentSummary.includes(Number(trainee.trainee_attNO)) && (
+                                              <button
+                                                onClick={() => handleRemove(trainee.trainee_id)}
+                                                className="btn btn-sm btn-outline-danger d-flex align-items-center justify-content-center px-2 py-1"
+                                                title="Remove from list"
+                                              >
+                                                <i className="bi bi-x-circle"></i>
+                                              </button>
+                                            )}
+                                          </div>
+                                        </td>
+                                      </tr>
+                                    ))}
+                                  </>
                                 );
-                              })}
+                              })()}
                             </tbody>
                           </table>
                         )}
                       </div>
                     </Accordion.Body>
                   </Accordion.Item>
-                </Accordion>
 
-                <Accordion defaultActiveKey={["1"]} alwaysOpen>
                   {/* Other Trainees */}
-                  <Accordion.Item eventKey="1">
-                    <Accordion.Header style={{position:'sticky',top:0,zIndex:3, backgroundColor: '#fff'}}>Others</Accordion.Header>
+                  <div className="sticky-bottom-accordion">
+                  <Accordion.Item eventKey="1" className="small-accordion-header">
+                    <Accordion.Header className="custom-accordion-header" style={{position:'sticky',top:0,zIndex:3, backgroundColor: '#fff'}}>Others</Accordion.Header>
                     <Accordion.Body>
                       <div className="table-responsive rounded shadow-sm p-1 bg-white">
                         {loading ? (
@@ -558,8 +648,9 @@ const handleDownload = async () => {
                       </div>
                     </Accordion.Body>
                   </Accordion.Item>
+                  </div>
                 </Accordion>
-              </div>
+            </div>
 
             <div className="d-flex justify-content-between align-items-center mt-2 mb-2">
               <div>
@@ -656,8 +747,8 @@ const handleDownload = async () => {
                   onClick={() => {
                     reset();
                     setFilterOptions({
-                      month: { value: lastMonth.toString(), label: lastMonth.toString() },
-                      year: { value: lastMonthYear.toString(), label: lastMonthYear.toString() }
+                      month: { value: maxMonth.toString(), label: maxMonth.toString() },
+                      year: { value: maxYear.toString(), label: maxYear.toString() }
                     });
                     setFilterVisible(false);
                   }}
@@ -684,7 +775,7 @@ const handleDownload = async () => {
                 <Modal.Body>
                 <form className="d-flex flex-column gap-2">
                   <div className="form-group">
-                  <label htmlFor="amount" className="form-label">Amount per day</label>
+                  <label htmlFor="amount" className="form-label">Payment per day</label>
                   <input
                     type="number"
                     className="form-control"

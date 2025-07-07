@@ -217,7 +217,7 @@ export default function TraineeAddSchedulePage() {
 
     // DELETE previous interviews for this trainee before updating schedule
   try {
-    await api.delete(`/api/interview/${trainee.NIC_NO}`);
+    await api.delete(`/api/trainee/interview/${trainee.NIC_NO}`);
     console.log("Previous interviews deleted for NIC:", trainee.NIC_NO);
   } catch (error: any) {
     if (error.response && error.response.status === 404) {
