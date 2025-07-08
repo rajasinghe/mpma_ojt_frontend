@@ -10,6 +10,9 @@ import api from "../api";
 import { MainContainer } from "../layout/containers/main_container/MainContainer";
 import SubContainer from "../layout/containers/sub_container/SubContainer";
 import { utils, writeFileXLSX } from "xlsx";
+import { getShortEmail } from '../helpers';
+
+
 export default function DepartmentPage() {
   const { state } = useNavigation();
   const { department, interviewSummary } = useLoaderData() as any;
@@ -196,7 +199,7 @@ export default function DepartmentPage() {
                       <thead className="table-dark">
                         <tr className="small" style={{ fontSize: "" }}>
                           <th></th>
-                          <th>name</th>
+                          <th>Name/Email</th>
                           <th>NIC</th>
                           <th>Start Date</th>
                           <th>Duration</th>
@@ -211,7 +214,40 @@ export default function DepartmentPage() {
                           return (
                             <tr key={`${interview.id}`}>
                               <td>{index + 1}</td>
-                              <td>{interview.name}</td>
+                              <td style={{ whiteSpace: 'pre-line', minWidth: 180, maxWidth: 240 }}>
+                                <div>{interview.name}</div>
+                                <div
+                                  style={{
+                                    fontSize: '0.9em',
+                                    color: '#555',
+                                    display: 'flex',
+                                    alignItems: 'center',
+                                    gap: 4,
+                                    maxWidth: 220,
+                                  }}
+                                >
+                                  <span
+                                    title={interview.email}
+                                    style={{
+                                      display: 'inline-block',
+                                      maxWidth: 140,
+                                      verticalAlign: 'bottom',
+                                      fontFamily: 'monospace',
+                                    }}
+                                  >
+                                    {getShortEmail(interview.email, 20)}
+                                  </span>
+                                  <button
+                                    type="button"
+                                    className="btn btn-link btn-sm p-0"
+                                    style={{ fontSize: '1em', flexShrink: 0 }}
+                                    onClick={() => navigator.clipboard.writeText(interview.email)}
+                                    title="Copy email"
+                                  >
+                                    <i className="bi bi-clipboard"></i>
+                                  </button>
+                                </div>
+                              </td>
                               <td>{interview.NIC}</td>
                               <td>{moment(interview.date).format("YYYY-MM-DD")}</td>
                               <td>{interview.duration}</td>

@@ -6,12 +6,14 @@ import removeIcon from '../../assets/remove.png';
 import Swal from 'sweetalert2';
 import api from '../../api';
 import './interview.css';
+import { getShortEmail } from '../../helpers';
 
 interface Interview {
   id: number;
   NIC: string;
   name: string;
   date: string;
+  email: string;
   duration: string;
   createdAt: string;
   departments: {
@@ -24,7 +26,7 @@ interface Interview {
 interface Props {
   lastSevenDays: Interview[];
   allInterviews: Interview[];
-  departmentNames: { [key: number]: string }; // Add this prop
+  departmentNames: { [key: number]: string };
 }
 
 export default function InterviewTables({ lastSevenDays, allInterviews, departmentNames }: Props) {
@@ -74,7 +76,7 @@ export default function InterviewTables({ lastSevenDays, allInterviews, departme
         <thead className="table-dark">
           <tr className="small">
             <th>NIC</th>
-            <th>Name</th>
+            <th>Name/Email</th>
             <th>Interview Date</th>
             <th>Start Date</th>
             <th>Duration</th>
@@ -96,7 +98,40 @@ export default function InterviewTables({ lastSevenDays, allInterviews, departme
                 className={isFuture ? "future-interview-row" : ""}
               >
                 <td>{interview.NIC}</td>
-                <td>{interview.name}</td>
+                <td style={{ whiteSpace: 'pre-line', minWidth: 180, maxWidth: 240 }}>
+                  <div>{interview.name}</div>
+                  <div
+                    style={{
+                      fontSize: '0.9em',
+                      color: '#555',
+                      display: 'flex',
+                      alignItems: 'center',
+                      gap: 4,
+                      maxWidth: 220,
+                    }}
+                  >
+                    <span
+                      title={interview.email}
+                      style={{
+                        display: 'inline-block',
+                        maxWidth: 140,
+                        verticalAlign: 'bottom',
+                        fontFamily: 'monospace',
+                      }}
+                    >
+                      {getShortEmail(interview.email, 20)}
+                    </span>
+                    <button
+                      type="button"
+                      className="btn btn-link btn-sm p-0"
+                      style={{ fontSize: '1em', flexShrink: 0 }}
+                      onClick={() => navigator.clipboard.writeText(interview.email)}
+                      title="Copy email"
+                    >
+                      <i className="bi bi-clipboard"></i>
+                    </button>
+                  </div>
+                </td>
                 <td>{moment(interview.createdAt).format('YYYY-MM-DD')}</td>
                 <td>{moment(interview.date).format('YYYY-MM-DD')}</td>
                 <td>{interview.duration || 'Not specified'}</td>

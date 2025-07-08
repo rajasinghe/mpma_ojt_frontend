@@ -13,6 +13,7 @@ interface InterviewDetail {
   id: number;
   NIC: string;
   name: string;
+  email: string;
   date: string;
   duration: string;
   departments: Department[];
@@ -58,6 +59,7 @@ export default function EditInterviewPage() {
           }} 
           startDate={interviewData.date} 
           name={interviewData.name}
+          email={interviewData.email}
           nicValidated={true}
           nicDisable={true}
           isEditing={true}

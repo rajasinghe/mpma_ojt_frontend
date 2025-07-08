@@ -19,6 +19,7 @@ interface Props {
 const schema = z.object({
   id: z.number().optional(),
   name: z.string().min(1, { message: "Name is required" }),
+  email: z.string().email("Invalid email format"),
   date: z.string().date(),
   duration: z.object({
     value: z.number().min(1, "Duration value is required"),
@@ -60,6 +61,7 @@ export default function InterviewModal({
     resolver: zodResolver(schema),
     defaultValues: interview ? 
     { name: interview.name,
+      email: interview.email,
       date: interview.date,
       duration: {
         value: parseInt(interview.duration.split(" ")[0]),
@@ -95,6 +97,7 @@ export default function InterviewModal({
           duration: `${formData.duration.value} ${formData.duration.unit}`,
           startDate: formData.date,
           name: formData.name,
+          email: formData.email,
           departments: [{
             department_id: department.id,
             from: formData.fromDate,
@@ -148,6 +151,7 @@ export default function InterviewModal({
             duration: `${formData.duration.value} ${formData.duration.unit}`,
             startDate: formData.date,
             name: formData.name,
+            email: formData.email,
             departments: {
               department_id: department.id,
               from: formData.fromDate,
@@ -159,6 +163,7 @@ export default function InterviewModal({
             duration: `${formData.duration.value} ${formData.duration.unit}`,
             startDate: formData.date,
             name: formData.name,
+            email: formData.email,
             departments: {
               department_id: department.id,
               from: formData.fromDate,
@@ -196,6 +201,7 @@ const resetAll = () => {
     // Reset to original interview values
     setNic(interview.NIC);
     setValue("name", interview.name);
+    setValue("email", interview.email);
     setNicDisable(true);
     // Convert date to YYYY-MM-DD format
     setValue("date", moment(interview.date).format("YYYY-MM-DD"));
@@ -270,6 +276,16 @@ const resetAll = () => {
             />
             {errors.name && <p className="text-danger m-0">{errors.name.message}</p>}
           </div>
+          <div className="mb-3">
+            <label className="form-label">Email</label>
+            <input
+              {...register("email")}
+              disabled={!interview && nic == null}
+              className={`form-control ${errors.email ? "is-invalid" : ""}`}
+              type="text"
+            />
+            {errors.email && <p className="text-danger m-0">{errors.email.message}</p>}
+          </div> 
           <div className="mb-3">
             <label className="form-label">Start Date</label>
               <input

@@ -20,10 +20,6 @@ export const InterviewLoader = async () => {
     return currentDate.diff(interviewDate, 'days') <= 30;
   });
 
-  console.log("Interviews loaded:", interviews);
-  console.log("Last 7 days interviews:", lastSevenDaysInterviews);
-  console.log("Last 30 days interviews:", lastThirtyDaysInterviews);
-
   return {
     lastSevenDays: lastSevenDaysInterviews,
     lastThirtyDays: lastThirtyDaysInterviews,

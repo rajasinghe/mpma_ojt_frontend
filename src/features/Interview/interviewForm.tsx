@@ -19,6 +19,7 @@ interface DepartmentSummary {
 
 const schema = z.object({
   name: z.string().optional(),
+  email: z.string().email("Invalid email format"),
   startDate: z.string().min(1,"start date is required"),
   duration: z.object({
     value: z.number().min(1, "Duration value is required"),
@@ -46,6 +47,7 @@ type InterviewProps = {
     duration?: { value: number ; unit: string; } | undefined;
     startDate?: string | undefined;
     name?: string | undefined;
+    email?: string | undefined;
     nicValidated: boolean;
     nicDisable: boolean;
     isEditing?: boolean;
@@ -70,6 +72,7 @@ export default function InterviewForm(Interview : InterviewProps) {
         resolver: zodResolver(schema),
         defaultValues: Interview ?{
             name: Interview.name,
+            email: Interview.email || "",
             startDate: Interview.startDate?.split("T")[0] || "",
             duration: Interview.duration,
             selections: Interview.selections
@@ -129,6 +132,7 @@ export default function InterviewForm(Interview : InterviewProps) {
           const  body ={
               nic: nic,
               name: data.name? data.name: null,
+              email: data.email,
               startDate: data.startDate,
               duration: `${data.duration.value} ${data.duration.unit}`,
               departments: data.selections.map(selection => ({
@@ -194,16 +198,31 @@ export default function InterviewForm(Interview : InterviewProps) {
             setNicDisable={setNicDisable}
           />
 
-          <div className="mb-4">
-            <label className="form-label">Name <span className="small">(Optional)</span></label>
-            <input
-              {...register("name")}
-              className={`form-control ${errors.name ? "is-invalid" : ""}`}
-              disabled={!nicValidated || isSubmitting}
-            />
-            {errors.name && (
-              <div className="invalid-feedback">{errors.name.message}</div>
-            )}
+          <div className="row mb-4">
+            <div className="col-md-6">
+              <label className="form-label">Name <span className="small">(Optional)</span></label>
+              <input
+                {...register("name")}
+                className={`form-control ${errors.name ? "is-invalid" : ""}`}
+                disabled={!nicValidated || isSubmitting}
+              />
+              {errors.name && (
+                <div className="invalid-feedback">{errors.name.message}</div>
+              )}
+            </div>
+
+            <div className="col-md-6">
+              <label className="form-label">Email</label>
+              <input
+                {...register("email")}
+                type="email"
+                className={`form-control ${errors.email ? "is-invalid" : ""}`}
+                disabled={!nicValidated || isSubmitting}
+              />
+              {errors.email && (
+                <div className="invalid-feedback">{errors.email.message}</div>
+              )}
+            </div>
           </div>
 
           <div className="row mb-4">
@@ -379,6 +398,7 @@ export default function InterviewForm(Interview : InterviewProps) {
                 if(isEditing){
                   reset({
                     name: "",
+                    email: "",
                     startDate: "",
                     duration: { value: 0, unit: "" },
                     selections: [{ 
