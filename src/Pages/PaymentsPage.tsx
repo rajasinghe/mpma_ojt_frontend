@@ -72,6 +72,7 @@ export default function PaymentsPage() {
   const [resultCount, setResultCount] = useState<number>(loaderData.selectTrainees.length);
   const [searchCount, setSearchCount] = useState<number | null>(null);
   const [loading, setLoading] = useState<boolean>(false);
+  const [activeAccordion, setActiveAccordion] = useState<string>("0");
 
   const { year: maxYear, months: maxYearMonths } = loaderData.summary.reduce((max, current) =>
     current.year > max.year ? current : max
@@ -450,7 +451,14 @@ const handleDownload = async () => {
               </div>
             </div>
             <div className="border border-2 rounded-2 p-1 mx-auto" style={{ maxHeight: "56vh", overflowY: "scroll", maxWidth: "1200px"}}>
-                <Accordion defaultActiveKey="0">
+                <Accordion activeKey={activeAccordion} 
+                    onSelect={(eventKey) => {
+                      if (Array.isArray(eventKey)) {
+                        setActiveAccordion(eventKey[0] ?? "0");
+                      } else {
+                        setActiveAccordion(eventKey ?? "0");
+                      }
+                    }}>
                   {/* Payment List */}
                   <Accordion.Item eventKey="0" className="small-accordion-header">
                     <Accordion.Header className="custom-accordion-header" style={{ position: 'sticky', top: 0, zIndex: 3, backgroundColor: '#fff', }}>Payment List</Accordion.Header>
