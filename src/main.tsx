@@ -6,6 +6,7 @@ import TraineeDetailsAddPage from "./Pages/TraineeDetailsAddPage.tsx";
 import "bootstrap/dist/css/bootstrap.css";
 import "bootstrap-icons/font/bootstrap-icons.css";
 import "bootstrap/dist/js/bootstrap.bundle.min";
+import '@fortawesome/fontawesome-free/css/all.min.css';
 import ViewTraineesPage from "./Pages/ViewTraineesPage.tsx";
 import {
   newTraineesInsertPageLoader,
@@ -40,10 +41,17 @@ import api from "./api.ts";
 import AddUsersPage from "./Pages/Admin/AddUserPage.tsx";
 import ViewUsersPage from "./Pages/Admin/ViewUsersPage.tsx";
 import { inboxLoader } from "./loaders/inboxLoader.ts";
+import GeneratePaymentSlip from "./Pages/GeneratePaymentSlip.tsx";
+import { PaymentSlipLoader, paymentDetailsLoader } from "./loaders/PaymentSlipLoader.ts";
 import NewInterviewPage from "./features/Interview/interviewPage.tsx";
 import ViewInterviewPage from "./features/Interview/viewInterviewPage.tsx";
 import EditInterviewPage from "./features/Interview/editInterviewPage.tsx";
 import {InterviewLoader} from "./loaders/InterviewLoader.ts";
+import {traineeDetailsPageLoader} from "./loaders/TraineesLoader.ts";
+import PaymentsPage from "./Pages/PaymentsPage.tsx";
+import ViewPaymentDetails from "./Pages/ViewPaymentDetails.tsx";
+import TraineeDetailsPage from "./Pages/TraineeDetailsPage.tsx";
+import PendingTraineesPage from "./Pages/PendingTraineesPage.tsx";
 
 export const setToken = () => {
   const token = localStorage.getItem("token");
@@ -120,6 +128,16 @@ const router = createBrowserRouter([
             loader: traineeAddSchedulePageLoader,
           },
           {
+            path: "trainees/details",
+            element: <TraineeDetailsPage />,
+            loader: traineeDetailsPageLoader,
+          },
+          {
+            path: "trainees/pending_trainees",
+            element: <PendingTraineesPage />,
+            
+          },
+          {
             path: "attendence/new",
             element: <UploadAttendenceSheet />,
           },
@@ -127,6 +145,20 @@ const router = createBrowserRouter([
             path: "attendence",
             element: <AttendencesPage />,
             loader: viewAttendenceLoader,
+          },
+          {
+            path: "payments",
+            element: <PaymentsPage />,
+            loader: paymentDetailsLoader
+          },
+          {
+            path: "payments/paymentslipgenerate",
+            element: <GeneratePaymentSlip />,
+            loader: PaymentSlipLoader
+          },
+          {
+            path: "payments/:id/view",
+            element: <ViewPaymentDetails />,
           },
           {
             path: "calender",

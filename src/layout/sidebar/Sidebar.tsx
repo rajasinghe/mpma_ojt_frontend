@@ -31,6 +31,20 @@ const Sidebar = ({ user }: Props) => {
           active_icon: "bi-person-plus-fill",
           inactive_icon: "bi-person-plus",
         },
+        {
+          name: "Details",
+          route: "/OJT/trainees/details",
+          regex: /^\/OJT\/trainees\/details/i,
+          active_icon: "bi-folder-fill",
+          inactive_icon: "bi-folder",
+        },
+        {
+          name: "Pending Trainees",
+          route: "/OJT/trainees/pending_trainees",
+          regex: /^\/OJT\/trainees\/pending_trainees/i,
+          active_icon: "bi-hourglass-split",
+          inactive_icon: "bi-hourglass",
+        },
       ],
     },
     {
@@ -63,9 +77,10 @@ const Sidebar = ({ user }: Props) => {
   useEffect(() => {
     if (user) {
       console.log(user);
+      let updatedLinks = [...initLinks];
+
       if (user && user.type == "SUPERADMIN") {
-        setLinks([
-          ...initLinks,
+     updatedLinks.push(
           {
             name: "Departments",
             regex: /^\/OJT\/departments/i,
@@ -73,7 +88,7 @@ const Sidebar = ({ user }: Props) => {
             active_icon: "bi-diagram-3-fill",
             inactive_icon: "bi-diagram-3",
           },
-          /*{
+          {
             name: "Interview",
             regex: /^\/OJT\/Interview/i,
             route: "/OJT/interview",
@@ -88,7 +103,23 @@ const Sidebar = ({ user }: Props) => {
                 inactive_icon: "bi-person-plus",
               },
             ],
-          },*/
+          },
+          {
+            name: "Payments",
+            regex: /^\/OJT\/payments/i,
+            route: "/OJT/payments",
+            active_icon: "bi-credit-card-fill",
+            inactive_icon: "bi-credit-card",
+            subLinks: [
+              {
+                name: "Payment Slip Generate",
+                regex: /^\/OJT\/payments\/paymentslipgenerate/i,
+                route: "/OJT/payments/paymentslipgenerate",
+                active_icon: "bi bi-file-text-fill",
+                inactive_icon: "bi bi-file-text",
+              },
+            ]
+          },
           {
             name: "Users",
             regex: /^\/OJT\/users/i,
@@ -105,51 +136,77 @@ const Sidebar = ({ user }: Props) => {
               },
             ],
           },
-        ]);
-      } else if (
-        user.accessLevels.find((accessLevel: any) => accessLevel.access == "interview:modify")
-      ) {
-        setLinks([
-          ...initLinks,
-          /*{
-            name: "Interview",
-            regex: /^\/OJT\/Interview/i,
-            route: "/OJT/interview",
-            active_icon: "bi-diagram-3-fill",
-            inactive_icon: "bi-diagram-3",
-            subLinks: [
-              {
-                name: "New Interview",
-                regex: /^\/OJT\/interview\/new/i,
-                route: "/OJT/interview/new",
-                active_icon: " bi-file-earmark-arrow-up-fill",
-                inactive_icon: "bi-file-earmark-arrow-up",
-              },
-            ],
-          },*/
-          {
-            name: "Departments",
-            regex: /^\/OJT\/departments/i,
-            route: "/OJT/departments",
-            active_icon: "bi-diagram-3-fill",
-            inactive_icon: "bi-diagram-3",
-          },
-        ]);
+     );
+      } else { 
+
+        if (
+          user.accessLevels.find((accessLevel: any) => accessLevel.access == "interview:modify")
+        ) {
+          updatedLinks.push(
+            {
+              name: "Interview",
+              regex: /^\/OJT\/Interview/i,
+              route: "/OJT/interview",
+              active_icon: "bi-diagram-3-fill",
+              inactive_icon: "bi-diagram-3",
+              subLinks: [
+                {
+                  name: "New Interview",
+                  regex: /^\/OJT\/interview\/new/i,
+                  route: "/OJT/interview/new",
+                  active_icon: " bi-file-earmark-arrow-up-fill",
+                  inactive_icon: "bi-file-earmark-arrow-up",
+                },
+              ],
+            },
+            {
+              name: "Departments",
+              regex: /^\/OJT\/departments/i,
+              route: "/OJT/departments",
+              active_icon: "bi-diagram-3-fill",
+              inactive_icon: "bi-diagram-3",
+            },
+        );
+        }
+        if (
+          user.accessLevels.find((accessLevel: any) => accessLevel.access == "department:modify")
+
+        ) {
+          updatedLinks.push(
+            {
+              name: "Departments",
+              regex: /^\/OJT\/departments/i,
+              route: "/OJT/departments",
+              active_icon: "bi-diagram-3-fill",
+              inactive_icon: "bi-diagram-3",
+
+            },
+          );
+        }
+        if (
+          user.accessLevels.find((accessLevel: any) => accessLevel.access == "payments:modify")
+        ) {
+          updatedLinks.push(
+            {
+              name: "Payments",
+              regex: /^\/OJT\/payments/i,
+              route: "/OJT/payments",
+              active_icon: "bi-credit-card-fill",
+              inactive_icon: "bi-credit-card",
+              subLinks: [
+                {
+                  name: "Payment Slip Generate",
+                  regex: /^\/OJT\/payments\/paymentslipgenerate/i,
+                  route: "/OJT/payments/paymentslipgenerate",
+                  active_icon: "bi bi-file-text-fill",
+                  inactive_icon: "bi bi-file-text",
+                },
+              ]
+            },
+          );
+        }
       }
-      else if (
-        user.accessLevels.find((accessLevel: any) => accessLevel.access == "department:modify")
-      ) {
-        setLinks([
-          ...initLinks,
-          {
-            name: "Departments",
-            regex: /^\/OJT\/departments/i,
-            route: "/OJT/departments",
-            active_icon: "bi-diagram-3-fill",
-            inactive_icon: "bi-diagram-3",
-          },
-        ]);
-      }
+      setLinks(updatedLinks);
     }
   }, [user]);
 

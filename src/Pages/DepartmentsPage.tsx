@@ -63,9 +63,9 @@ export default function DepartmentsPage() {
         <MainContainer title="Departments" breadCrumbs={["Home", "Departments"]}>
           <SubContainer>
             <div className="container-fluid border border-dark rounded-2 my-2 py-2" style={{maxWidth: "1200px"}}>
-              <div className="fw-semibold ">Total Active Trainees - {totals.active_count}</div>
-              <div className="fw-semibold ">Total Maximum Capacity - {totals.max_count}</div>
-              <div className="fw-semibold ">Total Interviewed - {totals.interview_count}</div>
+              <div className="fw-semibold ">Total Active Trainees in Departments - {totals.active_count}</div>
+              <div className="fw-semibold ">Total Maximum Capacity in Departments - {totals.max_count}</div>
+              <div className="fw-semibold ">Total Interviewed Count - {totals.interview_count}</div>
             </div>
             <div>
             <section

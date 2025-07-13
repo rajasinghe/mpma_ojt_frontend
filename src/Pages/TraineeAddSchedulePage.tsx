@@ -28,6 +28,7 @@ const schema = z.object({
     })
   ),
   start_date: z.string().date("Select a starting date for the journey"),
+  end_date: z.string().date(),
   period: z.object({
     label: z.string().min(1),
     value: z.string().min(1),
@@ -45,6 +46,7 @@ interface LoaderData {
 export default function TraineeAddSchedulePage() {
   const { trainee, departmentsList, periodsList } = useLoaderData() as LoaderData;
   const params = useSearchParams();
+  
   useEffect(() => {
     console.log(params);
     console.log(trainee);
@@ -59,12 +61,17 @@ export default function TraineeAddSchedulePage() {
   const periodModalVisibilityState = useState<boolean>(false);
   const setPeriodModalVisibility = periodModalVisibilityState[1];
   const [endDate, setEndDate] = useState<Date | null>(null);
+  const [manualEndDate, setManualEndDate] = useState<Date | null>(null);
+  const [isManualEndDate, setIsManualEndDate] = useState<boolean>(false);
+  const [IsChanged, setIsChanged] = useState<boolean>(false);
+  
 
   const {
     control,
     reset,
     register,
     setError,
+    setValue,
     watch,
     handleSubmit,
     formState: { errors },
@@ -79,6 +86,7 @@ export default function TraineeAddSchedulePage() {
               periodsList.find((period) => trainee.training_period_id == period.id).name ||
               "not in the list",
           },
+          end_date: formatDateToIso(trainee.end_date),
           schedules: trainee.schedules.map((schedule: any) => {
 
             return {
@@ -94,6 +102,7 @@ export default function TraineeAddSchedulePage() {
         }
       : {
           start_date: formatDateToIso(trainee.start_date),
+          end_date: formatDateToIso(trainee.end_date),
           period: {
             value: trainee.training_period_id + "",
             label:
@@ -104,11 +113,12 @@ export default function TraineeAddSchedulePage() {
         },
   });
 
-  useEffect(() => {
-    const startDate = watch("start_date");
-    const selectedPeriod = watch("period");
+  const startDate = watch("start_date");
+  const selectedPeriod = watch("period");
 
-    if (startDate && selectedPeriod?.value) {
+  useEffect(() => {
+
+    if (IsChanged && startDate && selectedPeriod?.value) {
       try {
         const newEndDate = endDateCalculator(
           periodsList,
@@ -116,11 +126,32 @@ export default function TraineeAddSchedulePage() {
           new Date(startDate)
         );
         setEndDate(newEndDate);
+        setValue("end_date", newEndDate.toISOString().split('T')[0]);
+        
+        // Reset to calculated end date when period or start date changes
+        setIsManualEndDate(false);
+        setManualEndDate(newEndDate);
+        
       } catch (error) {
         setError("root", { message: "Invalid period or start date" });
       }
     }
   }, [watch("start_date"), watch("period")]);
+
+  useEffect(() => {
+
+    const newEndDate = endDateCalculator(
+      periodsList,
+      parseInt(selectedPeriod.value),
+      new Date(startDate)
+    );
+
+    if(newEndDate.getTime() !== new Date(trainee.end_date).getTime()) {
+      setIsManualEndDate(true);
+      setManualEndDate(new Date(trainee.end_date));
+    } 
+    
+  },[]);
 
   const { fields, append, remove } = useFieldArray({ control: control, name: "schedules" });
 
@@ -152,6 +183,7 @@ export default function TraineeAddSchedulePage() {
     };
   };
 
+
   const onSubmit = async (formData: formType) => {
 
     const validation = sortAndValidateSchedules(formData.schedules);
@@ -172,7 +204,7 @@ export default function TraineeAddSchedulePage() {
     let data: any = formData;
     data.period = formData.period.value;
     if (endDate) {
-      data.end_date = endDate.toISOString().split("T")[0];
+      data.end_date = manualEndDate?.toISOString().split('T')[0];
     }
     data.schedules = data.schedules.map((schedule: any) => {
       return {
@@ -182,6 +214,26 @@ export default function TraineeAddSchedulePage() {
     });
 
     console.log(data);
+
+    // DELETE previous interviews for this trainee before updating schedule
+  try {
+    await api.delete(`/api/trainee/interview/${trainee.NIC_NO}`);
+    console.log("Previous interviews deleted for NIC:", trainee.NIC_NO);
+  } catch (error: any) {
+    if (error.response && error.response.status === 404) {
+      // No previous interviews found, this is fine
+      console.log("No previous interviews to delete for NIC:", trainee.NIC_NO);
+    } else {
+      // Other errors should be handled
+      console.error("Failed to delete previous interviews:", error);
+      Swal.fire({
+        icon: "error",
+        title: "Error",
+        text: "Failed to delete previous interviews for this trainee.",
+      });
+      return;
+    }
+  }
 
     // API call to create a new schedule entry
     Swal.fire({
@@ -207,10 +259,7 @@ export default function TraineeAddSchedulePage() {
             text: "schedule has been updated at the database .",
             icon: "success",
           });
-          //delete the interview record
-          const deleteInterViewResponse = await api.delete(`api/trainee/${trainee.id}/interview`);
-          console.log(deleteInterViewResponse);
-          //reset();
+          
           navigate(`/OJT/trainees/${trainee.id}/profile`);
         }
       })
@@ -320,6 +369,10 @@ export default function TraineeAddSchedulePage() {
                               label: period.name,
                             };
                           })}
+                            onChange={(value) => {
+                              field.onChange(value);
+                              setIsChanged(true);
+                            }}
                           placeholder="Select a training period"
                         />
                       )}
@@ -349,19 +402,35 @@ export default function TraineeAddSchedulePage() {
                         className="form-control"
                         type="date"
                         {...register("start_date")}
+                        onChange={(e) => {
+                          register("start_date").onChange(e);
+                          setIsChanged(true);
+                        }}
                       />
                       {errors.start_date && (
                         <p className="text-danger">{errors.start_date.message}</p>
                       )}
                     </div>
-                    <div className="w-50  ">
+                    <div className="w-50">
                       <label>End Date</label>
                       <input
                         className="form-control"
                         type="date"
-                        value={endDate ? endDate.toISOString().split("T")[0] : ""}
-                        readOnly
+                        value={manualEndDate ? manualEndDate.toISOString().split('T')[0] : trainee.end_date}
+                        {...register("end_date")}
+                        onChange={(e) => {
+                          setIsManualEndDate(true);
+                          setManualEndDate(new Date(e.target.value));
+                          setEndDate(new Date(e.target.value));
+                          register("end_date").onChange(e);
+                        }}
+                        min={watch('start_date') || ''}
                       />
+                      {isManualEndDate && (
+                        <small className="text-muted">
+                          Manually set. (Will reset if period or start date changes)
+                        </small>
+                      )}
                     </div>
                   </div>
                 </div>
@@ -409,7 +478,7 @@ export default function TraineeAddSchedulePage() {
                             type="date"
                             {...register(`schedules.${index}.start_date`)}
                             min={watch('start_date') || ''}
-                            max={endDate ? endDate.toISOString().split("T")[0] : ''}
+                            max={watch("end_date") || ''}
                           />
                           {errors.schedules?.[index]?.start_date && (
                             <p className="text-danger">
@@ -424,7 +493,7 @@ export default function TraineeAddSchedulePage() {
                             type="date"
                             {...register(`schedules.${index}.end_date`)}
                             min={watch(`schedules.${index}.start_date`) || watch('start_date') || ''}
-                            max={endDate ? endDate.toISOString().split("T")[0] : ''}
+                            max={watch("end_date") || ''}
                           />
                           {errors.schedules?.[index]?.end_date && (
                             <p className="text-danger">

@@ -21,7 +21,7 @@ export const profilePageLoader = async ({ params }: any) => {
     api.get("api/periods"),
     api.get("api/programs"),
     api.get(`api/trainee/${traineeId}/schedule`),
-    api.get(`api/trainee/${traineeId}/payment`),
+    api.get(`api/payments/${traineeId}`),
     api.get(`api/trainee/${traineeId}/attendence`),
     api.get("api/institutes"),
   ]);

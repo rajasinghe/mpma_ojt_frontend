@@ -94,7 +94,7 @@ export const traineePersonalDetailsUpdatePageLoader = async ({ params }: any) =>
 export const traineeBankDetailsLoader = async ({ params }: any) => {
   const [traineeResponse, paymentResponse] = await Promise.allSettled([
     api.get(`api/trainee/${params.id}`),
-    api.get(`api/trainee/${params.id}/payment`),
+    api.get(`api/payments/${params.id}`),
   ]);
   let trainee;
   if (traineeResponse.status == "fulfilled") {
@@ -109,4 +109,12 @@ export const traineeBankDetailsLoader = async ({ params }: any) => {
   return {
     ...trainee,
   };
+};
+
+export const traineeDetailsPageLoader = async () => {
+  const [traineeDetails] = await Promise.all([
+    api.get("api/attendence/traineeDetails"),
+  ]);
+
+  return traineeDetails.data;
 };

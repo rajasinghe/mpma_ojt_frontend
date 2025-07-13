@@ -3,10 +3,11 @@ import { useForm } from "react-hook-form";
 import { z } from "zod";
 import { zodResolver } from "@hookform/resolvers/zod";
 import Select from "react-select";
-import NIC from "../../Components/traineeForm/NIC";
+import InterviewNic from "./interviewNic";
 import api from "../../api";
 import Swal from "sweetalert2";
 import { useNavigate } from "react-router-dom";
+import { useRef } from "react";
 
 interface DepartmentSummary {
   name: string;
@@ -18,6 +19,7 @@ interface DepartmentSummary {
 
 const schema = z.object({
   name: z.string().optional(),
+  email: z.string().email("Invalid email format"),
   startDate: z.string().min(1,"start date is required"),
   duration: z.object({
     value: z.number().min(1, "Duration value is required"),
@@ -25,9 +27,9 @@ const schema = z.object({
   }),
   selections: z.array(
     z.object({
-      departmentId: z.number().min(1, "Department is required"),
-      fromDate: z.string().optional(),
-      toDate: z.string().optional()
+      department_id: z.number().min(1, "Department is required"),
+      from: z.string().optional(),
+      to: z.string().optional()
     })
   ).min(1, "At least one department selection is required")
 });
@@ -45,13 +47,13 @@ type InterviewProps = {
     duration?: { value: number ; unit: string; } | undefined;
     startDate?: string | undefined;
     name?: string | undefined;
+    email?: string | undefined;
     nicValidated: boolean;
     nicDisable: boolean;
     isEditing?: boolean;
 }
 
 export default function InterviewForm(Interview : InterviewProps) {
-
       const [nic, setNic] = useState<any>(Interview.NIC);
       const [nicValidated, setNicValidated] = useState(Interview.nicValidated);
       const [nicDisable, setNicDisable] = useState(Interview.nicDisable);
@@ -70,24 +72,34 @@ export default function InterviewForm(Interview : InterviewProps) {
         resolver: zodResolver(schema),
         defaultValues: Interview ?{
             name: Interview.name,
-            startDate: Interview.startDate,
+            email: Interview.email || "",
+            startDate: Interview.startDate?.split("T")[0] || "",
             duration: Interview.duration,
             selections: Interview.selections
             //?.filter(sel => sel !== undefined)
             ?.map(sel => ({
-              departmentId: sel?.departmentId || -1,
-              fromDate: sel?.fromDate || undefined,
-              toDate: sel?.toDate || undefined
+              department_id: sel?.departmentId || -1,
+              from: sel?.fromDate || undefined,
+              to: sel?.toDate || undefined
             })) || []
           } : undefined,
       });
     
-      const selections = watch("selections") || [{ departmentId: -1, fromDate: "", toDate: "" }];
+      const selections = watch("selections") || [{ department_id: -1, from: "", to: "" }];
+      const lastDeptRef = useRef<HTMLDivElement | null>(null);
+      const [prevCount, setPrevCount] = useState(selections.length);
 
       const departmentSummaryLoader = async () => {
         const response = await api.get("api/department/summary");
         return response.data;
       };
+
+      useEffect(() => {
+        if (selections.length > prevCount && lastDeptRef.current) {
+          lastDeptRef.current.scrollIntoView({ behavior: "smooth", block: "center" });
+        }
+        setPrevCount(selections.length);
+      }, [selections.length]);
     
       useEffect(() => {
         const loadDepartments = async () => {
@@ -107,12 +119,12 @@ export default function InterviewForm(Interview : InterviewProps) {
       }));
 
       const addSelection = () => {
-        setValue("selections", [...selections, { departmentId: -1, fromDate: "", toDate: "" }]);
+        setValue("selections", [...selections, { department_id: -1, from: "", to: "" }]);
       };
     
       const removeSelection = (index: number) => {
         const newSelections = selections.filter((_, i) => i !== index);
-        setValue("selections", newSelections.length ? newSelections : [{ departmentId: -1, fromDate: "", toDate: "" }]);
+        setValue("selections", newSelections.length ? newSelections : [{ department_id: -1, from: "", to: "" }]);
       };
     
       const onSubmit = async (data: FormData) => {
@@ -120,19 +132,21 @@ export default function InterviewForm(Interview : InterviewProps) {
           const  body ={
               nic: nic,
               name: data.name? data.name: null,
+              email: data.email,
               startDate: data.startDate,
               duration: `${data.duration.value} ${data.duration.unit}`,
               departments: data.selections.map(selection => ({
-                department_id: selection.departmentId,
-                from: selection.fromDate? selection.fromDate: null,
-                to: selection.toDate? selection.toDate: null
+                department_id: selection.department_id,
+                from: selection.from? selection.from: null,
+                to: selection.to? selection.to: null
               }))
             };
 
           
           if(isEditing){
             console.log("request:",body);
-            //const response = await api.put(`${}`,body);
+            const response = await api.put(`api/interview/${Interview.NIC}`,body);
+            console.log(response);
 
             Swal.fire({
               title: "Success!",
@@ -145,8 +159,8 @@ export default function InterviewForm(Interview : InterviewProps) {
             });
 
           }else{
-            console.log(body);
-            //const response = await api.post("",body);
+            const response = await api.post("/api/interview",body);
+            console.log(response);
     
             Swal.fire({
               title: "Success!",
@@ -171,26 +185,44 @@ export default function InterviewForm(Interview : InterviewProps) {
 
     return (
         <form onSubmit={handleSubmit(onSubmit)} className="p-4">
-          <NIC
-            nicDisableState={[nicDisable, setNicDisable]}
-            className="mb-3"
-            setNIC_NO={(value) => {
-              setNic(value);
+          {/* NIC validation for unique interview */}
+          <InterviewNic
+            value={nic}
+            onValidated={(nicVal) => {
+              setNic(nicVal);
               setNicValidated(true);
+              setNicDisable(true);
             }}
-            nic={nic}
+            disabled={nicDisable}
+            setNicValidated={setNicValidated}
+            setNicDisable={setNicDisable}
           />
 
-          <div className="mb-4">
-            <label className="form-label">Name</label>
-            <input
-              {...register("name")}
-              className={`form-control ${errors.name ? "is-invalid" : ""}`}
-              disabled={!nicValidated || isSubmitting}
-            />
-            {errors.name && (
-              <div className="invalid-feedback">{errors.name.message}</div>
-            )}
+          <div className="row mb-4">
+            <div className="col-md-6">
+              <label className="form-label">Name <span className="small">(Optional)</span></label>
+              <input
+                {...register("name")}
+                className={`form-control ${errors.name ? "is-invalid" : ""}`}
+                disabled={!nicValidated || isSubmitting}
+              />
+              {errors.name && (
+                <div className="invalid-feedback">{errors.name.message}</div>
+              )}
+            </div>
+
+            <div className="col-md-6">
+              <label className="form-label">Email</label>
+              <input
+                {...register("email")}
+                type="email"
+                className={`form-control ${errors.email ? "is-invalid" : ""}`}
+                disabled={!nicValidated || isSubmitting}
+              />
+              {errors.email && (
+                <div className="invalid-feedback">{errors.email.message}</div>
+              )}
+            </div>
           </div>
 
           <div className="row mb-4">
@@ -242,40 +274,34 @@ export default function InterviewForm(Interview : InterviewProps) {
           <div className="mb-4">
             <div className="d-flex align-items-center mb-3">
               <label className="me-auto">Departments</label>
-              <button
-                type="button"
-                onClick={addSelection}
-                className="btn btn-sm btn-primary"
-                disabled={!nicValidated || isSubmitting}
-              >
-                Add Department
-              </button>
             </div>
 
             {selections.map((selection, index) => (
-              <div key={index} className="card mb-3">
+              <div key={index} className="card mb-3"
+              ref={index === selections.length - 1 ? lastDeptRef : null}
+              >
                 <div className="card-body">
                   <div className="d-flex align-items-start gap-2">
                     <div className="flex-grow-1">
                       <Select
                         options={departmentOptions.filter(option => 
-                          !selections.some(selection => selection.departmentId === option.value))}
+                          !selections.some(selection => selection.department_id === option.value))}
                         value={departmentOptions.find(
-                          option => option.value === selection.departmentId
+                          option => option.value === selection.department_id
                         )|| null}
                         onChange={(option) => {
-                          setValue(`selections.${index}.departmentId`, option?.value || -1)
+                          setValue(`selections.${index}.department_id`, option?.value || -1)
                         }}
                         isDisabled={isSubmitting || !nicValidated}
                         placeholder="Select department..."
                         isClearable={false}
                       />
                       
-                      {selection.departmentId > 0 && (
+                      {selection.department_id > 0 && (
                         <div className="mt-2 small">
                           {(() => {
                             const summary = departmentSummary.find(
-                              dept => dept.dep_id === selection.departmentId
+                              dept => dept.dep_id === selection.department_id
                             );
                             
                             if (!summary) return (
@@ -304,46 +330,46 @@ export default function InterviewForm(Interview : InterviewProps) {
                       </button>
                     </div>
                   </div>
-                  {errors.selections?.[index]?.departmentId && (
+                  {errors.selections?.[index]?.department_id && (
                     <div className="text-danger small mt-1">
-                      {errors.selections[index]?.departmentId?.message}
+                      {errors.selections[index]?.department_id?.message}
                     </div>
                   )}
                 
                 <div className="row mt-3">
                   <div className="col-md-6">
                     <div className="d-flex align-items-center gap-2" style={{ margin: "0.5rem" }}>
-                      <label className="form-label small">From:</label>
+                      <label className="form-label small">From: <span className="small text-muted">(Optional)</span></label>
                       <input
-                        {...register(`selections.${index}.fromDate`)}
+                        {...register(`selections.${index}.from`)}
                         type="date"
                         className={`form-control form-control-sm ${
-                          errors.selections?.[index]?.fromDate ? "is-invalid" : ""
+                          errors.selections?.[index]?.from ? "is-invalid" : ""
                         }`}
                         disabled={!nicValidated || isSubmitting}
                       />
                     </div>
-                    {errors.selections?.[index]?.fromDate && (
+                    {errors.selections?.[index]?.from && (
                       <div className="invalid-feedback small">
-                        {errors.selections[index]?.fromDate?.message}
+                        {errors.selections[index]?.from?.message}
                       </div>
                     )}
                   </div>
                   <div className="col-md-6">
                     <div className="d-flex align-items-center gap-2" style={{ margin: "0.5rem" }}>
-                      <label className="form-label small">To:</label>
+                      <label className="form-label small">To: <span className="small text-muted">(Optional)</span></label>
                       <input
-                        {...register(`selections.${index}.toDate`)}
+                        {...register(`selections.${index}.to`)}
                         type="date"
                         className={`form-control form-control-sm ${
-                          errors.selections?.[index]?.toDate ? "is-invalid" : ""
+                          errors.selections?.[index]?.to ? "is-invalid" : ""
                         }`}
                         disabled={!nicValidated || isSubmitting}
                       />
                     </div>
-                    {errors.selections?.[index]?.toDate && (
+                    {errors.selections?.[index]?.to && (
                       <div className="invalid-feedback small">
-                        {errors.selections[index]?.toDate?.message}
+                        {errors.selections[index]?.to?.message}
                       </div>
                     )}
                   </div>
@@ -353,6 +379,18 @@ export default function InterviewForm(Interview : InterviewProps) {
             ))}
           </div>
 
+          <div className="d-flex justify-content-between align-items-center mb-3">
+            <div className="d-flex align-items-center mb-3">
+              <button
+                type="button"
+                onClick={addSelection}
+                className="btn btn-sm btn-primary"
+                disabled={!nicValidated || isSubmitting}
+              >
+                Add Department
+              </button>
+            </div>
+
           <div className="d-flex gap-2 justify-content-end">
             <button
               type="button"
@@ -360,20 +398,22 @@ export default function InterviewForm(Interview : InterviewProps) {
                 if(isEditing){
                   reset({
                     name: "",
+                    email: "",
                     startDate: "",
                     duration: { value: 0, unit: "" },
                     selections: [{ 
-                      departmentId: -1, 
-                      fromDate: "", 
-                      toDate: "" 
+                      department_id: -1, 
+                      from: "", 
+                      to: "" 
                     }],
                   });
+                  setNicValidated(Interview.nicValidated);
+                  setNicDisable(Interview.nicDisable);
                 }else{
                   reset();
-                  setNic("");
+                  setNicValidated(false);
+                  setNicDisable(false);
                 }
-                setNicValidated(Interview.nicValidated);
-                setNicDisable(Interview.nicDisable);
               }}
               className="btn btn-danger ms-2"
               disabled={!nicValidated || isSubmitting}
@@ -387,6 +427,7 @@ export default function InterviewForm(Interview : InterviewProps) {
             >
               {isSubmitting ? "Submitting..." : "Submit"}
             </button>
+          </div>
           </div>
         </form>
     );
