@@ -3,44 +3,57 @@ import { MainContainer } from "../layout/containers/main_container/MainContainer
 import SubContainer from "../layout/containers/sub_container/SubContainer";
 import MiniLoader from "../Components/ui/Loader/MiniLoader";
 import api from "../api";
-import moment from 'moment';
+import moment from "moment";
 import Swal from "sweetalert2";
 
 const interviewedTrainees = async () => {
-  try{
+  try {
     const response = await api.get("api/interview");
     return response.data.InterviewDetails;
-  }
-  catch (error) {
+  } catch (error) {
     console.error("Error fetching interviewed trainees:", error);
     return [];
   }
-}
+};
 
 const registeredTrainees = [
   // Example data, replace with real data from your state or props
-  { nic: "456789123V", name: "Alice Brown", email: "alice@example.com", startDate: "2025-07-03" },
-  { nic: "654321987V", name: "Bob White", email: "bob@example.com", startDate: "2025-07-04" },
+  {
+    nic: "456789123V",
+    name: "Alice Brown",
+    email: "alice@example.com",
+    startDate: "2025-07-03",
+  },
+  {
+    nic: "654321987V",
+    name: "Bob White",
+    email: "bob@example.com",
+    startDate: "2025-07-04",
+  },
 ];
 
 export default function PendingTraineesPage() {
   const [searchInterviewed, setSearchInterviewed] = useState("");
   const [searchRegistered, setSearchRegistered] = useState("");
-  const [interviewedTraineesData, setInterviewedTraineesData] = useState<any[]>([]);
+  const [interviewedTraineesData, setInterviewedTraineesData] = useState<any[]>(
+    []
+  );
   const [loadingInterviewed, setLoadingInterviewed] = useState(false);
   const [loadingRegistered, setLoadingRegistered] = useState(false);
   const [selectedTrainees, setSelectedTrainees] = useState<string[]>([]);
-  const [emailSentTrainees, setEmailSentTrainees] = useState<{[key: string]: number}>({});
+  const [emailSentTrainees, setEmailSentTrainees] = useState<{
+    [key: string]: number;
+  }>({});
   const [showScheduleModal, setShowScheduleModal] = useState(false);
   const [scheduleData, setScheduleData] = useState({
-    date: '',
-    time: '',
-    message: ''
+    date: "",
+    time: "",
+    message: "",
   });
 
   useEffect(() => {
     setLoadingInterviewed(true);
-    interviewedTrainees().then(result => {
+    interviewedTrainees().then((result) => {
       if (!Array.isArray(result)) {
         setInterviewedTraineesData([]);
       } else if (Array.isArray(result)) {
@@ -54,34 +67,39 @@ export default function PendingTraineesPage() {
   const isEmailRecentlySent = (email: string) => {
     const sentTime = emailSentTrainees[email];
     if (!sentTime) return false;
-    return (Date.now() - sentTime) < 2 * 60 * 1000; // 2 minutes
+    return Date.now() - sentTime < 2 * 60 * 1000; // 2 minutes
   };
 
-  const sendMail = async (mail: any) => {
+  const sendMail = async (mail: any, NIC: string) => {
     const confirm = await Swal.fire({
-      title: 'Are you sure?',
+      title: "Are you sure?",
       text: `Send login details to ${mail}?`,
-      icon: 'question',
+      icon: "question",
       showCancelButton: true,
-      confirmButtonText: 'Yes, send it',
-      cancelButtonText: 'Cancel',
+      confirmButtonText: "Yes, send it",
+      cancelButtonText: "Cancel",
     });
 
     if (confirm.isConfirmed) {
       try {
         const response = await api.post("api/trainee/sendMails", {
-          email: [mail],
+          data: [
+            {
+              email: mail,
+              NIC: NIC,
+            },
+          ],
         });
 
         // Mark email as sent with timestamp
-        setEmailSentTrainees(prev => ({
+        setEmailSentTrainees((prev) => ({
           ...prev,
-          [mail]: Date.now()
+          [mail]: Date.now(),
         }));
 
         // Move trainee to bottom of list
-        setInterviewedTraineesData(prev => {
-          const traineeIndex = prev.findIndex(t => t.email === mail);
+        setInterviewedTraineesData((prev) => {
+          const traineeIndex = prev.findIndex((t) => t.email === mail);
           if (traineeIndex !== -1) {
             const trainee = prev[traineeIndex];
             const newList = [...prev];
@@ -93,19 +111,18 @@ export default function PendingTraineesPage() {
         });
 
         Swal.fire({
-          icon: 'success',
-          title: 'Email Sent!',
+          icon: "success",
+          title: "Email Sent!",
           text: `Email successfully sent to ${mail}`,
           timer: 2000,
           showConfirmButton: false,
         });
-
       } catch (error) {
         console.error("Error sending email:", error);
 
         Swal.fire({
-          icon: 'error',
-          title: 'Failed!',
+          icon: "error",
+          title: "Failed!",
           text: `Could not send email to ${mail}.`,
         });
       }
@@ -115,66 +132,70 @@ export default function PendingTraineesPage() {
   const sendBulkMails = async () => {
     if (selectedTrainees.length === 0) {
       Swal.fire({
-        icon: 'warning',
-        title: 'No Selection',
-        text: 'Please select at least one trainee to send emails.',
+        icon: "warning",
+        title: "No Selection",
+        text: "Please select at least one trainee to send emails.",
       });
       return;
     }
 
-    const selectedEmails = interviewedTraineesData
-      .filter(t => selectedTrainees.includes(t.NIC))
-      .map(t => t.email);
+    // Create array of email and NIC pairs
+    const selectedTraineesData = interviewedTraineesData
+      .filter((t) => selectedTrainees.includes(t.NIC))
+      .map((t) => ({
+        email: t.email,
+        NIC: t.NIC,
+      }));
 
     const confirm = await Swal.fire({
-      title: 'Send Bulk Emails?',
-      text: `Send login details to ${selectedEmails.length} trainees?`,
-      icon: 'question',
+      title: "Send Bulk Emails?",
+      text: `Send login details to ${selectedTraineesData.length} trainees?`,
+      icon: "question",
       showCancelButton: true,
-      confirmButtonText: 'Yes, send all',
-      cancelButtonText: 'Cancel',
+      confirmButtonText: "Yes, send all",
+      cancelButtonText: "Cancel",
     });
 
     if (confirm.isConfirmed) {
       try {
         const response = await api.post("api/trainee/sendMails", {
-          email: selectedEmails,
+          data: selectedTraineesData,
         });
 
         // Mark all emails as sent with timestamp
         const now = Date.now();
-        setEmailSentTrainees(prev => {
+        setEmailSentTrainees((prev) => {
           const updated = { ...prev };
-          selectedEmails.forEach(email => {
-            updated[email] = now;
+          selectedTraineesData.forEach((item) => {
+            updated[item.email] = now;
           });
           return updated;
         });
 
         // Move selected trainees to bottom of list
-        setInterviewedTraineesData(prev => {
-          const selected = prev.filter(t => selectedTrainees.includes(t.NIC));
-          const remaining = prev.filter(t => !selectedTrainees.includes(t.NIC));
+        setInterviewedTraineesData((prev) => {
+          const selected = prev.filter((t) => selectedTrainees.includes(t.NIC));
+          const remaining = prev.filter(
+            (t) => !selectedTrainees.includes(t.NIC)
+          );
           return [...remaining, ...selected];
         });
 
         setSelectedTrainees([]);
 
         Swal.fire({
-          icon: 'success',
-          title: 'Bulk Emails Sent!',
-          text: `Emails successfully sent to ${selectedEmails.length} trainees`,
+          icon: "success",
+          title: "Bulk Emails Sent!",
+          text: `Emails successfully sent to ${selectedTraineesData.length} trainees`,
           timer: 2000,
           showConfirmButton: false,
         });
-
       } catch (error) {
         console.error("Error sending bulk emails:", error);
-
         Swal.fire({
-          icon: 'error',
-          title: 'Failed!',
-          text: 'Could not send bulk emails.',
+          icon: "error",
+          title: "Failed!",
+          text: "Could not send bulk emails.",
         });
       }
     }
@@ -182,54 +203,52 @@ export default function PendingTraineesPage() {
 
   const handleSelectAll = (e: React.ChangeEvent<HTMLInputElement>) => {
     if (e.target.checked) {
-      setSelectedTrainees(filteredInterviewed.map(t => t.NIC));
+      setSelectedTrainees(filteredInterviewed.map((t) => t.NIC));
     } else {
       setSelectedTrainees([]);
     }
   };
 
   const handleSelectTrainee = (nic: string) => {
-    setSelectedTrainees(prev =>
-      prev.includes(nic)
-        ? prev.filter(id => id !== nic)
-        : [...prev, nic]
+    setSelectedTrainees((prev) =>
+      prev.includes(nic) ? prev.filter((id) => id !== nic) : [...prev, nic]
     );
   };
 
   const handleScheduleEmail = async () => {
     if (selectedTrainees.length === 0) {
       Swal.fire({
-        icon: 'warning',
-        title: 'No Selection',
-        text: 'Please select at least one trainee to schedule emails.',
+        icon: "warning",
+        title: "No Selection",
+        text: "Please select at least one trainee to schedule emails.",
       });
       return;
     }
 
     if (!scheduleData.date || !scheduleData.time) {
       Swal.fire({
-        icon: 'warning',
-        title: 'Missing Information',
-        text: 'Please provide both date and time for scheduling.',
+        icon: "warning",
+        title: "Missing Information",
+        text: "Please provide both date and time for scheduling.",
       });
       return;
     }
 
     const selectedEmails = interviewedTraineesData
-      .filter(t => selectedTrainees.includes(t.NIC))
-      .map(t => t.email);
+      .filter((t) => selectedTrainees.includes(t.NIC))
+      .map((t) => t.email);
 
     try {
       const response = await api.post("api/trainee/schedule/sendMail", {
         emails: selectedEmails,
         scheduleDate: scheduleData.date,
         scheduleTime: scheduleData.time,
-        message: scheduleData.message
+        message: scheduleData.message,
       });
 
       Swal.fire({
-        icon: 'success',
-        title: 'Email Scheduled!',
+        icon: "success",
+        title: "Email Scheduled!",
         text: `Emails scheduled for ${selectedEmails.length} trainees on ${scheduleData.date} at ${scheduleData.time}`,
         timer: 2000,
         showConfirmButton: false,
@@ -237,15 +256,14 @@ export default function PendingTraineesPage() {
 
       setShowScheduleModal(false);
       setSelectedTrainees([]);
-      setScheduleData({ date: '', time: '', message: '' });
-
+      setScheduleData({ date: "", time: "", message: "" });
     } catch (error) {
       console.error("Error scheduling emails:", error);
 
       Swal.fire({
-        icon: 'error',
-        title: 'Failed!',
-        text: 'Could not schedule emails.',
+        icon: "error",
+        title: "Failed!",
+        text: "Could not schedule emails.",
       });
     }
   };
@@ -253,104 +271,103 @@ export default function PendingTraineesPage() {
   const handleViewTrainee = async (nic: string) => {
     try {
       const response = await api.get(`api/trainee/profile/${nic}`);
-      
+
       // You can customize this to show profile data in a modal or navigate to profile page
       Swal.fire({
-        title: 'Trainee Profile',
+        title: "Trainee Profile",
         html: `
           <div style="text-align: left;">
             <p><strong>NIC:</strong> ${response.data.NIC || nic}</p>
-            <p><strong>Name:</strong> ${response.data.name || 'N/A'}</p>
-            <p><strong>Email:</strong> ${response.data.email || 'N/A'}</p>
-            <p><strong>Phone:</strong> ${response.data.phone || 'N/A'}</p>
-            <p><strong>Address:</strong> ${response.data.address || 'N/A'}</p>
+            <p><strong>Name:</strong> ${response.data.name || "N/A"}</p>
+            <p><strong>Email:</strong> ${response.data.email || "N/A"}</p>
+            <p><strong>Phone:</strong> ${response.data.phone || "N/A"}</p>
+            <p><strong>Address:</strong> ${response.data.address || "N/A"}</p>
           </div>
         `,
-        width: '600px',
-        confirmButtonText: 'Close'
+        width: "600px",
+        confirmButtonText: "Close",
       });
-
     } catch (error) {
       console.error("Error fetching trainee profile:", error);
 
       Swal.fire({
-        icon: 'error',
-        title: 'Error',
-        text: 'Could not fetch trainee profile.',
+        icon: "error",
+        title: "Error",
+        text: "Could not fetch trainee profile.",
       });
     }
   };
 
   const handleDeleteTrainee = async (nic: string, name: string) => {
     const confirm = await Swal.fire({
-      title: 'Delete Trainee?',
+      title: "Delete Trainee?",
       text: `Are you sure you want to delete ${name}? This action cannot be undone.`,
-      icon: 'warning',
+      icon: "warning",
       showCancelButton: true,
-      confirmButtonText: 'Yes, delete',
-      cancelButtonText: 'Cancel',
-      confirmButtonColor: '#d33'
+      confirmButtonText: "Yes, delete",
+      cancelButtonText: "Cancel",
+      confirmButtonColor: "#d33",
     });
 
     if (confirm.isConfirmed) {
       try {
         const response = await api.delete(`api/trainee/delete/${nic}`);
 
-        setInterviewedTraineesData(prev => 
-          prev.filter(t => t.NIC !== nic)
-        );
+        setInterviewedTraineesData((prev) => prev.filter((t) => t.NIC !== nic));
 
-        setSelectedTrainees(prev => 
-          prev.filter(id => id !== nic)
-        );
+        setSelectedTrainees((prev) => prev.filter((id) => id !== nic));
 
         Swal.fire({
-          icon: 'success',
-          title: 'Deleted!',
+          icon: "success",
+          title: "Deleted!",
           text: `${name} has been deleted successfully.`,
           timer: 2000,
           showConfirmButton: false,
         });
-
       } catch (error) {
         console.error("Error deleting trainee:", error);
 
         Swal.fire({
-          icon: 'error',
-          title: 'Failed!',
-          text: 'Could not delete trainee.',
+          icon: "error",
+          title: "Failed!",
+          text: "Could not delete trainee.",
         });
       }
     }
   };
 
   // Filtered data
-  const filteredInterviewed = interviewedTraineesData.filter(t =>
-    t.NIC.toLowerCase().includes(searchInterviewed.toLowerCase()) ||
-    t.name?.toLowerCase().includes(searchInterviewed.toLowerCase()) ||
-    t.email.toLowerCase().includes(searchInterviewed.toLowerCase())
+  const filteredInterviewed = interviewedTraineesData.filter(
+    (t) =>
+      t.NIC.toLowerCase().includes(searchInterviewed.toLowerCase()) ||
+      t.name?.toLowerCase().includes(searchInterviewed.toLowerCase()) ||
+      t.email.toLowerCase().includes(searchInterviewed.toLowerCase())
   );
-  const filteredRegistered = registeredTrainees.filter(t =>
-    t.nic.toLowerCase().includes(searchRegistered.toLowerCase()) ||
-    t.name.toLowerCase().includes(searchRegistered.toLowerCase()) ||
-    t.email.toLowerCase().includes(searchRegistered.toLowerCase())
+  const filteredRegistered = registeredTrainees.filter(
+    (t) =>
+      t.nic.toLowerCase().includes(searchRegistered.toLowerCase()) ||
+      t.name.toLowerCase().includes(searchRegistered.toLowerCase()) ||
+      t.email.toLowerCase().includes(searchRegistered.toLowerCase())
   );
 
   return (
-    <MainContainer title="Pending Trainees" breadCrumbs={["Home", "Pending Trainees"]}>
+    <MainContainer
+      title="Pending Trainees"
+      breadCrumbs={["Home", "Pending Trainees"]}
+    >
       <SubContainer>
         <div className="d-flex justify-content-between align-items-center mb-3">
           <h4>Interviewed Trainees</h4>
           <div>
             {selectedTrainees.length > 0 && (
               <>
-                <button 
+                <button
                   className="btn btn-primary me-2"
                   onClick={sendBulkMails}
                 >
                   Send Bulk Emails ({selectedTrainees.length})
                 </button>
-                <button 
+                <button
                   className="btn btn-warning me-2"
                   onClick={() => setShowScheduleModal(true)}
                 >
@@ -366,7 +383,7 @@ export default function PendingTraineesPage() {
           className="form-control mb-2"
           placeholder="Search interviewed trainees..."
           value={searchInterviewed}
-          onChange={e => setSearchInterviewed(e.target.value)}
+          onChange={(e) => setSearchInterviewed(e.target.value)}
           style={{ maxWidth: 300 }}
         />
 
@@ -380,7 +397,11 @@ export default function PendingTraineesPage() {
                   <th>
                     <input
                       type="checkbox"
-                      checked={selectedTrainees.length === filteredInterviewed.length && filteredInterviewed.length > 0}
+                      checked={
+                        selectedTrainees.length ===
+                          filteredInterviewed.length &&
+                        filteredInterviewed.length > 0
+                      }
                       onChange={handleSelectAll}
                     />
                   </th>
@@ -404,25 +425,33 @@ export default function PendingTraineesPage() {
                     <td>{trainee.NIC}</td>
                     <td>{trainee.name}</td>
                     <td>{trainee.email}</td>
-                    <td>{moment(trainee.date).format('YYYY-MM-DD')}</td>
+                    <td>{moment(trainee.date).format("YYYY-MM-DD")}</td>
                     <td>
-                      <button 
+                      <button
                         className="btn btn-sm btn-primary me-1"
-                        onClick={() => sendMail(trainee.email)}
+                        onClick={() => sendMail(trainee.email, trainee.NIC)}
                         disabled={isEmailRecentlySent(trainee.email)}
-                        title={isEmailRecentlySent(trainee.email) ? 'Email sent recently. Please wait 2 minutes.' : 'Send/Resend email'}
+                        title={
+                          isEmailRecentlySent(trainee.email)
+                            ? "Email sent recently. Please wait 2 minutes."
+                            : "Send/Resend email"
+                        }
                       >
-                        {isEmailRecentlySent(trainee.email) ? 'Wait...' : 'Send/Resend'}
+                        {isEmailRecentlySent(trainee.email)
+                          ? "Wait..."
+                          : "Send/Resend"}
                       </button>
-                      <button 
+                      <button
                         className="btn btn-sm btn-info me-1"
                         onClick={() => handleViewTrainee(trainee.NIC)}
                       >
                         View
                       </button>
-                      <button 
+                      <button
                         className="btn btn-sm btn-danger"
-                        onClick={() => handleDeleteTrainee(trainee.NIC, trainee.name)}
+                        onClick={() =>
+                          handleDeleteTrainee(trainee.NIC, trainee.name)
+                        }
                       >
                         Delete
                       </button>
@@ -436,20 +465,25 @@ export default function PendingTraineesPage() {
 
         {/* Schedule Email Modal */}
         {showScheduleModal && (
-          <div className="modal" style={{ display: 'block', backgroundColor: 'rgba(0,0,0,0.5)' }}>
+          <div
+            className="modal"
+            style={{ display: "block", backgroundColor: "rgba(0,0,0,0.5)" }}
+          >
             <div className="modal-dialog">
               <div className="modal-content">
                 <div className="modal-header">
                   <h5 className="modal-title">Schedule Email</h5>
-                  <button 
-                    type="button" 
+                  <button
+                    type="button"
                     className="btn-close"
                     onClick={() => setShowScheduleModal(false)}
                   ></button>
                 </div>
                 <div className="modal-body">
                   <div className="mb-3">
-                    <label className="form-label">Selected Trainees: {selectedTrainees.length}</label>
+                    <label className="form-label">
+                      Selected Trainees: {selectedTrainees.length}
+                    </label>
                   </div>
                   <div className="mb-3">
                     <label className="form-label">Date</label>
@@ -457,7 +491,12 @@ export default function PendingTraineesPage() {
                       type="date"
                       className="form-control"
                       value={scheduleData.date}
-                      onChange={e => setScheduleData(prev => ({ ...prev, date: e.target.value }))}
+                      onChange={(e) =>
+                        setScheduleData((prev) => ({
+                          ...prev,
+                          date: e.target.value,
+                        }))
+                      }
                     />
                   </div>
                   <div className="mb-3">
@@ -466,7 +505,12 @@ export default function PendingTraineesPage() {
                       type="time"
                       className="form-control"
                       value={scheduleData.time}
-                      onChange={e => setScheduleData(prev => ({ ...prev, time: e.target.value }))}
+                      onChange={(e) =>
+                        setScheduleData((prev) => ({
+                          ...prev,
+                          time: e.target.value,
+                        }))
+                      }
                     />
                   </div>
                   <div className="mb-3">
@@ -475,21 +519,26 @@ export default function PendingTraineesPage() {
                       className="form-control"
                       rows={3}
                       value={scheduleData.message}
-                      onChange={e => setScheduleData(prev => ({ ...prev, message: e.target.value }))}
+                      onChange={(e) =>
+                        setScheduleData((prev) => ({
+                          ...prev,
+                          message: e.target.value,
+                        }))
+                      }
                       placeholder="Additional message for the scheduled email..."
                     />
                   </div>
                 </div>
                 <div className="modal-footer">
-                  <button 
-                    type="button" 
+                  <button
+                    type="button"
                     className="btn btn-secondary"
                     onClick={() => setShowScheduleModal(false)}
                   >
                     Cancel
                   </button>
-                  <button 
-                    type="button" 
+                  <button
+                    type="button"
                     className="btn btn-primary"
                     onClick={handleScheduleEmail}
                   >
@@ -507,7 +556,7 @@ export default function PendingTraineesPage() {
           className="form-control mb-2"
           placeholder="Search registered trainees..."
           value={searchRegistered}
-          onChange={e => setSearchRegistered(e.target.value)}
+          onChange={(e) => setSearchRegistered(e.target.value)}
           style={{ maxWidth: 300 }}
         />
         <div className="table-responsive">
@@ -532,7 +581,9 @@ export default function PendingTraineesPage() {
                     <td>{trainee.email}</td>
                     <td>{trainee.startDate}</td>
                     <td>
-                      <button className="btn btn-sm btn-success me-1">Add Schedule</button>
+                      <button className="btn btn-sm btn-success me-1">
+                        Add Schedule
+                      </button>
                       <button className="btn btn-sm btn-info me-1">View</button>
                       <button className="btn btn-sm btn-danger">Delete</button>
                     </td>
