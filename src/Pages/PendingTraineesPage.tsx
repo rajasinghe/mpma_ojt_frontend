@@ -1,4 +1,5 @@
 import { useEffect, useState } from "react";
+import { useLoaderData } from "react-router-dom";
 import { MainContainer } from "../layout/containers/main_container/MainContainer";
 import SubContainer from "../layout/containers/sub_container/SubContainer";
 import MiniLoader from "../Components/ui/Loader/MiniLoader";
@@ -16,6 +17,17 @@ const interviewedTrainees = async () => {
   }
 };
 
+type RegisteredTrainee = {
+  id: number;
+  NIC: string;
+  nickname: string;
+  username: string;
+  status: string;
+  Name: string;
+  email: string;
+  start_date: string;
+};
+/*
 const registeredTrainees = [
   // Example data, replace with real data from your state or props
   {
@@ -31,8 +43,9 @@ const registeredTrainees = [
     startDate: "2025-07-04",
   },
 ];
-
+*/
 export default function PendingTraineesPage() {
+  const registeredTrainees = useLoaderData() as RegisteredTrainee[];
   const [searchInterviewed, setSearchInterviewed] = useState("");
   const [searchRegistered, setSearchRegistered] = useState("");
   const [interviewedTraineesData, setInterviewedTraineesData] = useState<any[]>(
@@ -128,6 +141,8 @@ export default function PendingTraineesPage() {
       }
     }
   };
+
+  console.log(registeredTrainees);
 
   const sendBulkMails = async () => {
     if (selectedTrainees.length === 0) {
@@ -343,12 +358,6 @@ export default function PendingTraineesPage() {
       t.name?.toLowerCase().includes(searchInterviewed.toLowerCase()) ||
       t.email.toLowerCase().includes(searchInterviewed.toLowerCase())
   );
-  const filteredRegistered = registeredTrainees.filter(
-    (t) =>
-      t.nic.toLowerCase().includes(searchRegistered.toLowerCase()) ||
-      t.name.toLowerCase().includes(searchRegistered.toLowerCase()) ||
-      t.email.toLowerCase().includes(searchRegistered.toLowerCase())
-  );
 
   return (
     <MainContainer
@@ -356,11 +365,16 @@ export default function PendingTraineesPage() {
       breadCrumbs={["Home", "Pending Trainees"]}
     >
       <SubContainer>
-        <div className="d-flex justify-content-between align-items-center mb-3">
-          <h4>Interviewed Trainees</h4>
+        <div className="card shadow-sm mb-3">
+          <div className="card-body d-flex align-items-center">
+            <i className="bi bi-person-check-fill me-2"></i>
+            <h5 className="card-title mb-0">Interviewed Trainees</h5>
+          </div>
+        </div>
+        <div className="d-flex justify-content-between align-items-center">
           <div>
             {selectedTrainees.length > 0 && (
-              <>
+              <div className="mb-3">
                 <button
                   className="btn btn-primary me-2"
                   onClick={sendBulkMails}
@@ -373,7 +387,7 @@ export default function PendingTraineesPage() {
                 >
                   Schedule Emails
                 </button>
-              </>
+              </div>
             )}
           </div>
         </div>
@@ -434,12 +448,12 @@ export default function PendingTraineesPage() {
                         title={
                           isEmailRecentlySent(trainee.email)
                             ? "Email sent recently. Please wait 2 minutes."
-                            : "Send/Resend email"
+                            : "Send email"
                         }
                       >
                         {isEmailRecentlySent(trainee.email)
                           ? "Wait..."
-                          : "Send/Resend"}
+                          : "Send"}
                       </button>
                       <button
                         className="btn btn-sm btn-info me-1"
@@ -550,7 +564,12 @@ export default function PendingTraineesPage() {
           </div>
         )}
 
-        <h4>Registered Trainees</h4>
+        <div className="card shadow-sm mb-3">
+          <div className="card-body d-flex align-items-center">
+            <i className="bi bi-people-fill me-2"></i>
+            <h5 className="card-title mb-0">Portal Created Trainees</h5>
+          </div>
+        </div>
         <input
           type="text"
           className="form-control mb-2"
@@ -574,15 +593,15 @@ export default function PendingTraineesPage() {
                 </tr>
               </thead>
               <tbody>
-                {filteredRegistered.map((trainee, idx) => (
+                {registeredTrainees.map((trainee, idx) => (
                   <tr key={idx}>
-                    <td>{trainee.nic}</td>
-                    <td>{trainee.name}</td>
+                    <td>{trainee.NIC}</td>
+                    <td>{trainee.Name}</td>
                     <td>{trainee.email}</td>
-                    <td>{trainee.startDate}</td>
+                    <td>{moment(trainee.start_date).format("YYYY-MM-DD")}</td>
                     <td>
                       <button className="btn btn-sm btn-success me-1">
-                        Add Schedule
+                        Register
                       </button>
                       <button className="btn btn-sm btn-info me-1">View</button>
                       <button className="btn btn-sm btn-danger">Delete</button>
