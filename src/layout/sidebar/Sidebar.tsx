@@ -107,7 +107,9 @@ const Sidebar = ({ user }: Props) => {
           },
         ]);
       } else if (
-        user.accessLevels.find((accessLevel: any) => accessLevel.access == "interview:modify")
+        user.accessLevels.find(
+          (accessLevel: any) => accessLevel.access == "interview:modify"
+        )
       ) {
         setLinks([
           ...initLinks,
@@ -135,9 +137,10 @@ const Sidebar = ({ user }: Props) => {
             inactive_icon: "bi-diagram-3",
           },
         ]);
-      }
-      else if (
-        user.accessLevels.find((accessLevel: any) => accessLevel.access == "department:modify")
+      } else if (
+        user.accessLevels.find(
+          (accessLevel: any) => accessLevel.access == "department:modify"
+        )
       ) {
         setLinks([
           ...initLinks,
@@ -172,12 +175,21 @@ const Sidebar = ({ user }: Props) => {
   return (
     <>
       {/* Toggle Sidebar Button */}
-      <i className="bi bi-list toggle-sidebar-btn" onClick={handleSidebarToggle}></i>
+      <i
+        className="bi bi-list toggle-sidebar-btn"
+        onClick={handleSidebarToggle}
+      ></i>
       {/* Sidebar Component */}
-      <aside id="sidebar" className={`sidebar ${isSidebarToggled ? "toggle-sidebar" : ""}`}>
+      <aside
+        id="sidebar"
+        className={`sidebar ${isSidebarToggled ? "toggle-sidebar" : ""}`}
+      >
         <div className="d-flex">
           {/* Close Button */}
-          <i className="bi bi-x-circle toggle-close-btn ms-auto" onClick={handleSidebarToggle}></i>
+          <i
+            className="bi bi-x-circle toggle-close-btn ms-auto"
+            onClick={handleSidebarToggle}
+          ></i>
         </div>
         <div className="d-flex logo align-items-center mb-3">
           <img src={logo} alt="logo" />
@@ -198,7 +210,9 @@ const Sidebar = ({ user }: Props) => {
                     >
                       <i
                         className={`bi ${
-                          link.regex.test(pathname) ? link.active_icon : link.inactive_icon
+                          link.regex.test(pathname)
+                            ? link.active_icon
+                            : link.inactive_icon
                         } `}
                       ></i>
                       <span>{link.name}</span>
@@ -223,7 +237,9 @@ const Sidebar = ({ user }: Props) => {
                       <li className="nav-item" key={sublink.name}>
                         <Link
                           to={sublink.route}
-                          className={`nav-link ${sublink.regex.test(pathname) ? "enable" : ""}`}
+                          className={`nav-link ${
+                            sublink.regex.test(pathname) ? "enable" : ""
+                          }`}
                         >
                           <i
                             className={`bi ${
@@ -243,12 +259,16 @@ const Sidebar = ({ user }: Props) => {
               return (
                 <li className="nav-item" key={link.name}>
                   <Link
-                    className={`nav-link ${link.regex.test(pathname) ? "enable" : ""}`}
+                    className={`nav-link ${
+                      link.regex.test(pathname) ? "enable" : ""
+                    }`}
                     to={link.route}
                   >
                     <i
                       className={`bi  ${
-                        link.regex.test(pathname) ? link.active_icon : link.inactive_icon
+                        link.regex.test(pathname)
+                          ? link.active_icon
+                          : link.inactive_icon
                       }`}
                     ></i>
                     <span>{link.name}</span>
@@ -266,10 +286,10 @@ const Sidebar = ({ user }: Props) => {
             </Link>
           </li>
           <li className="nav-item">
-            <a className="nav-link disable" href="pages-contact.html">
+            <Link className="nav-link disable" to={"/OJT/notifications"}>
               <i className="bi bi-bell"></i>
               <span>Notification</span>
-            </a>
+            </Link>
           </li>
 
           <li className="nav-item">

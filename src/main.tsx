@@ -32,8 +32,15 @@ import ErrorHandler from "./Components/ErrorHandler.tsx";
 import TraineeBankDetailsUpdatePage from "./Pages/TraineeBankDetailsUpdatePage.tsx";
 import TraineeDetailsUpdatePage from "./Pages/Admin/TraineeDetailsUpdate.tsx";
 import UserProfilePage from "./Pages/UserProfilePage.tsx";
-import { createUserLoader, profileLoader, viewUsersPageLoader } from "./loaders/UserLoaders.ts";
-import { departmentSummaryLoader, singleDepartmentLoader } from "./loaders/DepartmentLoader.ts";
+import {
+  createUserLoader,
+  profileLoader,
+  viewUsersPageLoader,
+} from "./loaders/UserLoaders.ts";
+import {
+  departmentSummaryLoader,
+  singleDepartmentLoader,
+} from "./loaders/DepartmentLoader.ts";
 import DepartmentsPage from "./Pages/DepartmentsPage.tsx";
 import DepartmentPage from "./Pages/DepartmentPage.tsx";
 import api from "./api.ts";
@@ -43,7 +50,9 @@ import { inboxLoader } from "./loaders/inboxLoader.ts";
 import NewInterviewPage from "./features/Interview/interviewPage.tsx";
 import ViewInterviewPage from "./features/Interview/viewInterviewPage.tsx";
 import EditInterviewPage from "./features/Interview/editInterviewPage.tsx";
-import {InterviewLoader} from "./loaders/InterviewLoader.ts";
+import { InterviewLoader } from "./loaders/InterviewLoader.ts";
+import UserUpdatePage from "./Pages/Admin/UserUpdatePage.tsx";
+import NotificationPage from "./Pages/NotificationPage.tsx";
 
 export const setToken = () => {
   const token = localStorage.getItem("token");
@@ -173,10 +182,20 @@ const router = createBrowserRouter([
             loader: viewUsersPageLoader,
             element: <ViewUsersPage />,
           },
+          {
+            path: "users/:id/update",
+            element: <UserUpdatePage />,
+          },
+          {
+            path: "notifications",
+            element: <NotificationPage />,
+          },
         ],
       },
     ],
   },
 ]);
 
-createRoot(document.getElementById("root")!).render(<RouterProvider router={router} />);
+createRoot(document.getElementById("root")!).render(
+  <RouterProvider router={router} />
+);
