@@ -24,6 +24,7 @@ const schema = z.object({
   attNo: z.coerce.number(),
   name: z.string().min(1, "Enter the user name"),
   TEL_NO: z.string().regex(/^\d{9,10}$/, "Invalid Format, e.g., 0771231231"),
+  email: z.string().email("Invalid email format").optional(),
 });
 
 // Infer the types.
@@ -45,8 +46,10 @@ export default function UpdateTrainees() {
   const navigate = useNavigate();
   const nicDisable = useState<boolean>(false);
 
-  const [newInstituteModalVisibility, setInstituteModalVisibility] = useState<boolean>(false);
-  const [newProgramModalVisibility, setprogramModalVisibility] = useState<boolean>(false);
+  const [newInstituteModalVisibility, setInstituteModalVisibility] =
+    useState<boolean>(false);
+  const [newProgramModalVisibility, setprogramModalVisibility] =
+    useState<boolean>(false);
   const {
     handleSubmit,
     register,
@@ -59,14 +62,18 @@ export default function UpdateTrainees() {
       name: loaderData.trainee.name,
       program: {
         value: loaderData.trainee.training_program_id + "",
-        label: programs.find((program) => program.id == loaderData.trainee.training_program_id)
-          .name,
+        label: programs.find(
+          (program) => program.id == loaderData.trainee.training_program_id
+        ).name,
       },
       institute: {
         value: loaderData.trainee.institute_id + "",
-        label: institutes.find((institute) => institute.id == loaderData.trainee.institute_id).name,
+        label: institutes.find(
+          (institute) => institute.id == loaderData.trainee.institute_id
+        ).name,
       },
       TEL_NO: loaderData.trainee.contact_no + "",
+      email: loaderData.trainee.email || "",
       regNo: loaderData.trainee.REG_NO,
       attNo: loaderData.trainee.ATT_NO,
     },
@@ -96,14 +103,17 @@ export default function UpdateTrainees() {
             REG_NO: data.regNo,
             ATT_NO: data.attNo,
           });
-          const response = await api.put(`/api/trainee/${loaderData.trainee.id}`, {
-            ...data,
-            institute: data.institute.value,
-            program: data.program.value,
-            NIC_NO: nic,
-            REG_NO: data.regNo,
-            ATT_NO: data.attNo,
-          });
+          const response = await api.put(
+            `/api/trainee/${loaderData.trainee.id}`,
+            {
+              ...data,
+              institute: data.institute.value,
+              program: data.program.value,
+              NIC_NO: nic,
+              REG_NO: data.regNo,
+              ATT_NO: data.attNo,
+            }
+          );
           console.log(response);
           Swal.hideLoading();
           navigate(`/OJT/Trainees/${loaderData.trainee.id}/profile`);
@@ -123,11 +133,19 @@ export default function UpdateTrainees() {
           footer: '<a href="#">Why do I have this issue?</a>',
         });
 
-        if (errors.response && errors.response.data && errors.response.data.errors) {
+        if (
+          errors.response &&
+          errors.response.data &&
+          errors.response.data.errors
+        ) {
           const errorObject = errors.response.data.errors;
           for (const key in errorObject) {
             const error = errorObject[key][0];
-            setError(key as keyof TraineeFormValues, { message: error }, { shouldFocus: true });
+            setError(
+              key as keyof TraineeFormValues,
+              { message: error },
+              { shouldFocus: true }
+            );
           }
           Swal.fire({
             icon: "error",
@@ -170,7 +188,9 @@ export default function UpdateTrainees() {
               );
             }}
           />
-          {errors.institute && <p className="text-danger m-0">{errors.institute.message}</p>}
+          {errors.institute && (
+            <p className="text-danger m-0">{errors.institute.message}</p>
+          )}
           <div className="">
             <button
               onClick={() => {
@@ -204,7 +224,9 @@ export default function UpdateTrainees() {
               );
             }}
           />
-          {errors.program && <p className="text-danger m-0">{errors.program.message}</p>}
+          {errors.program && (
+            <p className="text-danger m-0">{errors.program.message}</p>
+          )}
 
           <div className="">
             <button
@@ -222,14 +244,26 @@ export default function UpdateTrainees() {
           <div className="fs-5 fw-semibold mb-2">Registration Details</div>
           <div className="mb-3">
             <label className="form-label">REG NO</label>
-            <input type="text" className="form-control" {...register("regNo")} />
-            {errors.regNo && <p className="text-danger">{errors.regNo.message}</p>}
+            <input
+              type="text"
+              className="form-control"
+              {...register("regNo")}
+            />
+            {errors.regNo && (
+              <p className="text-danger">{errors.regNo.message}</p>
+            )}
           </div>
 
           <div className="mb-3">
             <label className="form-label">Tel No</label>
-            <input type="text" className="form-control" {...register("attNo")} />
-            {errors.attNo && <p className="text-danger">{errors.attNo.message}</p>}
+            <input
+              type="text"
+              className="form-control"
+              {...register("attNo")}
+            />
+            {errors.attNo && (
+              <p className="text-danger">{errors.attNo.message}</p>
+            )}
           </div>
         </div>
         <div className="border border-dark p-2 rounded-2 mt-3">
@@ -237,19 +271,42 @@ export default function UpdateTrainees() {
           <div className="mb-3">
             <label className="form-label">Trainee Name</label>
             <input type="text" className="form-control" {...register("name")} />
-            {errors.name && <p className="text-danger">{errors.name.message}</p>}
+            {errors.name && (
+              <p className="text-danger">{errors.name.message}</p>
+            )}
           </div>
 
           <div className="mb-3">
             <label className="form-label">Tel No</label>
-            <input type="text" className="form-control" {...register("TEL_NO")} />
-            {errors.TEL_NO && <p className="text-danger">{errors.TEL_NO.message}</p>}
+            <input
+              type="text"
+              className="form-control"
+              {...register("TEL_NO")}
+            />
+            {errors.TEL_NO && (
+              <p className="text-danger">{errors.TEL_NO.message}</p>
+            )}
+          </div>
+
+          <div className="mb-3">
+            <label className="form-label">Email (optional)</label>
+            <input
+              type="text"
+              className="form-control"
+              {...register("email")}
+            />
+            {errors.email && (
+              <p className="text-danger">{errors.email.message}</p>
+            )}
           </div>
         </div>
         <div className="d-flex mt-2">
           <div className="me-auto">
-            <button type="button" className="btn btn-primary"
-              onClick={() => navigate(-1)}>
+            <button
+              type="button"
+              className="btn btn-primary"
+              onClick={() => navigate(-1)}
+            >
               <i className="bi bi-arrow-left"></i>
             </button>
           </div>
@@ -260,7 +317,10 @@ export default function UpdateTrainees() {
       </form>
       <AddInstituteModal
         setInstitutes={setInstitutes}
-        visibilityState={[newInstituteModalVisibility, setInstituteModalVisibility]}
+        visibilityState={[
+          newInstituteModalVisibility,
+          setInstituteModalVisibility,
+        ]}
       />
       <AddProgramModal
         setPrograms={setPrograms}

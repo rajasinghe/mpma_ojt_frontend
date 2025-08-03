@@ -27,23 +27,7 @@ type RegisteredTrainee = {
   email: string;
   start_date: string;
 };
-/*
-const registeredTrainees = [
-  // Example data, replace with real data from your state or props
-  {
-    nic: "456789123V",
-    name: "Alice Brown",
-    email: "alice@example.com",
-    startDate: "2025-07-03",
-  },
-  {
-    nic: "654321987V",
-    name: "Bob White",
-    email: "bob@example.com",
-    startDate: "2025-07-04",
-  },
-];
-*/
+
 export default function PendingTraineesPage() {
   const registeredTrainees = useLoaderData() as RegisteredTrainee[];
   const [searchInterviewed, setSearchInterviewed] = useState("");
@@ -351,13 +335,21 @@ export default function PendingTraineesPage() {
     }
   };
 
-  // Filtered data
-  const filteredInterviewed = interviewedTraineesData.filter(
-    (t) =>
-      t.NIC.toLowerCase().includes(searchInterviewed.toLowerCase()) ||
-      t.name?.toLowerCase().includes(searchInterviewed.toLowerCase()) ||
-      t.email.toLowerCase().includes(searchInterviewed.toLowerCase())
-  );
+  // Filtered data - exclude registered trainees from interviewed trainees
+  const filteredInterviewed = interviewedTraineesData
+    .filter(
+      (interviewedTrainee) =>
+        !registeredTrainees.some(
+          (registeredTrainee) =>
+            registeredTrainee.NIC === interviewedTrainee.NIC
+        )
+    )
+    .filter(
+      (t) =>
+        t.NIC.toLowerCase().includes(searchInterviewed.toLowerCase()) ||
+        t.name?.toLowerCase().includes(searchInterviewed.toLowerCase()) ||
+        t.email.toLowerCase().includes(searchInterviewed.toLowerCase())
+    );
 
   return (
     <MainContainer
@@ -371,111 +363,119 @@ export default function PendingTraineesPage() {
             <h5 className="card-title mb-0">Interviewed Trainees</h5>
           </div>
         </div>
-        <div className="d-flex justify-content-between align-items-center">
-          <div>
-            {selectedTrainees.length > 0 && (
-              <div className="mb-3">
-                <button
-                  className="btn btn-primary me-2"
-                  onClick={sendBulkMails}
-                >
-                  Send Bulk Emails ({selectedTrainees.length})
-                </button>
-                <button
-                  className="btn btn-warning me-2"
-                  onClick={() => setShowScheduleModal(true)}
-                >
-                  Schedule Emails
-                </button>
-              </div>
-            )}
+        {filteredInterviewed.length == 0 ? (
+          <div className="text-black-50 text-center m-3">
+            No interviewed trainees
           </div>
-        </div>
+        ) : (
+          <>
+            <div className="d-flex justify-content-between align-items-center">
+              <div>
+                {selectedTrainees.length > 0 && (
+                  <div className="mb-3">
+                    <button
+                      className="btn btn-primary me-2"
+                      onClick={sendBulkMails}
+                    >
+                      Send Bulk Emails ({selectedTrainees.length})
+                    </button>
+                    <button
+                      className="btn btn-warning me-2"
+                      onClick={() => setShowScheduleModal(true)}
+                    >
+                      Schedule Emails
+                    </button>
+                  </div>
+                )}
+              </div>
+            </div>
 
-        <input
-          type="text"
-          className="form-control mb-2"
-          placeholder="Search interviewed trainees..."
-          value={searchInterviewed}
-          onChange={(e) => setSearchInterviewed(e.target.value)}
-          style={{ maxWidth: 300 }}
-        />
+            <input
+              type="text"
+              className="form-control mb-2"
+              placeholder="Search interviewed trainees..."
+              value={searchInterviewed}
+              onChange={(e) => setSearchInterviewed(e.target.value)}
+              style={{ maxWidth: 300 }}
+            />
 
-        <div className="table-responsive mb-5">
-          {loadingInterviewed ? (
-            <MiniLoader />
-          ) : (
-            <table className="table table-bordered table-striped align-middle text-center">
-              <thead className="table-dark">
-                <tr>
-                  <th>
-                    <input
-                      type="checkbox"
-                      checked={
-                        selectedTrainees.length ===
-                          filteredInterviewed.length &&
-                        filteredInterviewed.length > 0
-                      }
-                      onChange={handleSelectAll}
-                    />
-                  </th>
-                  <th>NIC</th>
-                  <th>Name</th>
-                  <th>Email</th>
-                  <th>Start Date</th>
-                  <th>Actions</th>
-                </tr>
-              </thead>
-              <tbody>
-                {filteredInterviewed.map((trainee, idx) => (
-                  <tr key={idx}>
-                    <td>
-                      <input
-                        type="checkbox"
-                        checked={selectedTrainees.includes(trainee.NIC)}
-                        onChange={() => handleSelectTrainee(trainee.NIC)}
-                      />
-                    </td>
-                    <td>{trainee.NIC}</td>
-                    <td>{trainee.name}</td>
-                    <td>{trainee.email}</td>
-                    <td>{moment(trainee.date).format("YYYY-MM-DD")}</td>
-                    <td>
-                      <button
-                        className="btn btn-sm btn-primary me-1"
-                        onClick={() => sendMail(trainee.email, trainee.NIC)}
-                        disabled={isEmailRecentlySent(trainee.email)}
-                        title={
-                          isEmailRecentlySent(trainee.email)
-                            ? "Email sent recently. Please wait 2 minutes."
-                            : "Send email"
-                        }
-                      >
-                        {isEmailRecentlySent(trainee.email)
-                          ? "Wait..."
-                          : "Send"}
-                      </button>
-                      <button
-                        className="btn btn-sm btn-info me-1"
-                        onClick={() => handleViewTrainee(trainee.NIC)}
-                      >
-                        View
-                      </button>
-                      <button
-                        className="btn btn-sm btn-danger"
-                        onClick={() =>
-                          handleDeleteTrainee(trainee.NIC, trainee.name)
-                        }
-                      >
-                        Delete
-                      </button>
-                    </td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
-          )}
-        </div>
+            <div className="table-responsive mb-5">
+              {loadingInterviewed ? (
+                <MiniLoader />
+              ) : (
+                <table className="table table-bordered table-striped align-middle text-center">
+                  <thead className="table-dark">
+                    <tr>
+                      <th>
+                        <input
+                          type="checkbox"
+                          checked={
+                            selectedTrainees.length ===
+                              filteredInterviewed.length &&
+                            filteredInterviewed.length > 0
+                          }
+                          onChange={handleSelectAll}
+                        />
+                      </th>
+                      <th>NIC</th>
+                      <th>Name</th>
+                      <th>Email</th>
+                      <th>Start Date</th>
+                      <th>Actions</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {filteredInterviewed.map((trainee, idx) => (
+                      <tr key={idx}>
+                        <td>
+                          <input
+                            type="checkbox"
+                            checked={selectedTrainees.includes(trainee.NIC)}
+                            onChange={() => handleSelectTrainee(trainee.NIC)}
+                          />
+                        </td>
+                        <td>{trainee.NIC}</td>
+                        <td>{trainee.name}</td>
+                        <td>{trainee.email}</td>
+                        <td>{moment(trainee.date).format("YYYY-MM-DD")}</td>
+                        <td>
+                          <button
+                            className="btn btn-sm btn-primary me-1"
+                            onClick={() => sendMail(trainee.email, trainee.NIC)}
+                            disabled={isEmailRecentlySent(trainee.email)}
+                            title={
+                              isEmailRecentlySent(trainee.email)
+                                ? "Email sent recently. Please wait 2 minutes."
+                                : "Send email"
+                            }
+                          >
+                            {isEmailRecentlySent(trainee.email)
+                              ? "Wait..."
+                              : "Send"}
+                          </button>
+                          <button
+                            className="btn btn-sm btn-info me-1"
+                            onClick={() => handleViewTrainee(trainee.NIC)}
+                          >
+                            View
+                          </button>
+                          <button
+                            className="btn btn-sm btn-danger"
+                            onClick={() =>
+                              handleDeleteTrainee(trainee.NIC, trainee.name)
+                            }
+                          >
+                            Delete
+                          </button>
+                        </td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              )}
+            </div>
+          </>
+        )}
 
         {/* Schedule Email Modal */}
         {showScheduleModal && (
@@ -570,48 +570,62 @@ export default function PendingTraineesPage() {
             <h5 className="card-title mb-0">Portal Created Trainees</h5>
           </div>
         </div>
-        <input
-          type="text"
-          className="form-control mb-2"
-          placeholder="Search registered trainees..."
-          value={searchRegistered}
-          onChange={(e) => setSearchRegistered(e.target.value)}
-          style={{ maxWidth: 300 }}
-        />
-        <div className="table-responsive">
-          {loadingRegistered ? (
-            <MiniLoader />
-          ) : (
-            <table className="table table-bordered table-striped align-middle text-center">
-              <thead className="table-dark">
-                <tr>
-                  <th>NIC</th>
-                  <th>Name</th>
-                  <th>Email</th>
-                  <th>Start Date</th>
-                  <th>Actions</th>
-                </tr>
-              </thead>
-              <tbody>
-                {registeredTrainees.map((trainee, idx) => (
-                  <tr key={idx}>
-                    <td>{trainee.NIC}</td>
-                    <td>{trainee.Name}</td>
-                    <td>{trainee.email}</td>
-                    <td>{moment(trainee.start_date).format("YYYY-MM-DD")}</td>
-                    <td>
-                      <button className="btn btn-sm btn-success me-1">
-                        Register
-                      </button>
-                      <button className="btn btn-sm btn-info me-1">View</button>
-                      <button className="btn btn-sm btn-danger">Delete</button>
-                    </td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
-          )}
-        </div>
+        {registeredTrainees.length == 0 ? (
+          <div className="text-black-50 text-center m-3">
+            No registered trainees
+          </div>
+        ) : (
+          <>
+            <input
+              type="text"
+              className="form-control mb-2"
+              placeholder="Search registered trainees..."
+              value={searchRegistered}
+              onChange={(e) => setSearchRegistered(e.target.value)}
+              style={{ maxWidth: 300 }}
+            />
+            <div className="table-responsive">
+              {loadingRegistered ? (
+                <MiniLoader />
+              ) : (
+                <table className="table table-bordered table-striped align-middle text-center">
+                  <thead className="table-dark">
+                    <tr>
+                      <th>NIC</th>
+                      <th>Name</th>
+                      <th>Email</th>
+                      <th>Start Date</th>
+                      <th>Actions</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {registeredTrainees.map((trainee, idx) => (
+                      <tr key={idx}>
+                        <td>{trainee.NIC}</td>
+                        <td>{trainee.Name}</td>
+                        <td>{trainee.email}</td>
+                        <td>
+                          {moment(trainee.start_date).format("YYYY-MM-DD")}
+                        </td>
+                        <td>
+                          <button className="btn btn-sm btn-success me-1">
+                            Register
+                          </button>
+                          <button className="btn btn-sm btn-info me-1">
+                            View
+                          </button>
+                          <button className="btn btn-sm btn-danger">
+                            Delete
+                          </button>
+                        </td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              )}
+            </div>
+          </>
+        )}
       </SubContainer>
     </MainContainer>
   );

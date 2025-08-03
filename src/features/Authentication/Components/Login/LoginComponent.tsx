@@ -103,7 +103,7 @@ function LoginComponent({}: LoginComponentProps) {
           <div className="login-fogotPass">
             <div>
               Don’t have account?{" "}
-              <Link to={"/request_account"} className="login-requestAdmin">
+              <Link to={"/#"} className="login-requestAdmin">
                 Request Admin
               </Link>
             </div>

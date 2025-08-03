@@ -3,34 +3,56 @@ import { Link, useLoaderData } from "react-router-dom";
 import { formatDate, getMonthName } from "../helpers";
 import { MainContainer } from "../layout/containers/main_container/MainContainer";
 import SubContainer from "../layout/containers/sub_container/SubContainer";
-import {getDateDifferenceFormatted} from "../helpers";
+import { getDateDifferenceFormatted } from "../helpers";
 
 export default function ProfilePage() {
-  const { trainee, departments, /*periods,*/ programs, institutes } = useLoaderData() as any;
+  const { trainee, departments, /*periods,*/ programs, institutes } =
+    useLoaderData() as any;
   useEffect(() => {
     console.log(institutes);
   }, []);
   return (
-    <MainContainer title="Trainee Profile" breadCrumbs={["Home", "Trainee", "Profile"]}>
+    <MainContainer
+      title="Trainee Profile"
+      breadCrumbs={["Home", "Trainee", "Profile"]}
+    >
       <SubContainer>
         <div className="container-fluid border border-dark rounded-2 my-2 py-2">
           <div className="fs-5 fw-bolder">Trainee Details</div>
-          <div className="fw-semibold ">Status - {trainee.status == 1 ? "Active" : "Inactive"}</div>
+          <div className="fw-semibold ">
+            Status - {trainee.status == 1 ? "Active" : "Inactive"}
+          </div>
           <div className="fw-semibold ">Reg NO - {trainee.REG_NO}</div>
           <div className="fw-semibold">ATT NO - {trainee.ATT_NO}</div>
           <div className="fw-semibold">
             Training Program -
-            {programs.find((program: any) => trainee.training_program_id == program.id).name}{" "}
+            {
+              programs.find(
+                (program: any) => trainee.training_program_id == program.id
+              ).name
+            }{" "}
           </div>
           <div className="fw-semibold">
             Institute -{" "}
-            {institutes.find((institute: any) => trainee.institute_id == institute.id).name}{" "}
+            {
+              institutes.find(
+                (institute: any) => trainee.institute_id == institute.id
+              ).name
+            }{" "}
           </div>
           <div className="  fw-semibold">NIC - {trainee.NIC_NO}</div>
           <div className="  fw-semibold">Name - {trainee.name}</div>
-          <div className="  fw-semibold">Contact Number - {trainee.contact_no}</div>
+          <div className="  fw-semibold">
+            Contact Number - {trainee.contact_no}
+          </div>
+          {trainee.email ? (
+            <div className="  fw-semibold">Email - {trainee.email}</div>
+          ) : null}
           <div>
-            <Link to={`/OJT/Trainees/${trainee.id}/update`} className="btn btn-sm btn-warning">
+            <Link
+              to={`/OJT/Trainees/${trainee.id}/update`}
+              className="btn btn-sm btn-warning"
+            >
               Update
             </Link>
           </div>
@@ -42,8 +64,12 @@ export default function ProfilePage() {
             {getDateDifferenceFormatted(trainee.start_date, trainee.end_date)}
             {/*periods.find((period: any) => trainee.training_period_id == period.id).name*/}
           </div>
-          <div className=" fw-semibold">start date - {formatDate(trainee.start_date)}</div>
-          <div className=" fw-semibold">end date - {formatDate(trainee.end_date)}</div>
+          <div className=" fw-semibold">
+            start date - {formatDate(trainee.start_date)}
+          </div>
+          <div className=" fw-semibold">
+            end date - {formatDate(trainee.end_date)}
+          </div>
           {!trainee.schedules && (
             <div className="text-black-50">not assigned to departments yet</div>
           )}
@@ -63,7 +89,8 @@ export default function ProfilePage() {
                       <td>
                         {
                           departments.find(
-                            (department: any) => schedule.department_id == department.id
+                            (department: any) =>
+                              schedule.department_id == department.id
                           ).name
                         }
                       </td>
@@ -88,9 +115,15 @@ export default function ProfilePage() {
           <div className=" fs-5 fw-bolder">Bank Details</div>
           {trainee.bankDetails ? (
             <>
-              <div className="  fw-semibold">Name - {trainee.bankDetails.name}</div>
-              <div className="  fw-semibold">Account Number - {trainee.bankDetails.acc_no}</div>
-              <div className="  fw-semibold">Branch Code - {trainee.bankDetails.branch_code}</div>
+              <div className="  fw-semibold">
+                Name - {trainee.bankDetails.name}
+              </div>
+              <div className="  fw-semibold">
+                Account Number - {trainee.bankDetails.acc_no}
+              </div>
+              <div className="  fw-semibold">
+                Branch Code - {trainee.bankDetails.branch_code}
+              </div>
               <div>
                 <Link
                   to={`/OJT/trainees/${trainee.id}/bank_details/update`}
@@ -113,7 +146,9 @@ export default function ProfilePage() {
           <div className=" fs-5 fw-bolder">Attendence</div>
           <div className="mt-2">
             {!(trainee.attendence.summary.length > 0) ? (
-              <div className="text-black-50">Attendece Records are not yet uploaded </div>
+              <div className="text-black-50">
+                Attendece Records are not yet uploaded{" "}
+              </div>
             ) : (
               trainee.attendence.summary.map((yearRecord: any) => {
                 return (
@@ -134,7 +169,9 @@ export default function ProfilePage() {
                               <td>{getMonthName(monthRecord.month)}</td>
                               <td>
                                 {Math.round(
-                                  (monthRecord.presentCount / monthRecord.totalCount) * 100
+                                  (monthRecord.presentCount /
+                                    monthRecord.totalCount) *
+                                    100
                                 )}
                                 %
                               </td>
@@ -161,18 +198,30 @@ export default function ProfilePage() {
               <div className=" fw-semibold">
                 Total Attendece Percentage -{" "}
                 {Math.round(
-                  (trainee.attendence.totalPresentCount / trainee.attendence.totalCount) * 100
+                  (trainee.attendence.totalPresentCount /
+                    trainee.attendence.totalCount) *
+                    100
                 )}
                 %
               </div>
               <div className=" fw-semibold">
-                Total Attendece Count - {trainee.attendence.totalPresentCount} days
+                Total Attendece Count - {trainee.attendence.totalPresentCount}{" "}
+                days
               </div>
               <div className=" fw-semibold">
                 Total Working Days Count - {trainee.attendence.totalCount} days
               </div>
             </div>
           )}
+        </div>
+        <div className="container-fluid border border-dark rounded-2 my-2 py-2">
+          <div className=" fs-5 fw-bolder">Portal details</div>
+
+          <div className="mt-2">
+            <Link to={`/#`} className="btn btn-sm btn-primary">
+              Edit
+            </Link>
+          </div>
         </div>
       </SubContainer>
     </MainContainer>

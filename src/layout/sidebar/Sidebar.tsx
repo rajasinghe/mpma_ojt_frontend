@@ -45,6 +45,13 @@ const Sidebar = ({ user }: Props) => {
           active_icon: "bi-hourglass-split",
           inactive_icon: "bi-hourglass",
         },
+        {
+          name: "Portal Account",
+          route: "/OJT/trainees/portal_account",
+          regex: /^\/OJT\/trainees\/portal_account/i,
+          active_icon: "bi-person-badge-fill",
+          inactive_icon: "bi-person-badge",
+        },
       ],
     },
     {
@@ -53,22 +60,6 @@ const Sidebar = ({ user }: Props) => {
       route: "/OJT/calender",
       active_icon: "bi-calendar-event-fill",
       inactive_icon: "bi-calendar-event",
-    },
-    {
-      name: "Attendence",
-      regex: /^\/OJT\/attendence/i,
-      route: "/OJT/attendence",
-      active_icon: "bi-clipboard-check-fill",
-      inactive_icon: "bi-clipboard-check",
-      subLinks: [
-        {
-          name: "Upload Attendence",
-          regex: /^\/OJT\/attendence\/new/i,
-          route: "/OJT/attendence/new",
-          active_icon: " bi-file-earmark-arrow-up-fill",
-          inactive_icon: "bi-file-earmark-arrow-up",
-        },
-      ],
     },
   ];
 
@@ -80,14 +71,7 @@ const Sidebar = ({ user }: Props) => {
       let updatedLinks = [...initLinks];
 
       if (user && user.type == "SUPERADMIN") {
-     updatedLinks.push(
-          {
-            name: "Departments",
-            regex: /^\/OJT\/departments/i,
-            route: "/OJT/departments",
-            active_icon: "bi-diagram-3-fill",
-            inactive_icon: "bi-diagram-3",
-          },
+        updatedLinks.push(
           {
             name: "Interview",
             regex: /^\/OJT\/Interview/i,
@@ -105,6 +89,29 @@ const Sidebar = ({ user }: Props) => {
             ],
           },
           {
+            name: "Attendence",
+            regex: /^\/OJT\/attendence/i,
+            route: "/OJT/attendence",
+            active_icon: "bi-clipboard-check-fill",
+            inactive_icon: "bi-clipboard-check",
+            subLinks: [
+              {
+                name: "Upload Attendence",
+                regex: /^\/OJT\/attendence\/new/i,
+                route: "/OJT/attendence/new",
+                active_icon: " bi-file-earmark-arrow-up-fill",
+                inactive_icon: "bi-file-earmark-arrow-up",
+              },
+            ],
+          },
+          {
+            name: "Departments",
+            regex: /^\/OJT\/departments/i,
+            route: "/OJT/departments",
+            active_icon: "bi-diagram-3-fill",
+            inactive_icon: "bi-diagram-3",
+          },
+          {
             name: "Payments",
             regex: /^\/OJT\/payments/i,
             route: "/OJT/payments",
@@ -118,7 +125,7 @@ const Sidebar = ({ user }: Props) => {
                 active_icon: "bi bi-file-text-fill",
                 inactive_icon: "bi bi-file-text",
               },
-            ]
+            ],
           },
           {
             name: "Users",
@@ -135,12 +142,13 @@ const Sidebar = ({ user }: Props) => {
                 inactive_icon: "bi-patch-plus",
               },
             ],
-          },
-     );
-      } else { 
-
+          }
+        );
+      } else {
         if (
-          user.accessLevels.find((accessLevel: any) => accessLevel.access == "interview:modify")
+          user.accessLevels.find(
+            (accessLevel: any) => accessLevel.access == "interview:modify"
+          )
         ) {
           updatedLinks.push(
             {
@@ -165,45 +173,65 @@ const Sidebar = ({ user }: Props) => {
               route: "/OJT/departments",
               active_icon: "bi-diagram-3-fill",
               inactive_icon: "bi-diagram-3",
-            },
-        );
-        }
-        if (
-          user.accessLevels.find((accessLevel: any) => accessLevel.access == "department:modify")
-
-        ) {
-          updatedLinks.push(
-            {
-              name: "Departments",
-              regex: /^\/OJT\/departments/i,
-              route: "/OJT/departments",
-              active_icon: "bi-diagram-3-fill",
-              inactive_icon: "bi-diagram-3",
-
-            },
+            }
           );
         }
         if (
-          user.accessLevels.find((accessLevel: any) => accessLevel.access == "payments:modify")
+          user.accessLevels.find(
+            (accessLevel: any) => accessLevel.access == "attendence:modify"
+          )
         ) {
-          updatedLinks.push(
-            {
-              name: "Payments",
-              regex: /^\/OJT\/payments/i,
-              route: "/OJT/payments",
-              active_icon: "bi-credit-card-fill",
-              inactive_icon: "bi-credit-card",
-              subLinks: [
-                {
-                  name: "Payment Slip Generate",
-                  regex: /^\/OJT\/payments\/paymentslipgenerate/i,
-                  route: "/OJT/payments/paymentslipgenerate",
-                  active_icon: "bi bi-file-text-fill",
-                  inactive_icon: "bi bi-file-text",
-                },
-              ]
-            },
-          );
+          updatedLinks.push({
+            name: "Attendence",
+            regex: /^\/OJT\/attendence/i,
+            route: "/OJT/attendence",
+            active_icon: "bi-clipboard-check-fill",
+            inactive_icon: "bi-clipboard-check",
+            subLinks: [
+              {
+                name: "Upload Attendence",
+                regex: /^\/OJT\/attendence\/new/i,
+                route: "/OJT/attendence/new",
+                active_icon: " bi-file-earmark-arrow-up-fill",
+                inactive_icon: "bi-file-earmark-arrow-up",
+              },
+            ],
+          });
+        }
+        if (
+          user.accessLevels.find(
+            (accessLevel: any) => accessLevel.access == "department:modify"
+          )
+        ) {
+          updatedLinks.push({
+            name: "Departments",
+            regex: /^\/OJT\/departments/i,
+            route: "/OJT/departments",
+            active_icon: "bi-diagram-3-fill",
+            inactive_icon: "bi-diagram-3",
+          });
+        }
+        if (
+          user.accessLevels.find(
+            (accessLevel: any) => accessLevel.access == "payments:modify"
+          )
+        ) {
+          updatedLinks.push({
+            name: "Payments",
+            regex: /^\/OJT\/payments/i,
+            route: "/OJT/payments",
+            active_icon: "bi-credit-card-fill",
+            inactive_icon: "bi-credit-card",
+            subLinks: [
+              {
+                name: "Payment Slip Generate",
+                regex: /^\/OJT\/payments\/paymentslipgenerate/i,
+                route: "/OJT/payments/paymentslipgenerate",
+                active_icon: "bi bi-file-text-fill",
+                inactive_icon: "bi bi-file-text",
+              },
+            ],
+          });
         }
       }
       setLinks(updatedLinks);
@@ -229,12 +257,21 @@ const Sidebar = ({ user }: Props) => {
   return (
     <>
       {/* Toggle Sidebar Button */}
-      <i className="bi bi-list toggle-sidebar-btn" onClick={handleSidebarToggle}></i>
+      <i
+        className="bi bi-list toggle-sidebar-btn"
+        onClick={handleSidebarToggle}
+      ></i>
       {/* Sidebar Component */}
-      <aside id="sidebar" className={`sidebar ${isSidebarToggled ? "toggle-sidebar" : ""}`}>
+      <aside
+        id="sidebar"
+        className={`sidebar ${isSidebarToggled ? "toggle-sidebar" : ""}`}
+      >
         <div className="d-flex">
           {/* Close Button */}
-          <i className="bi bi-x-circle toggle-close-btn ms-auto" onClick={handleSidebarToggle}></i>
+          <i
+            className="bi bi-x-circle toggle-close-btn ms-auto"
+            onClick={handleSidebarToggle}
+          ></i>
         </div>
         <div className="d-flex logo align-items-center mb-3">
           <img src={logo} alt="logo" />
@@ -255,7 +292,9 @@ const Sidebar = ({ user }: Props) => {
                     >
                       <i
                         className={`bi ${
-                          link.regex.test(pathname) ? link.active_icon : link.inactive_icon
+                          link.regex.test(pathname)
+                            ? link.active_icon
+                            : link.inactive_icon
                         } `}
                       ></i>
                       <span>{link.name}</span>
@@ -280,7 +319,9 @@ const Sidebar = ({ user }: Props) => {
                       <li className="nav-item" key={sublink.name}>
                         <Link
                           to={sublink.route}
-                          className={`nav-link ${sublink.regex.test(pathname) ? "enable" : ""}`}
+                          className={`nav-link ${
+                            sublink.regex.test(pathname) ? "enable" : ""
+                          }`}
                         >
                           <i
                             className={`bi ${
@@ -300,12 +341,16 @@ const Sidebar = ({ user }: Props) => {
               return (
                 <li className="nav-item" key={link.name}>
                   <Link
-                    className={`nav-link ${link.regex.test(pathname) ? "enable" : ""}`}
+                    className={`nav-link ${
+                      link.regex.test(pathname) ? "enable" : ""
+                    }`}
                     to={link.route}
                   >
                     <i
                       className={`bi  ${
-                        link.regex.test(pathname) ? link.active_icon : link.inactive_icon
+                        link.regex.test(pathname)
+                          ? link.active_icon
+                          : link.inactive_icon
                       }`}
                     ></i>
                     <span>{link.name}</span>

@@ -27,7 +27,6 @@ interface InterviewNicProps {
 
 interface InterviewData {
   NIC: string;
-  // Add other properties as needed
 }
 
 export default function InterviewNic({
@@ -38,7 +37,7 @@ export default function InterviewNic({
   setNicDisable,
 }: InterviewNicProps) {
   const [isDisabled, setIsDisabled] = useState(disabled);
-  
+
   const {
     register,
     handleSubmit,
@@ -67,12 +66,15 @@ export default function InterviewNic({
     try {
       // Fetch all interviews
       const response = await api.get("/api/interview");
+      const response2 = await api.get(`/api/trainee/NIC_check/${data.NIC}`);
+
       const interviews: InterviewData[] = response.data.InterviewDetails || [];
-      
+      const trainees = response2.data || false;
+
       // Check if NIC already exists
       const exists = interviews.some((interview) => interview.NIC === data.NIC);
-      
-      if (exists) {
+
+      if (exists || trainees.exists) {
         setFocus("NIC");
         await Swal.fire({
           title: "Not Eligible",
@@ -82,13 +84,12 @@ export default function InterviewNic({
         setNicValidated?.(false);
         return;
       }
-      
+
       // Validation successful
       setIsDisabled(true);
       setNicValidated?.(true);
       setNicDisable?.(true);
       onValidated?.(data.NIC);
-
     } catch (error) {
       console.error("NIC validation error:", error);
       setFocus("NIC");
@@ -107,7 +108,7 @@ export default function InterviewNic({
       <div className="d-flex gap-2">
         <input
           type="text"
-          className={`form-control ${errors.NIC ? 'is-invalid' : ''}`}
+          className={`form-control ${errors.NIC ? "is-invalid" : ""}`}
           disabled={isDisabled}
           placeholder="Enter NIC number"
           {...register("NIC")}
@@ -120,19 +121,20 @@ export default function InterviewNic({
         >
           {isSubmitting ? (
             <>
-              <span className="spinner-border spinner-border-sm me-2" role="status" aria-hidden="true"></span>
+              <span
+                className="spinner-border spinner-border-sm me-2"
+                role="status"
+                aria-hidden="true"
+              ></span>
               Validating...
             </>
           ) : (
             "Validate"
           )}
         </button>
-
       </div>
       {errors.NIC && (
-        <div className="invalid-feedback d-block">
-          {errors.NIC.message}
-        </div>
+        <div className="invalid-feedback d-block">{errors.NIC.message}</div>
       )}
     </div>
   );
