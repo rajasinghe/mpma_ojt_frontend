@@ -7,11 +7,11 @@
   /* user-select: none; */
 }
 
-@media (min-width: 1200px) {
+/*@media (min-width: 1200px) {
   .logo {
     width: 280px;
   }
-}
+}*/
 
 .logo img {
   max-height: 50px;
@@ -154,19 +154,46 @@
   .logo span {
     font-size: 22px;
   }
+
+  /* Mobile nav adjustments */
+  .nav-container {
+    padding: 6px 12px;
+    border-radius: 20px;
+  }
+
+  .profile-info {
+    display: none !important;
+  }
+
+  .profile-avatar {
+    width: 36px;
+    height: 36px;
+    font-size: 12px;
+  }
+
+  .notifications-dropdown {
+    min-width: 300px;
+    max-width: 90vw;
+  }
+
+  .header-nav .nav-icon {
+    padding: 8px;
+  }
 }
 
-.header .notifi-profile {
-  box-shadow: 0px 2px 20px rgba(1, 41, 112, 0.2);
-  background-color: #fff;
-  border-radius: 30px;
-  margin-right: 10px;
-  padding: 8px 5px 8px 18px;
+/* Enhanced Navigation Container */
+.nav-container {
+  background: rgba(255, 255, 255, 0.95);
+  backdrop-filter: blur(10px);
+  border-radius: 25px;
+  padding: 8px 20px;
+  box-shadow: 0 4px 20px rgba(1, 41, 112, 0.15);
+  border: 1px solid rgba(65, 84, 241, 0.1);
   transition: all 0.3s ease;
 }
 
-.header .notifi-profile:hover {
-  box-shadow: 0px 4px 25px rgba(1, 41, 112, 0.25);
+.nav-container:hover {
+  box-shadow: 0 6px 30px rgba(1, 41, 112, 0.2);
   transform: translateY(-1px);
 }
 
@@ -175,32 +202,124 @@
   --------------------------------------------------------------*/
 .header-nav ul {
   list-style: none;
-}
-
-.header-nav > ul {
   margin: 0;
   padding: 0;
 }
 
+/* Enhanced Navigation Icon */
 .header-nav .nav-icon {
-  font-size: 22px;
   color: #012970;
-  margin-right: 25px;
+  padding: 10px;
+  border-radius: 12px;
+  transition: all 0.3s ease;
+  text-decoration: none;
+  display: flex;
+  align-items: center;
+  justify-content: center;
   position: relative;
 }
 
+.header-nav .nav-icon:hover {
+  background: rgba(65, 84, 241, 0.1);
+  color: #4154f1;
+  transform: scale(1.05);
+}
+
+/* Enhanced Notification Badge */
+.notification-badge {
+  position: absolute;
+  top: 5px;
+  right: 5px;
+  background: linear-gradient(135deg, #ff6b6b, #ee5a24);
+  color: white;
+  font-size: 10px;
+  font-weight: 600;
+  padding: 2px 6px;
+  border-radius: 10px;
+  min-width: 18px;
+  height: 18px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border: 2px solid white;
+  box-shadow: 0 2px 8px rgba(255, 107, 107, 0.3);
+  animation: pulse 2s infinite;
+}
+
+@keyframes pulse {
+  0% {
+    transform: scale(1);
+  }
+  50% {
+    transform: scale(1.1);
+  }
+  100% {
+    transform: scale(1);
+  }
+}
+
+/* Enhanced Profile Section */
 .header-nav .nav-profile {
   color: #012970;
+  text-decoration: none;
+  padding: 8px 12px;
+  border-radius: 15px;
+  transition: all 0.3s ease;
 }
 
-.header-nav .nav-profile img {
-  max-height: 36px;
-  user-select: none;
+.header-nav .nav-profile:hover {
+  background: rgba(65, 84, 241, 0.1);
+  transform: translateY(-2px);
+  color: #4154f1;
 }
 
-.header-nav .nav-profile span {
+.profile-container {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.profile-avatar {
+  width: 40px;
+  height: 40px;
+  border-radius: 50%;
+  background: linear-gradient(135deg, #4154f1, #6c7ce7);
+  color: white;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-weight: 600;
+  font-size: 14px;
+  text-transform: uppercase;
+  box-shadow: 0 4px 12px rgba(65, 84, 241, 0.3);
+  transition: all 0.3s ease;
+}
+
+.profile-avatar:hover {
+  transform: scale(1.05);
+  box-shadow: 0 6px 20px rgba(65, 84, 241, 0.4);
+}
+
+.profile-info {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+}
+
+.profile-name {
   font-size: 14px;
   font-weight: 600;
+  color: #012970;
+  line-height: 1.2;
+  margin-bottom: 2px;
+}
+
+.profile-role {
+  font-size: 11px;
+  color: #6c757d;
+  font-weight: 500;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
 }
 
 .header-nav .badge-number {
@@ -211,6 +330,7 @@
   padding: 3px 6px;
 }
 
+/* Enhanced Notifications Dropdown */
 .header-nav .notifications {
   inset: 8px -15px auto auto !important;
   height: 525px;

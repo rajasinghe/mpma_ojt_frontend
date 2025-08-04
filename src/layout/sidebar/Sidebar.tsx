@@ -172,8 +172,10 @@ const Sidebar = ({ user }: Props) => {
             <img src={logo} alt="logo" className="logo-image" />
           </div>
           <div className="logo-text">
-            <span className="d-lg-block brand-name">MPMA</span>
-            <small className="brand-subtitle">OJT System</small>
+            <span className="d-lg-block brand-name">
+              MPMA <small style={{ fontSize: "0.6em" }}>OJT</small>
+            </span>
+            <small className="brand-subtitle">Management System</small>
           </div>
         </div>
         <ul className="sidebar-nav" id="sidebar-nav">
