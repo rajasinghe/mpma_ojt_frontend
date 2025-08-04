@@ -166,11 +166,61 @@ const Sidebar = ({ user }: Props) => {
     console.log(navigation);
   }, [navigation]);
 
+  // Handle orientation change to close sidebar in portrait mode
+  useEffect(() => {
+    const handleOrientationChange = () => {
+      // Close sidebar when switching to portrait mode on mobile
+      if (window.innerWidth <= 768 && window.innerHeight > window.innerWidth) {
+        if (isSidebarToggled) {
+          setIsSidebarToggled(false);
+          document.body.classList.remove("toggle-sidebar");
+        }
+      }
+    };
+
+    window.addEventListener("orientationchange", handleOrientationChange);
+    window.addEventListener("resize", handleOrientationChange);
+
+    return () => {
+      window.removeEventListener("orientationchange", handleOrientationChange);
+      window.removeEventListener("resize", handleOrientationChange);
+    };
+  }, [isSidebarToggled]);
+
   // Function to toggle the sidebar state
   const handleSidebarToggle = () => {
     setIsSidebarToggled(!isSidebarToggled);
     document.body.classList.toggle("toggle-sidebar");
   };
+
+  // Handle click outside sidebar to close it in mobile view
+  useEffect(() => {
+    const handleClickOutside = (event: Event) => {
+      const sidebar = document.getElementById("sidebar");
+      const toggleBtn = document.querySelector(".toggle-sidebar-btn");
+
+      if (
+        isSidebarToggled &&
+        sidebar &&
+        !sidebar.contains(event.target as Node) &&
+        !toggleBtn?.contains(event.target as Node) &&
+        window.innerWidth <= 1199
+      ) {
+        setIsSidebarToggled(false);
+        document.body.classList.remove("toggle-sidebar");
+      }
+    };
+
+    if (isSidebarToggled) {
+      document.addEventListener("mousedown", handleClickOutside);
+      document.addEventListener("touchstart", handleClickOutside);
+    }
+
+    return () => {
+      document.removeEventListener("mousedown", handleClickOutside);
+      document.removeEventListener("touchstart", handleClickOutside);
+    };
+  }, [isSidebarToggled]);
 
   return (
     <>
@@ -184,16 +234,21 @@ const Sidebar = ({ user }: Props) => {
         id="sidebar"
         className={`sidebar ${isSidebarToggled ? "toggle-sidebar" : ""}`}
       >
-        <div className="d-flex">
+        <div className="d-flex justify-content-end mb-3">
           {/* Close Button */}
           <i
-            className="bi bi-x-circle toggle-close-btn ms-auto"
+            className="bi bi-x-circle toggle-close-btn"
             onClick={handleSidebarToggle}
           ></i>
         </div>
-        <div className="d-flex logo align-items-center mb-3">
-          <img src={logo} alt="logo" />
-          <span className="d-lg-block">MPMA</span>
+        <div className="d-flex logo align-items-center mb-4 px-2">
+          <div className="logo-container">
+            <img src={logo} alt="logo" className="logo-image" />
+          </div>
+          <div className="logo-text">
+            <span className="d-lg-block brand-name">MPMA</span>
+            <small className="brand-subtitle">OJT System</small>
+          </div>
         </div>
         <ul className="sidebar-nav" id="sidebar-nav">
           <li className="nav-heading">Main Menu</li>
@@ -219,11 +274,14 @@ const Sidebar = ({ user }: Props) => {
                     </Link>
                     <div className="w-100 d-flex">
                       <button
-                        className="btn btn-sm ms-auto"
+                        className="btn btn-sm ms-auto submenu-toggle"
                         data-bs-toggle="collapse"
                         data-bs-target={`#submenu-${link.name}`}
+                        aria-expanded="false"
                       >
-                        <i className={`bi bi-chevron-expand`}></i>
+                        <i
+                          className={`bi bi-chevron-down transition-transform`}
+                        ></i>
                       </button>
                     </div>
                   </a>
