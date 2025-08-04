@@ -1,7 +1,13 @@
-import { Link, useLoaderData, useNavigation } from "react-router-dom";
+import {
+  Link,
+  useLoaderData,
+  useNavigation,
+  useNavigate,
+} from "react-router-dom";
 import Loader from "../../Components/ui/Loader/Loader";
 import { Fragment, useEffect, useState } from "react";
 import editIcon from "../../assets/edit.png";
+import removeIcon from "../../assets/remove.png";
 import activeIcon from "../../assets/active.png";
 import inactiveIcon from "../../assets/inactive.png";
 import Swal from "sweetalert2";
@@ -11,6 +17,7 @@ import { MainContainer } from "../../layout/containers/main_container/MainContai
 import SubContainer from "../../layout/containers/sub_container/SubContainer";
 export default function ViewUsersPage() {
   const { state } = useNavigation();
+  const navigate = useNavigate();
   const loaderData = useLoaderData() as any;
   const [isLoading, setLoading] = useState<boolean>(false);
   const [users, setUsers] = useState(loaderData);
@@ -98,6 +105,44 @@ export default function ViewUsersPage() {
     }
   };
 
+  const handleDelete = async (userId: number) => {
+    try {
+      const { isConfirmed } = await Swal.fire({
+        title: "Delete User Account",
+        text: "Confirm account deletion",
+        icon: "warning",
+        showCancelButton: true,
+        confirmButtonText: "Delete",
+      });
+      if (isConfirmed) {
+        Swal.fire({
+          title: "Please Wait... ",
+          allowOutsideClick: false,
+          didOpen: () => {
+            Swal.showLoading();
+          },
+        });
+        await api.delete(`auth/user/${userId}`);
+        Swal.close();
+        revalidateData();
+        Swal.fire({
+          title: "User Deleted",
+          text: "User has been Deleted",
+          icon: "success",
+          showCloseButton: true,
+        });
+      }
+    } catch (error: any) {
+      Swal.close();
+      Swal.fire({
+        icon: "error",
+        title: "Oops...",
+        text: error,
+        footer: '<a href="#">Why do I have this issue?</a>',
+      });
+    }
+  };
+
   const revalidateData = async () => {
     try {
       setLoading(true);
@@ -122,7 +167,10 @@ export default function ViewUsersPage() {
       ) : (
         <MainContainer title="User Manager" breadCrumbs={["Home", "Users"]}>
           <SubContainer>
-            <section className="border border-2 rounded-2 p-1 m-2 mx-auto" style={{maxWidth: "1200px"}}>
+            <section
+              className="border border-2 rounded-2 p-1 m-2 mx-auto"
+              style={{ maxWidth: "1200px" }}
+            >
               <div>
                 {isLoading ? (
                   <MiniLoader />
@@ -143,21 +191,44 @@ export default function ViewUsersPage() {
                           return (
                             <Fragment key={user.id}>
                               <tr key={user.id}>
-                                <td rowSpan={user.accessLevels.length}>{user.name}</td>
-                                <td rowSpan={user.accessLevels.length}>{user.username}</td>
-                                <td rowSpan={user.accessLevels.length}>{user.status}</td>
+                                <td rowSpan={user.accessLevels.length}>
+                                  {user.name}
+                                </td>
+                                <td rowSpan={user.accessLevels.length}>
+                                  {user.username}
+                                </td>
+                                <td rowSpan={user.accessLevels.length}>
+                                  {user.status}
+                                </td>
                                 <td>{user.accessLevels[0].access}</td>
-                                <td rowSpan={user.accessLevels.length} className=" ">
+                                <td
+                                  rowSpan={user.accessLevels.length}
+                                  className=" "
+                                >
                                   <div className="d-flex align-content-center justify-content-center flex-column align-items-center ">
                                     <img
                                       src={editIcon}
                                       onClick={() => {
-                                        Swal.fire({
-                                          text: "the feature will be available soon",
-                                        });
+                                        navigate(
+                                          `/OJT/users/${user.id}/update`
+                                        );
                                       }}
                                       alt=""
                                       className="btn mt-2 btn-sm btn-outline-secondary"
+                                    />
+                                    <img
+                                      src={removeIcon}
+                                      onClick={() => {
+                                        handleDelete(user.id);
+                                      }}
+                                      alt=""
+                                      className="btn ms-2 btn-sm btn-outline-secondary"
+                                      style={{
+                                        width: "40px",
+                                        height: "40px",
+                                        padding: "2px",
+                                        margin: "10px",
+                                      }}
                                     />
                                     {user.status == "ACTIVE" ? (
                                       <img
@@ -195,8 +266,11 @@ export default function ViewUsersPage() {
                 )}
               </div>
             </section>
-            <div className="d-flex m-1 mx-auto" style={{maxWidth: "1200px"}}>
-              <Link to={"/OJT/users/create"} className="ms-auto btn btn-sm btn-primary">
+            <div className="d-flex m-1 mx-auto" style={{ maxWidth: "1200px" }}>
+              <Link
+                to={"/OJT/users/create"}
+                className="ms-auto btn btn-sm btn-primary"
+              >
                 Create User
               </Link>
             </div>

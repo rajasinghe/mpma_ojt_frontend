@@ -61,6 +61,8 @@ import { traineeDetailsPageLoader } from "./loaders/TraineesLoader.ts";
 import PaymentsPage from "./Pages/PaymentsPage.tsx";
 import ViewPaymentDetails from "./Pages/ViewPaymentDetails.tsx";
 import TraineeDetailsPage from "./Pages/TraineeDetailsPage.tsx";
+import UserUpdatePage from "./Pages/Admin/UserUpdatePage.tsx";
+import NotificationPage from "./Pages/NotificationPage.tsx";
 
 export const setToken = () => {
   const token = localStorage.getItem("token");
@@ -208,6 +210,14 @@ const router = createBrowserRouter([
             path: "users",
             loader: viewUsersPageLoader,
             element: <ViewUsersPage />,
+          },
+          {
+            path: "users/:id/update",
+            element: <UserUpdatePage />,
+          },
+          {
+            path: "notifications",
+            element: <NotificationPage />,
           },
         ],
       },

@@ -332,10 +332,10 @@ const Sidebar = ({ user }: Props) => {
             </Link>
           </li>
           <li className="nav-item">
-            <a className="nav-link disable" href="pages-contact.html">
+            <Link className="nav-link disable" to={"/OJT/notifications"}>
               <i className="bi bi-bell"></i>
               <span>Notification</span>
-            </a>
+            </Link>
           </li>
 
           <li className="nav-item">
