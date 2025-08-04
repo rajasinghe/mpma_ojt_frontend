@@ -47,22 +47,6 @@ const Sidebar = ({ user }: Props) => {
       active_icon: "bi-calendar-event-fill",
       inactive_icon: "bi-calendar-event",
     },
-    {
-      name: "Attendence",
-      regex: /^\/OJT\/attendence/i,
-      route: "/OJT/attendence",
-      active_icon: "bi-clipboard-check-fill",
-      inactive_icon: "bi-clipboard-check",
-      subLinks: [
-        {
-          name: "Upload Attendence",
-          regex: /^\/OJT\/attendence\/new/i,
-          route: "/OJT/attendence/new",
-          active_icon: " bi-file-earmark-arrow-up-fill",
-          inactive_icon: "bi-file-earmark-arrow-up",
-        },
-      ],
-    },
   ];
 
   const [links, setLinks] = useState<RouteLink[]>(initLinks);
@@ -74,13 +58,6 @@ const Sidebar = ({ user }: Props) => {
 
       if (user && user.type == "SUPERADMIN") {
         updatedLinks.push(
-          {
-            name: "Departments",
-            regex: /^\/OJT\/departments/i,
-            route: "/OJT/departments",
-            active_icon: "bi-diagram-3-fill",
-            inactive_icon: "bi-diagram-3",
-          },
           {
             name: "Interview",
             regex: /^\/OJT\/Interview/i,
@@ -96,6 +73,29 @@ const Sidebar = ({ user }: Props) => {
                 inactive_icon: "bi-person-plus",
               },
             ],
+          },
+          {
+            name: "Attendence",
+            regex: /^\/OJT\/attendence/i,
+            route: "/OJT/attendence",
+            active_icon: "bi-clipboard-check-fill",
+            inactive_icon: "bi-clipboard-check",
+            subLinks: [
+              {
+                name: "Upload Attendence",
+                regex: /^\/OJT\/attendence\/new/i,
+                route: "/OJT/attendence/new",
+                active_icon: " bi-file-earmark-arrow-up-fill",
+                inactive_icon: "bi-file-earmark-arrow-up",
+              },
+            ],
+          },
+          {
+            name: "Departments",
+            regex: /^\/OJT\/departments/i,
+            route: "/OJT/departments",
+            active_icon: "bi-diagram-3-fill",
+            inactive_icon: "bi-diagram-3",
           },
           {
             name: "Payments",
@@ -161,6 +161,28 @@ const Sidebar = ({ user }: Props) => {
               inactive_icon: "bi-diagram-3",
             }
           );
+        }
+        if (
+          user.accessLevels.find(
+            (accessLevel: any) => accessLevel.access == "attendence:modify"
+          )
+        ) {
+          updatedLinks.push({
+            name: "Attendence",
+            regex: /^\/OJT\/attendence/i,
+            route: "/OJT/attendence",
+            active_icon: "bi-clipboard-check-fill",
+            inactive_icon: "bi-clipboard-check",
+            subLinks: [
+              {
+                name: "Upload Attendence",
+                regex: /^\/OJT\/attendence\/new/i,
+                route: "/OJT/attendence/new",
+                active_icon: " bi-file-earmark-arrow-up-fill",
+                inactive_icon: "bi-file-earmark-arrow-up",
+              },
+            ],
+          });
         }
         if (
           user.accessLevels.find(

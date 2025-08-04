@@ -226,7 +226,7 @@ export default function ViewUsersPage() {
                                       style={{
                                         width: "40px",
                                         height: "40px",
-                                        padding: "2px",
+                                        padding: "5px",
                                         margin: "10px",
                                       }}
                                     />

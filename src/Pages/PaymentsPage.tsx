@@ -562,7 +562,7 @@ export default function PaymentsPage() {
                                   ATTN COUNT
                                 </th>
                                 <th className="bg-dark text-white">PAYMENT</th>
-                                <th className="bg-dark text-white">Options</th>
+                                <th className="bg-dark text-white">Actions</th>
                               </tr>
                             </thead>
                             <tbody>
@@ -772,7 +772,7 @@ export default function PaymentsPage() {
                                 <th className="bg-dark text-white">
                                   ATTN COUNT
                                 </th>
-                                <th className="bg-dark text-white">Options</th>
+                                <th className="bg-dark text-white">Actions</th>
                               </tr>
                             </thead>
                             <tbody>
@@ -889,7 +889,7 @@ export default function PaymentsPage() {
                   }}
                   disabled={loading}
                 >
-                  Change list
+                  Options
                 </button>
               </div>
             </div>
@@ -1040,7 +1040,7 @@ export default function PaymentsPage() {
                         <th className="bg-dark text-white">ATT_NO</th>
                         <th className="bg-dark text-white">NAME</th>
                         <th className="bg-dark text-white">ATTN COUNT</th>
-                        <th className="bg-dark text-white">Options</th>
+                        <th className="bg-dark text-white">Actions</th>
                       </tr>
                     </thead>
                     <tbody>
@@ -1072,7 +1072,7 @@ export default function PaymentsPage() {
                                       )
                                     );
                                   }}
-                                  className="btn btn-sm btn-danger d-flex align-items-center justify-content-center px-2 py-1"
+                                  className="btn btn-sm btn-outline-danger d-flex align-items-center justify-content-center px-2 py-1"
                                   title="Remove from list"
                                 >
                                   <i className="bi bi-x-circle"></i>
@@ -1164,14 +1164,14 @@ export default function PaymentsPage() {
                   Save
                 </button>
                 <button
-                  className="btn btn-warning btn-sm"
+                  className="btn btn-danger btn-sm"
                   onClick={() => {
                     setShowModel(false);
                     setRemovedTrainees([]);
                     refreshData();
                   }}
                 >
-                  Close
+                  Cancel
                 </button>
               </Modal.Footer>
             </Modal>
