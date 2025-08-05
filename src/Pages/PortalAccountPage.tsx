@@ -14,6 +14,9 @@ import Swal from "sweetalert2";
 // Form validation schema
 const createAccountSchema = z
   .object({
+    name: z.string().optional(),
+    email: z.string().optional(),
+    nic: z.string().optional(),
     username: z
       .string()
       .min(3, "Username must be at least 3 characters")
@@ -166,17 +169,45 @@ export default function PortalAccountPage() {
   };
 
   const onSubmitCreateAccount = async (data: CreateAccountFormData) => {
-    if (!selectedTraineeForAccount) return;
-
     setIsSubmitting(true);
     try {
-      const response = await api.post("api/trainee/create-account", {
-        nic: selectedTraineeForAccount.NIC_NO,
-        email: selectedTraineeForAccount.email,
-        name: selectedTraineeForAccount.name,
-        username: data.username,
-        password: data.password,
-      });
+      let requestData;
+
+      if (selectedTraineeForAccount) {
+        // Creating account for existing trainee
+        requestData = {
+          nic: selectedTraineeForAccount.NIC_NO,
+          email: selectedTraineeForAccount.email,
+          name: selectedTraineeForAccount.name,
+          username: data.username,
+          password: data.password,
+        };
+      } else {
+        // Creating completely new user account
+        if (!data.name || !data.email || !data.nic) {
+          await Swal.fire({
+            title: "Missing Information!",
+            text: "Please fill in all required fields (Name, Email, NIC)",
+            icon: "warning",
+            confirmButtonText: "OK",
+          });
+          setIsSubmitting(false);
+          return;
+        }
+
+        requestData = {
+          nic: data.nic,
+          email: data.email,
+          name: data.name,
+          username: data.username,
+          password: data.password,
+        };
+      }
+
+      const response = await api.post(
+        "api/trainee/create-account",
+        requestData
+      );
 
       console.log(response.data.message);
 
@@ -248,13 +279,16 @@ export default function PortalAccountPage() {
           <div className="card-body d-flex align-items-center">
             <i className="bi bi-person-plus-fill me-2"></i>
             <h5 className="card-title mb-0">Create Portal Account</h5>
-            <button className="btn btn-outline-primary mx-2 ms-auto">
+            <button
+              className="btn btn-outline-primary mx-2 ms-auto"
+              onClick={() => openCreateAccountModal(null)}
+            >
               Create New
             </button>
           </div>
         </div>
-        {traineesWithoutPortalAccounts.length == 0 ? (
-          <div className="text-black-50 text-center m-3"> </div>
+        {loading ? (
+          <MiniLoader />
         ) : (
           <>
             <div className="d-flex justify-content-between align-items-center">
@@ -288,8 +322,8 @@ export default function PortalAccountPage() {
               </div>
             </div>
             <div className=" table-responsive rounded-2  table-scrollbar">
-              {loading ? (
-                <MiniLoader />
+              {traineesWithoutPortalAccounts.length == 0 ? (
+                <div className="text-black-50 text-center m-3"> </div>
               ) : (
                 <table
                   className="table table-sm table-bordered w-100 table-striped align-middle text-center"
@@ -427,8 +461,8 @@ export default function PortalAccountPage() {
                     {registeredTrainees.map((trainee, idx) => (
                       <tr key={idx}>
                         <td>{trainee.NIC}</td>
-                        <td>{trainee.Name}</td>
-                        <td>{trainee.email}</td>
+                        <td>{trainee.nickname}</td>
+                        <td>{trainee?.email || "No email"}</td>
                         <td>
                           {moment(trainee.start_date).format("YYYY-MM-DD")}
                         </td>
@@ -456,11 +490,15 @@ export default function PortalAccountPage() {
       {/* Create Account Modal */}
       <Modal show={showModal} onHide={closeModal} centered>
         <Modal.Header closeButton>
-          <Modal.Title>Create Portal Account</Modal.Title>
+          <Modal.Title>
+            {selectedTraineeForAccount
+              ? "Create Portal Account"
+              : "Create New User Account"}
+          </Modal.Title>
         </Modal.Header>
         <form onSubmit={handleSubmit(onSubmitCreateAccount)}>
           <Modal.Body>
-            {selectedTraineeForAccount && (
+            {selectedTraineeForAccount ? (
               <div className="mb-3">
                 <h6>Creating account for:</h6>
                 <p className="text-muted">
@@ -471,6 +509,64 @@ export default function PortalAccountPage() {
                   <strong>Email:</strong> {selectedTraineeForAccount.email}
                 </p>
               </div>
+            ) : (
+              <>
+                <div className="mb-3">
+                  <label htmlFor="name" className="form-label">
+                    Full Name <span className="text-danger">*</span>
+                  </label>
+                  <input
+                    type="text"
+                    className={`form-control ${
+                      errors.name ? "is-invalid" : ""
+                    }`}
+                    id="name"
+                    placeholder="Enter full name"
+                    {...register("name")}
+                  />
+                  {errors.name && (
+                    <div className="invalid-feedback">
+                      {errors.name.message}
+                    </div>
+                  )}
+                </div>
+
+                <div className="mb-3">
+                  <label htmlFor="email" className="form-label">
+                    Email Address <span className="text-danger">*</span>
+                  </label>
+                  <input
+                    type="email"
+                    className={`form-control ${
+                      errors.email ? "is-invalid" : ""
+                    }`}
+                    id="email"
+                    placeholder="Enter email address"
+                    {...register("email")}
+                  />
+                  {errors.email && (
+                    <div className="invalid-feedback">
+                      {errors.email.message}
+                    </div>
+                  )}
+                </div>
+
+                <div className="mb-3">
+                  <label htmlFor="nic" className="form-label">
+                    NIC Number <span className="text-danger">*</span>
+                  </label>
+                  <input
+                    type="text"
+                    className={`form-control ${errors.nic ? "is-invalid" : ""}`}
+                    id="nic"
+                    placeholder="Enter NIC number"
+                    {...register("nic")}
+                  />
+                  {errors.nic && (
+                    <div className="invalid-feedback">{errors.nic.message}</div>
+                  )}
+                </div>
+              </>
             )}
 
             <div className="mb-3">
