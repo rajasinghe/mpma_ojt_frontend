@@ -49,6 +49,18 @@ const TraineesWithoutPortalAccounts = async () => {
   return traineesWithoutPortalAccounts.data;
 };
 
+const PendingTrainees = async () => {
+  try {
+    const response = await api.get("api/portal/pending_trainees");
+    return response.data.data;
+  } catch (error) {
+    console.error("Error fetching pending trainees:", error);
+    return [];
+  }
+};
+
+//console.log("pending trainees", PendingTrainees.data);
+
 type RegisteredTrainee = {
   id: number;
   NIC: string;
@@ -64,14 +76,26 @@ export default function PortalAccountPage() {
   const registeredTrainees = useLoaderData() as RegisteredTrainee[];
   const [traineesWithoutPortalAccounts, setTraineesWithoutPortalAccounts] =
     useState<any[]>([]);
+  const [pendingTrainees, setPendingTrainees] = useState<any[]>([]);
   const [searchRegistered, setSearchRegistered] = useState("");
+  const [searchPending, setSearchPending] = useState("");
   const [loadingRegistered, setLoadingRegistered] = useState(false);
+  const [loadingPending, setLoadingPending] = useState(false);
   const [loading, setLoading] = useState(false);
   const [selectedTrainees, setSelectedTrainees] = useState<string[]>([]);
+  const [selectedPendingTrainees, setSelectedPendingTrainees] = useState<
+    string[]
+  >([]);
+  const [emailSentTrainees, setEmailSentTrainees] = useState<{
+    [key: string]: number;
+  }>({});
 
   // Modal state
   const [showModal, setShowModal] = useState(false);
+  const [showEditModal, setShowEditModal] = useState(false);
   const [selectedTraineeForAccount, setSelectedTraineeForAccount] =
+    useState<any>(null);
+  const [selectedTraineeForEdit, setSelectedTraineeForEdit] =
     useState<any>(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
 
@@ -101,6 +125,13 @@ export default function PortalAccountPage() {
     } else {
       setSelectedTrainees([]);
     }
+  };
+
+  // Check if email was sent within last 2 minutes
+  const isEmailRecentlySent = (email: string) => {
+    const sentTime = emailSentTrainees[email];
+    if (!sentTime) return false;
+    return Date.now() - sentTime < 2 * 60 * 1000; // 2 minutes
   };
 
   const sendBulkEmails = async () => {
@@ -137,6 +168,129 @@ export default function PortalAccountPage() {
         });
 
         setSelectedTrainees([]);
+
+        Swal.fire({
+          icon: "success",
+          title: "Bulk Emails Sent!",
+          text: `Emails successfully sent to ${selectedTraineesData.length} trainees`,
+          timer: 2000,
+          showConfirmButton: false,
+        });
+      } catch (error) {
+        console.error("Error sending bulk emails:", error);
+        Swal.fire({
+          icon: "error",
+          title: "Failed!",
+          text: "Could not send bulk emails.",
+        });
+      }
+    }
+  };
+
+  // Pending trainees functions
+  const handleSelectPendingTrainee = (nic: string) => {
+    setSelectedPendingTrainees((prev) =>
+      prev.includes(nic) ? prev.filter((id) => id !== nic) : [...prev, nic]
+    );
+  };
+
+  const handleSelectAllPending = (e: React.ChangeEvent<HTMLInputElement>) => {
+    if (e.target.checked) {
+      setSelectedPendingTrainees(filteredPendingTrainees.map((t) => t.NIC));
+    } else {
+      setSelectedPendingTrainees([]);
+    }
+  };
+
+  const sendPendingEmail = async (email: string, NIC: string) => {
+    const confirm = await Swal.fire({
+      title: "Are you sure?",
+      text: `Send login details to ${email}?`,
+      icon: "question",
+      showCancelButton: true,
+      confirmButtonText: "Yes, send it",
+      cancelButtonText: "Cancel",
+    });
+
+    if (confirm.isConfirmed) {
+      try {
+        const response = await api.post("api/trainee/sendMails", {
+          data: [
+            {
+              email: email,
+              NIC: NIC,
+            },
+          ],
+        });
+
+        // Mark email as sent with timestamp
+        setEmailSentTrainees((prev) => ({
+          ...prev,
+          [email]: Date.now(),
+        }));
+
+        Swal.fire({
+          icon: "success",
+          title: "Email Sent!",
+          text: `Email successfully sent to ${email}`,
+          timer: 2000,
+          showConfirmButton: false,
+        });
+      } catch (error) {
+        console.error("Error sending email:", error);
+        Swal.fire({
+          icon: "error",
+          title: "Failed!",
+          text: `Could not send email to ${email}.`,
+        });
+      }
+    }
+  };
+
+  const sendBulkPendingEmails = async () => {
+    if (selectedPendingTrainees.length === 0) {
+      Swal.fire({
+        icon: "warning",
+        title: "No Selection",
+        text: "Please select at least one trainee to send emails.",
+      });
+      return;
+    }
+
+    // Create array of email and NIC pairs
+    const selectedTraineesData = pendingTrainees
+      .filter((t) => selectedPendingTrainees.includes(t.NIC))
+      .map((t) => ({
+        email: t.email,
+        NIC: t.NIC,
+      }));
+
+    const confirm = await Swal.fire({
+      title: "Send Bulk Emails?",
+      text: `Send login details to ${selectedTraineesData.length} trainees?`,
+      icon: "question",
+      showCancelButton: true,
+      confirmButtonText: "Yes, send all",
+      cancelButtonText: "Cancel",
+    });
+
+    if (confirm.isConfirmed) {
+      try {
+        const response = await api.post("api/trainee/sendMails", {
+          data: selectedTraineesData,
+        });
+
+        // Mark all emails as sent with timestamp
+        const now = Date.now();
+        setEmailSentTrainees((prev) => {
+          const updated = { ...prev };
+          selectedTraineesData.forEach((item) => {
+            updated[item.email] = now;
+          });
+          return updated;
+        });
+
+        setSelectedPendingTrainees([]);
 
         Swal.fire({
           icon: "success",
@@ -243,17 +397,91 @@ export default function PortalAccountPage() {
     }
   };
 
+  // Edit trainee functionality
+  const openEditModal = (trainee: any) => {
+    setSelectedTraineeForEdit(trainee);
+    setShowEditModal(true);
+  };
+
+  const closeEditModal = () => {
+    setShowEditModal(false);
+    setSelectedTraineeForEdit(null);
+  };
+
+  const handleEditTrainee = async (trainee: any) => {
+    // This would typically open a form to edit trainee details
+    // For now, we'll show a simple prompt to edit email
+    const { value: newEmail } = await Swal.fire({
+      title: "Edit Trainee Email",
+      input: "email",
+      inputLabel: "Email address",
+      inputValue: trainee.email,
+      showCancelButton: true,
+      inputValidator: (value) => {
+        if (!value) {
+          return "You need to write something!";
+        }
+      },
+    });
+
+    if (newEmail) {
+      try {
+        const response = await api.put(
+          `api/trainee/update-email/${trainee.NIC}`,
+          {
+            email: newEmail,
+          }
+        );
+
+        // Update the pending trainees list
+        setPendingTrainees((prev) =>
+          prev.map((t) =>
+            t.NIC === trainee.NIC ? { ...t, email: newEmail } : t
+          )
+        );
+
+        Swal.fire({
+          icon: "success",
+          title: "Updated!",
+          text: `Email updated successfully to ${newEmail}`,
+          timer: 2000,
+          showConfirmButton: false,
+        });
+      } catch (error) {
+        console.error("Error updating email:", error);
+        Swal.fire({
+          icon: "error",
+          title: "Failed!",
+          text: "Could not update email.",
+        });
+      }
+    }
+  };
+
   useEffect(() => {
     setLoading(true);
-    TraineesWithoutPortalAccounts().then((result) => {
-      if (!Array.isArray(result)) {
+    Promise.all([TraineesWithoutPortalAccounts(), PendingTrainees()])
+      .then(([traineesResult, pendingResult]) => {
+        // Handle trainees without portal accounts
+        if (!Array.isArray(traineesResult)) {
+          setTraineesWithoutPortalAccounts([]);
+        } else {
+          setTraineesWithoutPortalAccounts(traineesResult);
+        }
+
+        // Handle pending trainees
+        if (!Array.isArray(pendingResult)) {
+          setPendingTrainees([]);
+        } else {
+          setPendingTrainees(pendingResult);
+        }
+
         setLoading(false);
-        setTraineesWithoutPortalAccounts([]);
-      } else if (Array.isArray(result)) {
-        setTraineesWithoutPortalAccounts(result);
+      })
+      .catch((error) => {
+        console.error("Error loading data:", error);
         setLoading(false);
-      }
-    });
+      });
   }, []);
 
   const validateUsername = async (username: string) => {
@@ -267,6 +495,21 @@ export default function PortalAccountPage() {
     }
   };
 
+  // Filtered pending trainees - exclude registered trainees from pending trainees
+  const filteredPendingTrainees = pendingTrainees
+    .filter(
+      (pendingTrainee) =>
+        !registeredTrainees.some(
+          (registeredTrainee) => registeredTrainee.NIC === pendingTrainee.NIC
+        )
+    )
+    .filter(
+      (t) =>
+        t.NIC?.toLowerCase().includes(searchPending.toLowerCase()) ||
+        t.name?.toLowerCase().includes(searchPending.toLowerCase()) ||
+        t.email?.toLowerCase().includes(searchPending.toLowerCase())
+    );
+
   console.log("traineesWithoutPortalAccounts", registeredTrainees);
 
   return (
@@ -275,150 +518,267 @@ export default function PortalAccountPage() {
       breadCrumbs={["Home", "Trainees", "Portal Account"]}
     >
       <SubContainer>
-        <div className="card shadow-sm mb-3">
+        <div className="container-fluid border border-dark rounded-2 my-0 py-2">
+          <div className="card shadow-sm mb-3">
+            <div className="card-body d-flex align-items-center">
+              <i className="bi bi-person-plus-fill me-2"></i>
+              <h5 className="card-title mb-0">Create Portal Account</h5>
+              <button
+                className="btn btn-success mx-2 ms-auto"
+                onClick={() => openCreateAccountModal(null)}
+              >
+                Create New
+              </button>
+            </div>
+          </div>
+          {loading ? (
+            <MiniLoader />
+          ) : (
+            <>
+              <div className="d-flex justify-content-between align-items-center">
+                <input
+                  type="text"
+                  className="form-control mb-2"
+                  placeholder="Search registered trainees..."
+                  value={searchRegistered}
+                  onChange={(e) => setSearchRegistered(e.target.value)}
+                  style={{ maxWidth: 300 }}
+                />
+                <div className="d-flex justify-content-between align-items-center">
+                  <div>
+                    {selectedTrainees.length > 0 && (
+                      <div className="mb-3">
+                        <button
+                          className="btn btn-primary me-2"
+                          onClick={sendBulkEmails}
+                        >
+                          Send Bulk Emails ({selectedTrainees.length})
+                        </button>
+                        <button
+                          className="btn btn-warning me-2"
+                          //onClick={() => setShowScheduleModal(true)}
+                        >
+                          Schedule Emails
+                        </button>
+                      </div>
+                    )}
+                  </div>
+                </div>
+              </div>
+              <div className=" table-responsive rounded-2  table-scrollbar">
+                {traineesWithoutPortalAccounts.length == 0 ? (
+                  <div className="text-black-50 text-center m-3"> </div>
+                ) : (
+                  <table
+                    className="table table-sm table-bordered w-100 table-striped align-middle text-center"
+                    style={{ fontSize: "0.875rem" }}
+                  >
+                    <thead className="table-dark position-sticky top-0">
+                      <tr>
+                        <th>
+                          <input
+                            type="checkbox"
+                            checked={
+                              selectedTrainees.length ===
+                                traineesWithoutPortalAccounts.filter(
+                                  (t) => t.email
+                                ).length &&
+                              traineesWithoutPortalAccounts.filter(
+                                (t) => t.email
+                              ).length > 0
+                            }
+                            onChange={handleSelectAll}
+                          />
+                        </th>
+                        <th>NIC</th>
+                        <th>Name</th>
+                        <th>Email</th>
+                        <th>Institute</th>
+                        <th>Start Date</th>
+                        <th>Actions</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      {traineesWithoutPortalAccounts
+                        .sort((a, b) => {
+                          if (a.email && !b.email) return -1;
+                          if (!a.email && b.email) return 1;
+                          return 0;
+                        })
+                        .map((trainee, idx) => (
+                          <tr key={idx}>
+                            <td>
+                              {trainee.email ? (
+                                <input
+                                  type="checkbox"
+                                  checked={selectedTrainees.includes(
+                                    trainee.NIC_NO
+                                  )}
+                                  onChange={() =>
+                                    handleSelectTrainee(trainee.NIC_NO)
+                                  }
+                                />
+                              ) : null}
+                            </td>
+                            <td>{trainee.NIC_NO}</td>
+                            <td>{trainee.name}</td>
+                            <td>{trainee?.email || "No email"}</td>
+                            <td
+                              style={{
+                                maxWidth:
+                                  window.innerWidth >= 1200 ? "200px" : "auto",
+                                overflow:
+                                  window.innerWidth >= 1200
+                                    ? "hidden"
+                                    : "visible",
+                                textOverflow:
+                                  window.innerWidth >= 1200
+                                    ? "ellipsis"
+                                    : "initial",
+                                whiteSpace:
+                                  window.innerWidth >= 1200
+                                    ? "nowrap"
+                                    : "normal",
+                              }}
+                            >
+                              {trainee.institute_name}
+                            </td>
+                            <td>
+                              {moment(trainee.start_date).format("YYYY-MM-DD")}
+                            </td>
+                            <td>
+                              <button
+                                className="btn btn-sm btn-primary me-1 m-1"
+                                onClick={() => openCreateAccountModal(trainee)}
+                              >
+                                Create
+                              </button>
+                              <Link
+                                className={"btn btn-sm btn-warning"}
+                                to={`/OJT/trainees/${trainee.id}/profile`}
+                                style={{ width: "57px" }}
+                              >
+                                Profile
+                              </Link>
+                            </td>
+                          </tr>
+                        ))}
+                    </tbody>
+                  </table>
+                )}
+              </div>
+            </>
+          )}
+        </div>
+
+        {/* Pending Trainees Section */}
+        <div className="card shadow-sm mb-3 mt-5">
           <div className="card-body d-flex align-items-center">
-            <i className="bi bi-person-plus-fill me-2"></i>
-            <h5 className="card-title mb-0">Create Portal Account</h5>
-            <button
-              className="btn btn-outline-primary mx-2 ms-auto"
-              onClick={() => openCreateAccountModal(null)}
-            >
-              Create New
-            </button>
+            <i className="bi bi-person-check-fill me-2"></i>
+            <h5 className="card-title mb-0">Pending Trainees</h5>
           </div>
         </div>
-        {loading ? (
-          <MiniLoader />
+        {filteredPendingTrainees.length === 0 ? (
+          <div className="text-black-50 text-center m-3">
+            No pending trainees
+          </div>
         ) : (
           <>
             <div className="d-flex justify-content-between align-items-center">
               <input
                 type="text"
                 className="form-control mb-2"
-                placeholder="Search registered trainees..."
-                value={searchRegistered}
-                onChange={(e) => setSearchRegistered(e.target.value)}
+                placeholder="Search pending trainees..."
+                value={searchPending}
+                onChange={(e) => setSearchPending(e.target.value)}
                 style={{ maxWidth: 300 }}
               />
               <div className="d-flex justify-content-between align-items-center">
                 <div>
-                  {selectedTrainees.length > 0 && (
+                  {selectedPendingTrainees.length > 0 && (
                     <div className="mb-3">
                       <button
                         className="btn btn-primary me-2"
-                        onClick={sendBulkEmails}
+                        onClick={sendBulkPendingEmails}
                       >
-                        Send Bulk Emails ({selectedTrainees.length})
-                      </button>
-                      <button
-                        className="btn btn-warning me-2"
-                        //onClick={() => setShowScheduleModal(true)}
-                      >
-                        Schedule Emails
+                        Send Bulk Emails ({selectedPendingTrainees.length})
                       </button>
                     </div>
                   )}
                 </div>
               </div>
             </div>
-            <div className=" table-responsive rounded-2  table-scrollbar">
-              {traineesWithoutPortalAccounts.length == 0 ? (
-                <div className="text-black-50 text-center m-3"> </div>
-              ) : (
-                <table
-                  className="table table-sm table-bordered w-100 table-striped align-middle text-center"
-                  style={{ fontSize: "0.875rem" }}
-                >
-                  <thead className="table-dark position-sticky top-0">
-                    <tr>
-                      <th>
+            <div className="table-responsive rounded-2 table-scrollbar">
+              <table
+                className="table table-sm table-bordered w-100 table-striped align-middle text-center"
+                style={{ fontSize: "0.875rem" }}
+              >
+                <thead className="table-dark position-sticky top-0">
+                  <tr>
+                    <th>
+                      <input
+                        type="checkbox"
+                        checked={
+                          selectedPendingTrainees.length ===
+                            filteredPendingTrainees.length &&
+                          filteredPendingTrainees.length > 0
+                        }
+                        onChange={handleSelectAllPending}
+                      />
+                    </th>
+                    <th>NIC</th>
+                    <th>Name</th>
+                    <th>Email</th>
+                    <th>Date</th>
+                    <th>Actions</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {filteredPendingTrainees.map((trainee, idx) => (
+                    <tr key={idx}>
+                      <td>
                         <input
                           type="checkbox"
-                          checked={
-                            selectedTrainees.length ===
-                              traineesWithoutPortalAccounts.filter(
-                                (t) => t.email
-                              ).length &&
-                            traineesWithoutPortalAccounts.filter((t) => t.email)
-                              .length > 0
+                          checked={selectedPendingTrainees.includes(
+                            trainee.NIC
+                          )}
+                          onChange={() =>
+                            handleSelectPendingTrainee(trainee.NIC)
                           }
-                          onChange={handleSelectAll}
                         />
-                      </th>
-                      <th>NIC</th>
-                      <th>Name</th>
-                      <th>Email</th>
-                      <th>Institute</th>
-                      <th>Start Date</th>
-                      <th>Actions</th>
+                      </td>
+                      <td>{trainee.NIC}</td>
+                      <td>{trainee.nickname}</td>
+                      <td>{trainee.email || "No email"}</td>
+                      <td>{moment(trainee.date).format("YYYY-MM-DD")}</td>
+                      <td>
+                        <button
+                          className="btn btn-sm btn-primary me-1 m-1"
+                          onClick={() =>
+                            sendPendingEmail(trainee.email, trainee.NIC)
+                          }
+                          disabled={isEmailRecentlySent(trainee.email)}
+                          title={
+                            isEmailRecentlySent(trainee.email)
+                              ? "Email sent recently. Please wait 2 minutes."
+                              : "Send email"
+                          }
+                        >
+                          {isEmailRecentlySent(trainee.email)
+                            ? "Wait..."
+                            : "Resend"}
+                        </button>
+                        <button
+                          className="btn btn-sm btn-warning me-1 m-1"
+                          onClick={() => handleEditTrainee(trainee)}
+                        >
+                          Edit
+                        </button>
+                      </td>
                     </tr>
-                  </thead>
-                  <tbody>
-                    {traineesWithoutPortalAccounts
-                      .sort((a, b) => {
-                        if (a.email && !b.email) return -1;
-                        if (!a.email && b.email) return 1;
-                        return 0;
-                      })
-                      .map((trainee, idx) => (
-                        <tr key={idx}>
-                          <td>
-                            {trainee.email ? (
-                              <input
-                                type="checkbox"
-                                checked={selectedTrainees.includes(
-                                  trainee.NIC_NO
-                                )}
-                                onChange={() =>
-                                  handleSelectTrainee(trainee.NIC_NO)
-                                }
-                              />
-                            ) : null}
-                          </td>
-                          <td>{trainee.NIC_NO}</td>
-                          <td>{trainee.name}</td>
-                          <td>{trainee?.email || "No email"}</td>
-                          <td
-                            style={{
-                              maxWidth:
-                                window.innerWidth >= 1200 ? "200px" : "auto",
-                              overflow:
-                                window.innerWidth >= 1200
-                                  ? "hidden"
-                                  : "visible",
-                              textOverflow:
-                                window.innerWidth >= 1200
-                                  ? "ellipsis"
-                                  : "initial",
-                              whiteSpace:
-                                window.innerWidth >= 1200 ? "nowrap" : "normal",
-                            }}
-                          >
-                            {trainee.institute_name}
-                          </td>
-                          <td>
-                            {moment(trainee.start_date).format("YYYY-MM-DD")}
-                          </td>
-                          <td>
-                            <button
-                              className="btn btn-sm btn-primary me-1 m-1"
-                              onClick={() => openCreateAccountModal(trainee)}
-                            >
-                              Create
-                            </button>
-                            <Link
-                              className={"btn btn-sm btn-warning"}
-                              to={`/OJT/trainees/${trainee.id}/profile`}
-                              style={{ width: "57px" }}
-                            >
-                              Profile
-                            </Link>
-                          </td>
-                        </tr>
-                      ))}
-                  </tbody>
-                </table>
-              )}
+                  ))}
+                </tbody>
+              </table>
             </div>
           </>
         )}
