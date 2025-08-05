@@ -7,6 +7,8 @@ import "bootstrap/dist/css/bootstrap.css";
 import "bootstrap-icons/font/bootstrap-icons.css";
 import "bootstrap/dist/js/bootstrap.bundle.min";
 import ViewTraineesPage from "./Pages/ViewTraineesPage.tsx";
+
+import { SessionProvider } from "./contexts/SessionContext.tsx";
 import {
   newTraineesInsertPageLoader,
   traineeAddSchedulePageLoader,
@@ -32,8 +34,15 @@ import ErrorHandler from "./Components/ErrorHandler.tsx";
 import TraineeBankDetailsUpdatePage from "./Pages/TraineeBankDetailsUpdatePage.tsx";
 import TraineeDetailsUpdatePage from "./Pages/Admin/TraineeDetailsUpdate.tsx";
 import UserProfilePage from "./Pages/UserProfilePage.tsx";
-import { createUserLoader, profileLoader, viewUsersPageLoader } from "./loaders/UserLoaders.ts";
-import { departmentSummaryLoader, singleDepartmentLoader } from "./loaders/DepartmentLoader.ts";
+import {
+  createUserLoader,
+  profileLoader,
+  viewUsersPageLoader,
+} from "./loaders/UserLoaders.ts";
+import {
+  departmentSummaryLoader,
+  singleDepartmentLoader,
+} from "./loaders/DepartmentLoader.ts";
 import DepartmentsPage from "./Pages/DepartmentsPage.tsx";
 import DepartmentPage from "./Pages/DepartmentPage.tsx";
 import api from "./api.ts";
@@ -43,7 +52,7 @@ import { inboxLoader } from "./loaders/inboxLoader.ts";
 import NewInterviewPage from "./features/Interview/interviewPage.tsx";
 import ViewInterviewPage from "./features/Interview/viewInterviewPage.tsx";
 import EditInterviewPage from "./features/Interview/editInterviewPage.tsx";
-import {InterviewLoader} from "./loaders/InterviewLoader.ts";
+import { InterviewLoader } from "./loaders/InterviewLoader.ts";
 
 export const setToken = () => {
   const token = localStorage.getItem("token");
@@ -179,4 +188,8 @@ const router = createBrowserRouter([
   },
 ]);
 
-createRoot(document.getElementById("root")!).render(<RouterProvider router={router} />);
+createRoot(document.getElementById("root")!).render(
+  <SessionProvider>
+    <RouterProvider router={router} />
+  </SessionProvider>
+);

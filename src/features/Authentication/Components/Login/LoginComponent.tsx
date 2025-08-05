@@ -5,7 +5,7 @@ import { zodResolver } from "@hookform/resolvers/zod";
 import "./style.css";
 import api from "../../../../api";
 import Swal from "sweetalert2";
-import { setToken } from "../../../../main";
+import { useSession } from "../../../../contexts/SessionContext";
 import { AxiosError } from "axios";
 interface LoginComponentProps {
   className?: string;
@@ -25,6 +25,7 @@ function LoginComponent({}: LoginComponentProps) {
   } = useForm<loginRequest>({ resolver: zodResolver(schema) });
 
   const navigate = useNavigate();
+  const { login: sessionLogin } = useSession();
 
   //const usercontext = useContext(UserContext);
 
@@ -40,8 +41,8 @@ function LoginComponent({}: LoginComponentProps) {
         },
       });
       const response = await api.post("auth/login", data);
-      localStorage.setItem("token", response.data);
-      setToken();
+      sessionLogin(response.data);
+
       console.log(response.data);
       navigate("/OJT/trainees");
       Swal.close();
