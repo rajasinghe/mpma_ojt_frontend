@@ -31,6 +31,13 @@ function LoginComponent({}: LoginComponentProps) {
   // State for UI enhancements
   const [showPassword, setShowPassword] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
+  const [isFirstLogin, setIsFirstLogin] = useState(true);
+
+  // Check if user has logged in before
+  useState(() => {
+    const hasLoggedInBefore = localStorage.getItem("hasLoggedIn");
+    setIsFirstLogin(!hasLoggedInBefore);
+  });
 
   const {
     register,
@@ -59,6 +66,7 @@ function LoginComponent({}: LoginComponentProps) {
 
       const response = await api.post("auth/login", data);
       localStorage.setItem("token", response.data);
+      localStorage.setItem("hasLoggedIn", "true"); // Mark as logged in before
       setToken();
       console.log(response.data);
 
@@ -114,8 +122,12 @@ function LoginComponent({}: LoginComponentProps) {
             <div className="login-logo">
               <img src={logo} alt="MPMA Logo" className="logo-image" />
             </div>
-            <h1 className="login-title">Welcome Back</h1>
-            <p className="login-subtitle">Sign in to your MPMA OJT Management account</p>
+            <h1 className="login-title">
+              {isFirstLogin ? "Welcome" : "Welcome Back"}
+            </h1>
+            <p className="login-subtitle">
+              Sign in to your MPMA OJT Management account
+            </p>
           </div>
 
           {/* Form Section */}
@@ -169,7 +181,9 @@ function LoginComponent({}: LoginComponentProps) {
                   disabled={isSubmitting || isLoading}
                   aria-label={showPassword ? "Hide password" : "Show password"}
                 >
-                  <i className={`bi ${showPassword ? "bi-eye-slash" : "bi-eye"}`}></i>
+                  <i
+                    className={`bi ${showPassword ? "bi-eye-slash" : "bi-eye"}`}
+                  ></i>
                 </button>
               </div>
               {errors.password && (
@@ -183,7 +197,9 @@ function LoginComponent({}: LoginComponentProps) {
             {/* Submit Button */}
             <button
               type="submit"
-              className={`login-button ${isSubmitting || isLoading ? "loading" : ""}`}
+              className={`login-button ${
+                isSubmitting || isLoading ? "loading" : ""
+              }`}
               disabled={isSubmitting || isLoading}
             >
               {isSubmitting || isLoading ? (
@@ -203,7 +219,7 @@ function LoginComponent({}: LoginComponentProps) {
             <div className="login-footer">
               <p className="signup-text">
                 Don't have an account?{" "}
-                <Link to="/request_account" className="signup-link">
+                <Link to="/#" className="signup-link">
                   Request Access
                 </Link>
               </p>
