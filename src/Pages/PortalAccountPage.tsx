@@ -79,7 +79,6 @@ export default function PortalAccountPage() {
   const [pendingTrainees, setPendingTrainees] = useState<any[]>([]);
   const [searchRegistered, setSearchRegistered] = useState("");
   const [searchPending, setSearchPending] = useState("");
-  const [loadingRegistered, setLoadingRegistered] = useState(false);
   const [loadingPending, setLoadingPending] = useState(false);
   const [loading, setLoading] = useState(false);
   const [selectedTrainees, setSelectedTrainees] = useState<string[]>([]);
@@ -460,6 +459,7 @@ export default function PortalAccountPage() {
 
   useEffect(() => {
     setLoading(true);
+    setLoadingPending(true);
     Promise.all([TraineesWithoutPortalAccounts(), PendingTrainees()])
       .then(([traineesResult, pendingResult]) => {
         // Handle trainees without portal accounts
@@ -477,10 +477,12 @@ export default function PortalAccountPage() {
         }
 
         setLoading(false);
+        setLoadingPending(false);
       })
       .catch((error) => {
         console.error("Error loading data:", error);
         setLoading(false);
+        setLoadingPending(false);
       });
   }, []);
 
@@ -518,7 +520,7 @@ export default function PortalAccountPage() {
       breadCrumbs={["Home", "Trainees", "Portal Account"]}
     >
       <SubContainer>
-        <div className="container-fluid border border-dark rounded-2 my-0 py-2">
+        <div className="container-fluid border border-dark rounded-2 my-2 py-2">
           <div className="card shadow-sm mb-3">
             <div className="card-body d-flex align-items-center">
               <i className="bi bi-person-plus-fill me-2"></i>
@@ -622,7 +624,26 @@ export default function PortalAccountPage() {
                             </td>
                             <td>{trainee.NIC_NO}</td>
                             <td>{trainee.name}</td>
-                            <td>{trainee?.email || "No email"}</td>
+                            <td
+                              style={{
+                                maxWidth:
+                                  window.innerWidth >= 1200 ? "200px" : "auto",
+                                overflow:
+                                  window.innerWidth >= 1200
+                                    ? "hidden"
+                                    : "visible",
+                                textOverflow:
+                                  window.innerWidth >= 1200
+                                    ? "ellipsis"
+                                    : "initial",
+                                whiteSpace:
+                                  window.innerWidth >= 1200
+                                    ? "nowrap"
+                                    : "normal",
+                              }}
+                            >
+                              {trainee?.email || "No email"}
+                            </td>
                             <td
                               style={{
                                 maxWidth:
@@ -672,18 +693,18 @@ export default function PortalAccountPage() {
         </div>
 
         {/* Pending Trainees Section */}
-        <div className="card shadow-sm mb-3 mt-5">
-          <div className="card-body d-flex align-items-center">
-            <i className="bi bi-person-check-fill me-2"></i>
-            <h5 className="card-title mb-0">Pending Trainees</h5>
+        <div className="container-fluid border border-dark rounded-2 my-2 py-2">
+          <div className="card shadow-sm mb-3">
+            <div className="card-body d-flex align-items-center">
+              <i className="bi bi-person-check-fill me-2"></i>
+              <h5 className="card-title mb-0">Pending Trainees</h5>
+            </div>
           </div>
-        </div>
-        {filteredPendingTrainees.length === 0 ? (
-          <div className="text-black-50 text-center m-3">
-            No pending trainees
-          </div>
-        ) : (
-          <>
+          {loadingPending ? (
+            <div className="text-black-50 text-center m-3">
+              No pending trainees
+            </div>
+          ) : (
             <div className="d-flex justify-content-between align-items-center">
               <input
                 type="text"
@@ -701,13 +722,19 @@ export default function PortalAccountPage() {
                         className="btn btn-primary me-2"
                         onClick={sendBulkPendingEmails}
                       >
-                        Send Bulk Emails ({selectedPendingTrainees.length})
+                        Resend Emails ({selectedPendingTrainees.length})
                       </button>
                     </div>
                   )}
                 </div>
               </div>
             </div>
+          )}
+          {filteredPendingTrainees.length === 0 ? (
+            <div className="text-black-50 text-center m-3">
+              No pending trainees
+            </div>
+          ) : (
             <div className="table-responsive rounded-2 table-scrollbar">
               <table
                 className="table table-sm table-bordered w-100 table-striped align-middle text-center"
@@ -780,35 +807,36 @@ export default function PortalAccountPage() {
                 </tbody>
               </table>
             </div>
-          </>
-        )}
-
-        <div className="card shadow-sm mb-3 mt-5">
-          <div className="card-body d-flex align-items-center">
-            <i className="bi bi-people-fill me-2"></i>
-            <h5 className="card-title mb-0">Portal Created Trainees</h5>
-          </div>
+          )}
         </div>
-        {registeredTrainees.length == 0 ? (
-          <div className="text-black-50 text-center m-3">
-            No registered trainees
+
+        <div className="container-fluid border border-dark rounded-2 my-2 py-2">
+          <div className="card shadow-sm mb-3">
+            <div className="card-body d-flex align-items-center">
+              <i className="bi bi-people-fill me-2"></i>
+              <h5 className="card-title mb-0">Portal Created Trainees</h5>
+            </div>
           </div>
-        ) : (
-          <>
-            <input
-              type="text"
-              className="form-control mb-2"
-              placeholder="Search registered trainees..."
-              value={searchRegistered}
-              onChange={(e) => setSearchRegistered(e.target.value)}
-              style={{ maxWidth: 300 }}
-            />
-            <div className="table-responsive">
-              {loadingRegistered ? (
-                <MiniLoader />
-              ) : (
-                <table className="table table-sm table-bordered w-100 table-striped align-middle text-center">
-                  <thead className="table-dark">
+          {registeredTrainees.length == 0 ? (
+            <div className="text-black-50 text-center m-3">
+              No registered trainees
+            </div>
+          ) : (
+            <>
+              <input
+                type="text"
+                className="form-control mb-2"
+                placeholder="Search registered trainees..."
+                value={searchRegistered}
+                onChange={(e) => setSearchRegistered(e.target.value)}
+                style={{ maxWidth: 300 }}
+              />
+              <div className="table-responsive rounded-2 table-scrollbar">
+                <table
+                  className="table table-sm table-bordered w-100 table-striped align-middle text-center"
+                  style={{ fontSize: "0.875rem" }}
+                >
+                  <thead className="table-dark position-sticky top-0">
                     <tr>
                       <th>NIC</th>
                       <th>Name</th>
@@ -841,10 +869,10 @@ export default function PortalAccountPage() {
                     ))}
                   </tbody>
                 </table>
-              )}
-            </div>
-          </>
-        )}
+              </div>
+            </>
+          )}
+        </div>
       </SubContainer>
 
       {/* Create Account Modal */}

@@ -40,6 +40,18 @@ export default function InterviewTables({
   const [showModal, setShowModal] = useState(false);
   const [lastSevenDaysFilter, setLastSevenDaysFilter] = useState("");
   const [allInterviewsFilter, setAllInterviewsFilter] = useState("");
+
+  // Email functionality states
+  const [selectedLastSevenDays, setSelectedLastSevenDays] = useState<string[]>(
+    []
+  );
+  const [selectedAllInterviews, setSelectedAllInterviews] = useState<string[]>(
+    []
+  );
+  const [emailSentTrainees, setEmailSentTrainees] = useState<{
+    [key: string]: number;
+  }>({});
+
   const navigate = useNavigate();
 
   const handleShowDetails = (interview: Interview) => {
@@ -103,103 +115,369 @@ export default function InterviewTables({
     }
   };
 
-  const renderTable = (interviews: Interview[], _title: string) => (
-    <div className="table-responsive">
-      <table className="table table-striped table-sm table-bordered table-hover">
-        <thead className="table-dark">
-          <tr className="small">
-            <th>NIC</th>
-            <th>Name</th>
-            <th>Email</th>
-            <th>Start Date</th>
-            <th>Action</th>
-          </tr>
-        </thead>
-        <tbody>
-          {interviews.map((interview) => {
-            // Compare only the date part (ignore time)
-            const startDate = new Date(interview.date);
-            const today = new Date();
-            startDate.setHours(0, 0, 0, 0);
-            today.setHours(0, 0, 0, 0);
-            const isFuture = startDate > today;
-            return (
-              <tr
-                key={interview.id}
-                className={isFuture ? "future-interview-row" : ""}
-              >
-                <td>{interview.NIC}</td>
-                <td>{interview.name}</td>
-                <td>
-                  <div
-                    style={{
-                      display: "flex",
-                      alignItems: "center",
-                      gap: 4,
-                    }}
-                  >
-                    <span
-                      title={interview.email}
-                      style={{
-                        display: "inline-block",
-                        maxWidth: 200,
-                        overflow: "hidden",
-                        textOverflow: "ellipsis",
-                        whiteSpace: "nowrap",
-                        fontFamily: "monospace",
-                      }}
+  // Email functionality functions
+  const handleSelectLastSevenDays = (nic: string) => {
+    setSelectedLastSevenDays((prev) =>
+      prev.includes(nic) ? prev.filter((id) => id !== nic) : [...prev, nic]
+    );
+  };
+
+  const handleSelectAllLastSevenDays = (
+    e: React.ChangeEvent<HTMLInputElement>
+  ) => {
+    const interviewsWithEmail = filterInterviews(
+      lastSevenDays,
+      lastSevenDaysFilter
+    ).filter((interview) => interview.email);
+    if (e.target.checked) {
+      setSelectedLastSevenDays(
+        interviewsWithEmail.map((interview) => interview.NIC)
+      );
+    } else {
+      setSelectedLastSevenDays([]);
+    }
+  };
+
+  const handleSelectAllInterviews = (nic: string) => {
+    setSelectedAllInterviews((prev) =>
+      prev.includes(nic) ? prev.filter((id) => id !== nic) : [...prev, nic]
+    );
+  };
+
+  const handleSelectAllAllInterviews = (
+    e: React.ChangeEvent<HTMLInputElement>
+  ) => {
+    const interviewsWithEmail = filterInterviews(
+      allInterviews,
+      allInterviewsFilter
+    ).filter((interview) => interview.email);
+    if (e.target.checked) {
+      setSelectedAllInterviews(
+        interviewsWithEmail.map((interview) => interview.NIC)
+      );
+    } else {
+      setSelectedAllInterviews([]);
+    }
+  };
+
+  // Check if email was sent within last 2 minutes
+  const isEmailRecentlySent = (email: string) => {
+    const sentTime = emailSentTrainees[email];
+    if (!sentTime) return false;
+    return Date.now() - sentTime < 2 * 60 * 1000; // 2 minutes
+  };
+
+  const sendBulkEmailsLastSevenDays = async () => {
+    if (selectedLastSevenDays.length === 0) {
+      Swal.fire({
+        icon: "warning",
+        title: "No Selection",
+        text: "Please select at least one trainee to send emails.",
+      });
+      return;
+    }
+
+    const selectedInterviewsData = filterInterviews(
+      lastSevenDays,
+      lastSevenDaysFilter
+    )
+      .filter((interview) => selectedLastSevenDays.includes(interview.NIC))
+      .map((interview) => ({
+        email: interview.email,
+        NIC: interview.NIC,
+      }));
+
+    const confirm = await Swal.fire({
+      title: "Send Bulk Emails?",
+      text: `Send login details to ${selectedInterviewsData.length} trainees?`,
+      icon: "question",
+      showCancelButton: true,
+      confirmButtonText: "Yes, send all",
+      cancelButtonText: "Cancel",
+    });
+
+    if (confirm.isConfirmed) {
+      try {
+        await api.post("api/trainee/sendMails", {
+          data: selectedInterviewsData,
+        });
+
+        setSelectedLastSevenDays([]);
+
+        Swal.fire({
+          icon: "success",
+          title: "Bulk Emails Sent!",
+          text: `Emails successfully sent to ${selectedInterviewsData.length} trainees`,
+          timer: 2000,
+          showConfirmButton: false,
+        });
+      } catch (error) {
+        console.error("Error sending bulk emails:", error);
+        Swal.fire({
+          icon: "error",
+          title: "Failed!",
+          text: "Could not send bulk emails.",
+        });
+      }
+    }
+  };
+
+  const sendBulkEmailsAllInterviews = async () => {
+    if (selectedAllInterviews.length === 0) {
+      Swal.fire({
+        icon: "warning",
+        title: "No Selection",
+        text: "Please select at least one trainee to send emails.",
+      });
+      return;
+    }
+
+    const selectedInterviewsData = filterInterviews(
+      allInterviews,
+      allInterviewsFilter
+    )
+      .filter((interview) => selectedAllInterviews.includes(interview.NIC))
+      .map((interview) => ({
+        email: interview.email,
+        NIC: interview.NIC,
+      }));
+
+    const confirm = await Swal.fire({
+      title: "Send Bulk Emails?",
+      text: `Send login details to ${selectedInterviewsData.length} trainees?`,
+      icon: "question",
+      showCancelButton: true,
+      confirmButtonText: "Yes, send all",
+      cancelButtonText: "Cancel",
+    });
+
+    if (confirm.isConfirmed) {
+      try {
+        await api.post("api/trainee/sendMails", {
+          data: selectedInterviewsData,
+        });
+
+        setSelectedAllInterviews([]);
+
+        Swal.fire({
+          icon: "success",
+          title: "Bulk Emails Sent!",
+          text: `Emails successfully sent to ${selectedInterviewsData.length} trainees`,
+          timer: 2000,
+          showConfirmButton: false,
+        });
+      } catch (error) {
+        console.error("Error sending bulk emails:", error);
+        Swal.fire({
+          icon: "error",
+          title: "Failed!",
+          text: "Could not send bulk emails.",
+        });
+      }
+    }
+  };
+
+  const sendSingleEmail = async (email: string, NIC: string) => {
+    const confirm = await Swal.fire({
+      title: "Are you sure?",
+      text: `Send login details to ${email}?`,
+      icon: "question",
+      showCancelButton: true,
+      confirmButtonText: "Yes, send it",
+      cancelButtonText: "Cancel",
+    });
+
+    if (confirm.isConfirmed) {
+      try {
+        await api.post("api/trainee/sendMails", {
+          data: [
+            {
+              email: email,
+              NIC: NIC,
+            },
+          ],
+        });
+
+        // Mark email as sent with timestamp
+        setEmailSentTrainees((prev) => ({
+          ...prev,
+          [email]: Date.now(),
+        }));
+
+        Swal.fire({
+          icon: "success",
+          title: "Email Sent!",
+          text: `Email successfully sent to ${email}`,
+          timer: 2000,
+          showConfirmButton: false,
+        });
+      } catch (error) {
+        console.error("Error sending email:", error);
+        Swal.fire({
+          icon: "error",
+          title: "Failed!",
+          text: `Could not send email to ${email}.`,
+        });
+      }
+    }
+  };
+
+  const renderTable = (interviews: Interview[], title: string) => {
+    const isLastSevenDays = title === "Last 7 Days Interviews";
+    const selectedInterviews = isLastSevenDays
+      ? selectedLastSevenDays
+      : selectedAllInterviews;
+    const handleSelectInterview = isLastSevenDays
+      ? handleSelectLastSevenDays
+      : handleSelectAllInterviews;
+    const handleSelectAll = isLastSevenDays
+      ? handleSelectAllLastSevenDays
+      : handleSelectAllAllInterviews;
+    const currentFilter = isLastSevenDays
+      ? lastSevenDaysFilter
+      : allInterviewsFilter;
+
+    const filteredInterviews = filterInterviews(interviews, currentFilter);
+    const interviewsWithEmail = filteredInterviews.filter(
+      (interview) => interview.email
+    );
+
+    return (
+      <div className="table-responsive">
+        <table className="table table-striped table-sm table-bordered table-hover">
+          <thead className="table-dark">
+            <tr className="small">
+              <th>
+                <input
+                  type="checkbox"
+                  checked={
+                    selectedInterviews.length === interviewsWithEmail.length &&
+                    interviewsWithEmail.length > 0
+                  }
+                  onChange={handleSelectAll}
+                  title="Select all trainees with email"
+                />
+              </th>
+              <th>NIC</th>
+              <th>Name</th>
+              <th>Email</th>
+              <th>Start Date</th>
+              <th>Action</th>
+            </tr>
+          </thead>
+          <tbody>
+            {filteredInterviews.map((interview) => {
+              // Compare only the date part (ignore time)
+              const startDate = new Date(interview.date);
+              const today = new Date();
+              startDate.setHours(0, 0, 0, 0);
+              today.setHours(0, 0, 0, 0);
+              const isFuture = startDate > today;
+              return (
+                <tr
+                  key={interview.id}
+                  className={isFuture ? "future-interview-row" : ""}
+                >
+                  <td>
+                    {interview.email ? (
+                      <input
+                        type="checkbox"
+                        checked={selectedInterviews.includes(interview.NIC)}
+                        onChange={() => handleSelectInterview(interview.NIC)}
+                      />
+                    ) : null}
+                  </td>
+                  <td>{interview.NIC}</td>
+                  <td>{interview.name}</td>
+                  <td>
+                    {interview.email ? (
+                      <div
+                        style={{
+                          display: "flex",
+                          alignItems: "center",
+                          gap: 4,
+                        }}
+                      >
+                        <span
+                          title={interview.email}
+                          style={{
+                            display: "inline-block",
+                            maxWidth: 150,
+                            overflow: "hidden",
+                            textOverflow: "ellipsis",
+                            whiteSpace: "nowrap",
+                            fontFamily: "monospace",
+                          }}
+                        >
+                          {interview.email}
+                        </span>
+                        <button
+                          type="button"
+                          className="btn btn-link btn-sm p-0"
+                          style={{ fontSize: "1em", flexShrink: 0 }}
+                          onClick={() =>
+                            navigator.clipboard.writeText(interview.email)
+                          }
+                          title="Copy email"
+                        >
+                          <i className="bi bi-clipboard"></i>
+                        </button>
+                        <button
+                          className="btn btn-sm btn-success ms-1"
+                          onClick={() =>
+                            sendSingleEmail(interview.email, interview.NIC)
+                          }
+                          disabled={isEmailRecentlySent(interview.email)}
+                          title={
+                            isEmailRecentlySent(interview.email)
+                              ? "Email sent recently"
+                              : "Send login details"
+                          }
+                        >
+                          <i className="bi bi-envelope"></i>
+                        </button>
+                      </div>
+                    ) : (
+                      <span className="text-muted">No email</span>
+                    )}
+                  </td>
+                  <td>{moment(interview.date).format("YYYY-MM-DD")}</td>
+                  <td style={{ verticalAlign: "middle" }}>
+                    <div
+                      className="d-flex justify-content-center"
+                      style={{ height: "100%" }}
                     >
-                      {interview.email}
-                    </span>
-                    <button
-                      type="button"
-                      className="btn btn-link btn-sm p-0"
-                      style={{ fontSize: "1em", flexShrink: 0 }}
-                      onClick={() =>
-                        navigator.clipboard.writeText(interview.email)
-                      }
-                      title="Copy email"
-                    >
-                      <i className="bi bi-clipboard"></i>
-                    </button>
-                  </div>
-                </td>
-                <td>{moment(interview.date).format("YYYY-MM-DD")}</td>
-                <td style={{ verticalAlign: "middle" }}>
-                  <div
-                    className="d-flex justify-content-center"
-                    style={{ height: "100%" }}
-                  >
-                    <button
-                      className="btn btn-sm btn-outline-info me-2"
-                      onClick={() => handleShowDetails(interview)}
-                      title="View Details"
-                    >
-                      <i className="bi bi-eye"></i> Details
-                    </button>
-                    <img
-                      alt="Edit"
-                      className="btn btn-sm btn-outline-secondary me-2"
-                      style={{ width: "auto", height: "34px" }}
-                      onClick={() => navigate(`${interview.NIC}/edit`)}
-                      src={editIcon}
-                    />
-                    <img
-                      alt="Delete"
-                      style={{ width: "auto", height: "34px" }}
-                      onClick={() => handleDelete(interview.NIC)}
-                      className="btn btn-sm btn-outline-secondary"
-                      src={removeIcon}
-                    />
-                  </div>
-                </td>
-              </tr>
-            );
-          })}
-        </tbody>
-      </table>
-    </div>
-  );
+                      <button
+                        className="btn btn-sm btn-outline-info me-2"
+                        onClick={() => handleShowDetails(interview)}
+                        title="View Details"
+                      >
+                        <i className="bi bi-eye"></i> Details
+                      </button>
+                      <img
+                        alt="Edit"
+                        className="btn btn-sm btn-outline-secondary me-2"
+                        style={{ width: "auto", height: "34px" }}
+                        onClick={() => navigate(`${interview.NIC}/edit`)}
+                        src={editIcon}
+                      />
+                      <img
+                        alt="Delete"
+                        style={{ width: "auto", height: "34px" }}
+                        onClick={() => handleDelete(interview.NIC)}
+                        className="btn btn-sm btn-outline-secondary"
+                        src={removeIcon}
+                      />
+                    </div>
+                  </td>
+                </tr>
+              );
+            })}
+          </tbody>
+        </table>
+      </div>
+    );
+  };
 
   return (
     <div className="container-fluid px-4">
@@ -233,6 +511,16 @@ export default function InterviewTables({
                   </button>
                 )}
               </div>
+            </div>
+            <div className="col-md-6 d-flex justify-content-end align-items-center">
+              {selectedLastSevenDays.length > 0 && (
+                <button
+                  className="btn btn-primary"
+                  onClick={sendBulkEmailsLastSevenDays}
+                >
+                  Send Bulk Emails ({selectedLastSevenDays.length})
+                </button>
+              )}
             </div>
           </div>
 
@@ -289,6 +577,16 @@ export default function InterviewTables({
                     </button>
                   )}
                 </div>
+              </div>
+              <div className="col-md-6 d-flex justify-content-end align-items-center">
+                {selectedAllInterviews.length > 0 && (
+                  <button
+                    className="btn btn-primary"
+                    onClick={sendBulkEmailsAllInterviews}
+                  >
+                    Send Bulk Emails ({selectedAllInterviews.length})
+                  </button>
+                )}
               </div>
             </div>
 
