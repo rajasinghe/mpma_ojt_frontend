@@ -20,9 +20,28 @@ interface SessionContextType {
 
 const SessionContext = createContext<SessionContextType | undefined>(undefined);
 
+// Add JWT decode function at the top
+const decodeJWT = (token: string) => {
+  try {
+    const base64Url = token.split(".")[1];
+    const base64 = base64Url.replace(/-/g, "+").replace(/_/g, "/");
+    const jsonPayload = decodeURIComponent(
+      atob(base64)
+        .split("")
+        .map(function (c) {
+          return "%" + ("00" + c.charCodeAt(0).toString(16)).slice(-2);
+        })
+        .join("")
+    );
+    return JSON.parse(jsonPayload);
+  } catch (error) {
+    console.error("Failed to decode JWT:", error);
+    return null;
+  }
+};
+
 // Session timeout constants (in milliseconds)
-const SESSION_DURATION = 4 * 60 * 1000; // 1 hour (matches backend TOKEN_EXP_TIME)
-const WARNING_TIME = 5 * 60 * 1000; // Show warning 5 minutes before expiration
+const WARNING_TIME = 1 * 60 * 1000; // Show warning 5 minutes before expiration
 const CHECK_INTERVAL = 30 * 1000; // Check every 30 seconds
 
 interface SessionProviderProps {
@@ -36,47 +55,55 @@ export const SessionProvider: React.FC<SessionProviderProps> = ({
   const [user, setUser] = useState<any>(null);
   const [sessionTimeLeft, setSessionTimeLeft] = useState<number>(() => {
     const token = localStorage.getItem("token");
-    const storedStartTime = localStorage.getItem("sessionStartTime");
+    if (!token) return 0;
 
-    if (token && storedStartTime) {
-      const elapsed = Date.now() - parseInt(storedStartTime);
-      const timeLeft = SESSION_DURATION - elapsed;
-      return Math.max(0, timeLeft);
-    }
+    const decoded = decodeJWT(token);
+    if (!decoded || !decoded.exp) return 0;
 
-    return 0;
+    const expirationTime = decoded.exp * 1000;
+    const timeLeft = expirationTime - Date.now();
+    return Math.max(0, timeLeft);
   });
   const [isSessionWarningVisible, setIsSessionWarningVisible] =
     useState<boolean>(false);
-  const [sessionStartTime, setSessionStartTime] = useState<number | null>(null);
+  // const [sessionStartTime, setSessionStartTime] = useState<number | null>(null);
 
   // Calculate time left in session
   const calculateTimeLeft = useCallback(() => {
-    if (!sessionStartTime) return 0;
-    const elapsed = Date.now() - sessionStartTime;
-    const timeLeft = SESSION_DURATION - elapsed;
+    const token = localStorage.getItem("token");
+    if (!token) return 0;
+
+    const decoded = decodeJWT(token);
+    if (!decoded || !decoded.exp) return 0;
+
+    const expirationTime = decoded.exp * 1000; // Convert to milliseconds
+    const timeLeft = expirationTime - Date.now();
     return Math.max(0, timeLeft);
-  }, [sessionStartTime]);
+  }, []);
 
   // Login function
   const login = useCallback((token: string) => {
     localStorage.setItem("token", token);
-    localStorage.setItem("sessionStartTime", Date.now().toString());
     api.defaults.headers.common.Authorization = token;
     setIsAuthenticated(true);
-    setSessionStartTime(Date.now());
-    setSessionTimeLeft(SESSION_DURATION);
     setIsSessionWarningVisible(false);
+
+    // Update sessionTimeLeft immediately
+    const decoded = decodeJWT(token);
+    if (decoded && decoded.exp) {
+      const expirationTime = decoded.exp * 1000;
+      const timeLeft = expirationTime - Date.now();
+      setSessionTimeLeft(Math.max(0, timeLeft));
+    }
   }, []);
 
   // Logout function
   const logout = useCallback(() => {
     localStorage.removeItem("token");
-    localStorage.removeItem("sessionStartTime");
+    localStorage.removeItem("sessionStartTime"); // Clean up old storage
     delete api.defaults.headers.common.Authorization;
     setIsAuthenticated(false);
     setUser(null);
-    setSessionStartTime(null);
     setSessionTimeLeft(0);
     setIsSessionWarningVisible(false);
   }, []);
@@ -89,47 +116,43 @@ export const SessionProvider: React.FC<SessionProviderProps> = ({
   // Session monitoring effect
   useEffect(() => {
     const token = localStorage.getItem("token");
-    const storedStartTime = localStorage.getItem("sessionStartTime");
 
-    if (token && storedStartTime) {
+    if (token) {
       api.defaults.headers.common.Authorization = token;
       setIsAuthenticated(true);
-      setSessionStartTime(parseInt(storedStartTime)); // Use stored time, not current time
     }
 
     const interval = setInterval(() => {
-      if (sessionStartTime) {
-        const timeLeft = calculateTimeLeft();
-        setSessionTimeLeft(timeLeft);
+      const timeLeft = calculateTimeLeft();
+      setSessionTimeLeft(timeLeft);
 
-        // Show warning when 5 minutes left
-        if (
-          timeLeft <= WARNING_TIME &&
-          timeLeft > 0 &&
-          !isSessionWarningVisible
-        ) {
-          setIsSessionWarningVisible(true);
-        }
+      // Show warning when 5 minutes left
+      if (
+        timeLeft <= WARNING_TIME &&
+        timeLeft > 0 &&
+        !isSessionWarningVisible
+      ) {
+        setIsSessionWarningVisible(true);
+      }
 
-        // Auto logout when session expires
-        if (timeLeft <= 0) {
-          logout();
-          Swal.fire({
-            icon: "warning",
-            title: "Session Expired",
-            text: "Your session has expired. Please login again to continue.",
-            confirmButtonText: "Go to Login",
-            allowOutsideClick: false,
-            allowEscapeKey: false,
-          }).then(() => {
-            window.location.href = "/login";
-          });
-        }
+      // Auto logout when session expires
+      if (timeLeft <= 0 && localStorage.getItem("token")) {
+        logout();
+        Swal.fire({
+          icon: "warning",
+          title: "Session Expired",
+          text: "Your session has expired. Please login again to continue.",
+          confirmButtonText: "Go to Login",
+          allowOutsideClick: false,
+          allowEscapeKey: false,
+        }).then(() => {
+          window.location.href = "/login";
+        });
       }
     }, CHECK_INTERVAL);
 
     return () => clearInterval(interval);
-  }, [sessionStartTime, calculateTimeLeft, isSessionWarningVisible, logout]);
+  }, [calculateTimeLeft, isSessionWarningVisible, logout]);
 
   // Authenticate user on mount
   useEffect(() => {
