@@ -556,12 +556,6 @@ export default function PortalAccountPage() {
                         >
                           Send Bulk Emails ({selectedTrainees.length})
                         </button>
-                        <button
-                          className="btn btn-warning me-2"
-                          //onClick={() => setShowScheduleModal(true)}
-                        >
-                          Schedule Emails
-                        </button>
                       </div>
                     )}
                   </div>

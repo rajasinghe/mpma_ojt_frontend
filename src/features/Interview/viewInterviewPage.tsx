@@ -5,7 +5,7 @@ import SubContainer from "../../layout/containers/sub_container/SubContainer";
 import Loader from "../../Components/ui/Loader/Loader";
 import api from "../../api";
 import Swal from "sweetalert2";
-import InterviewTables from './InterviewTables';
+import InterviewTables from "./InterviewTables";
 import MiniLoader from "../../Components/ui/Loader/MiniLoader";
 
 interface DepartmentSummary {
@@ -17,8 +17,11 @@ interface DepartmentSummary {
 }
 
 export default function ViewInterviewPage() {
-  const [departmentNames, setDepartmentNames] = useState<{[key: number]: string}>({});
+  const [departmentNames, setDepartmentNames] = useState<{
+    [key: number]: string;
+  }>({});
   const [loadingDepartments, setLoadingDepartments] = useState(true);
+  const [showLoginDetailsTable, setShowLoginDetailsTable] = useState(true);
 
   const { state } = useNavigation();
   const InterviewDetails = useLoaderData() as any;
@@ -28,41 +31,44 @@ export default function ViewInterviewPage() {
       setLoadingDepartments(true);
       const response = await api.get("api/department/summary");
       const departments: DepartmentSummary[] = response.data;
-      
-      const deptMap = departments.reduce((acc: {[key: number]: string}, dept) => {
-        // Use dep_id instead of id, and name instead of dname
-        acc[dept.dep_id] = dept.name;
-        return acc;
-      }, {});
-      
+
+      const deptMap = departments.reduce(
+        (acc: { [key: number]: string }, dept) => {
+          // Use dep_id instead of id, and name instead of dname
+          acc[dept.dep_id] = dept.name;
+          return acc;
+        },
+        {}
+      );
+
       setDepartmentNames(deptMap);
     } catch (error) {
       console.error("Error fetching department names:", error);
       // Optionally show an error message to the user
       Swal.fire({
-        icon: 'error',
-        title: 'Error',
-        text: 'Failed to load department information'
+        icon: "error",
+        title: "Error",
+        text: "Failed to load department information",
       });
     } finally {
       setLoadingDepartments(false);
     }
   };
 
-    useEffect(() => {
-      try{
-        fetchDepartmentNames();
-      } catch (error) {
-        console.error("Error fetching department names:", error);
-        Swal.fire({
-          icon: 'error',
-          title: 'Error',
-          text: 'Failed to load department information'
-        });
-      }
-    }, []);
+  useEffect(() => {
+    try {
+      fetchDepartmentNames();
+    } catch (error) {
+      console.error("Error fetching department names:", error);
+      Swal.fire({
+        icon: "error",
+        title: "Error",
+        text: "Failed to load department information",
+      });
+    }
+  }, []);
 
- /* useEffect(() => {
+  /* useEffect(() => {
     const fetchData = () => {
       setLoading(true);
       try {
@@ -121,19 +127,26 @@ export default function ViewInterviewPage() {
         <MainContainer title="Interviews" breadCrumbs={["Home", "Interviews"]}>
           <SubContainer>
             <div className="pt-4">
-            <InterviewTables 
-              lastSevenDays={InterviewDetails.lastSevenDays}
-              allInterviews={InterviewDetails.allInterviews}
-              departmentNames={departmentNames}
-            />
+              <div className="mb-3"></div>
+              <InterviewTables
+                allInterviews={InterviewDetails.allInterviews}
+                departmentNames={departmentNames}
+                showLoginDetailsTable={showLoginDetailsTable}
+                onToggleView={() =>
+                  setShowLoginDetailsTable(!showLoginDetailsTable)
+                }
+              />
             </div>
-              <section className="px-2 mt-1">
-                  <div className="d-flex mt-2">
-                    <Link to={"/OJT/interview/new"} className="btn btn-primary btn-sm ms-auto">
-                      Add New Interview
-                    </Link>
-                  </div>
-              </section>
+            <section className="px-2 mt-1">
+              <div className="d-flex mt-2">
+                <Link
+                  to={"/OJT/interview/new"}
+                  className="btn btn-primary btn-sm ms-auto"
+                >
+                  Add New Interview
+                </Link>
+              </div>
+            </section>
           </SubContainer>
         </MainContainer>
       )}

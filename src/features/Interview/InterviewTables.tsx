@@ -1,8 +1,6 @@
 import { useState } from "react";
 import moment from "moment";
 import { useNavigate } from "react-router-dom";
-import editIcon from "../../assets/edit.png";
-import removeIcon from "../../assets/remove.png";
 import Swal from "sweetalert2";
 import api from "../../api";
 import "./interview.css";
@@ -23,28 +21,25 @@ interface Interview {
 }
 
 interface Props {
-  lastSevenDays: Interview[];
   allInterviews: Interview[];
   departmentNames: { [key: number]: string };
+  showLoginDetailsTable: boolean;
+  onToggleView: () => void;
 }
 
 export default function InterviewTables({
-  lastSevenDays,
   allInterviews,
   departmentNames,
+  showLoginDetailsTable,
+  onToggleView,
 }: Props) {
-  const [showallInterviews, setShowallInterviews] = useState(false);
   const [selectedInterview, setSelectedInterview] = useState<Interview | null>(
     null
   );
   const [showModal, setShowModal] = useState(false);
-  const [lastSevenDaysFilter, setLastSevenDaysFilter] = useState("");
   const [allInterviewsFilter, setAllInterviewsFilter] = useState("");
 
   // Email functionality states
-  const [selectedLastSevenDays, setSelectedLastSevenDays] = useState<string[]>(
-    []
-  );
   const [selectedAllInterviews, setSelectedAllInterviews] = useState<string[]>(
     []
   );
@@ -116,27 +111,6 @@ export default function InterviewTables({
   };
 
   // Email functionality functions
-  const handleSelectLastSevenDays = (nic: string) => {
-    setSelectedLastSevenDays((prev) =>
-      prev.includes(nic) ? prev.filter((id) => id !== nic) : [...prev, nic]
-    );
-  };
-
-  const handleSelectAllLastSevenDays = (
-    e: React.ChangeEvent<HTMLInputElement>
-  ) => {
-    const interviewsWithEmail = filterInterviews(
-      lastSevenDays,
-      lastSevenDaysFilter
-    ).filter((interview) => interview.email);
-    if (e.target.checked) {
-      setSelectedLastSevenDays(
-        interviewsWithEmail.map((interview) => interview.NIC)
-      );
-    } else {
-      setSelectedLastSevenDays([]);
-    }
-  };
 
   const handleSelectAllInterviews = (nic: string) => {
     setSelectedAllInterviews((prev) =>
@@ -167,61 +141,6 @@ export default function InterviewTables({
     return Date.now() - sentTime < 2 * 60 * 1000; // 2 minutes
   };
 
-  const sendBulkEmailsLastSevenDays = async () => {
-    if (selectedLastSevenDays.length === 0) {
-      Swal.fire({
-        icon: "warning",
-        title: "No Selection",
-        text: "Please select at least one trainee to send emails.",
-      });
-      return;
-    }
-
-    const selectedInterviewsData = filterInterviews(
-      lastSevenDays,
-      lastSevenDaysFilter
-    )
-      .filter((interview) => selectedLastSevenDays.includes(interview.NIC))
-      .map((interview) => ({
-        email: interview.email,
-        NIC: interview.NIC,
-      }));
-
-    const confirm = await Swal.fire({
-      title: "Send Bulk Emails?",
-      text: `Send login details to ${selectedInterviewsData.length} trainees?`,
-      icon: "question",
-      showCancelButton: true,
-      confirmButtonText: "Yes, send all",
-      cancelButtonText: "Cancel",
-    });
-
-    if (confirm.isConfirmed) {
-      try {
-        await api.post("api/trainee/sendMails", {
-          data: selectedInterviewsData,
-        });
-
-        setSelectedLastSevenDays([]);
-
-        Swal.fire({
-          icon: "success",
-          title: "Bulk Emails Sent!",
-          text: `Emails successfully sent to ${selectedInterviewsData.length} trainees`,
-          timer: 2000,
-          showConfirmButton: false,
-        });
-      } catch (error) {
-        console.error("Error sending bulk emails:", error);
-        Swal.fire({
-          icon: "error",
-          title: "Failed!",
-          text: "Could not send bulk emails.",
-        });
-      }
-    }
-  };
-
   const sendBulkEmailsAllInterviews = async () => {
     if (selectedAllInterviews.length === 0) {
       Swal.fire({
@@ -244,7 +163,9 @@ export default function InterviewTables({
 
     const confirm = await Swal.fire({
       title: "Send Bulk Emails?",
-      text: `Send login details to ${selectedInterviewsData.length} trainees?`,
+      text: showLoginDetailsTable
+        ? `Send login details to ${selectedInterviewsData.length} trainees?`
+        : `Send meeting schedule and document requirements to ${selectedInterviewsData.length} trainees?`,
       icon: "question",
       showCancelButton: true,
       confirmButtonText: "Yes, send all",
@@ -253,7 +174,11 @@ export default function InterviewTables({
 
     if (confirm.isConfirmed) {
       try {
-        await api.post("api/trainee/sendMails", {
+        const endpoint = showLoginDetailsTable
+          ? "api/trainee/sendLoginMails"
+          : "api/trainee/sendMeetingMails";
+
+        await api.post(endpoint, {
           data: selectedInterviewsData,
         });
 
@@ -280,7 +205,9 @@ export default function InterviewTables({
   const sendSingleEmail = async (email: string, NIC: string) => {
     const confirm = await Swal.fire({
       title: "Are you sure?",
-      text: `Send login details to ${email}?`,
+      text: showLoginDetailsTable
+        ? `Send login details to ${email}?`
+        : `Send meeting schedule and document requirements to ${email}?`,
       icon: "question",
       showCancelButton: true,
       confirmButtonText: "Yes, send it",
@@ -322,20 +249,11 @@ export default function InterviewTables({
     }
   };
 
-  const renderTable = (interviews: Interview[], title: string) => {
-    const isLastSevenDays = title === "Last 7 Days Interviews";
-    const selectedInterviews = isLastSevenDays
-      ? selectedLastSevenDays
-      : selectedAllInterviews;
-    const handleSelectInterview = isLastSevenDays
-      ? handleSelectLastSevenDays
-      : handleSelectAllInterviews;
-    const handleSelectAll = isLastSevenDays
-      ? handleSelectAllLastSevenDays
-      : handleSelectAllAllInterviews;
-    const currentFilter = isLastSevenDays
-      ? lastSevenDaysFilter
-      : allInterviewsFilter;
+  const renderTable = (interviews: Interview[]) => {
+    const selectedInterviews = selectedAllInterviews;
+    const handleSelectInterview = handleSelectAllInterviews;
+    const handleSelectAll = handleSelectAllAllInterviews;
+    const currentFilter = allInterviewsFilter;
 
     const filteredInterviews = filterInterviews(interviews, currentFilter);
     const interviewsWithEmail = filteredInterviews.filter(
@@ -422,20 +340,6 @@ export default function InterviewTables({
                         >
                           <i className="bi bi-clipboard"></i>
                         </button>
-                        <button
-                          className="btn btn-sm btn-success ms-1"
-                          onClick={() =>
-                            sendSingleEmail(interview.email, interview.NIC)
-                          }
-                          disabled={isEmailRecentlySent(interview.email)}
-                          title={
-                            isEmailRecentlySent(interview.email)
-                              ? "Email sent recently"
-                              : "Send login details"
-                          }
-                        >
-                          <i className="bi bi-envelope"></i>
-                        </button>
                       </div>
                     ) : (
                       <span className="text-muted">No email</span>
@@ -452,22 +356,22 @@ export default function InterviewTables({
                         onClick={() => handleShowDetails(interview)}
                         title="View Details"
                       >
-                        <i className="bi bi-eye"></i> Details
+                        Details
                       </button>
-                      <img
-                        alt="Edit"
-                        className="btn btn-sm btn-outline-secondary me-2"
-                        style={{ width: "auto", height: "34px" }}
-                        onClick={() => navigate(`${interview.NIC}/edit`)}
-                        src={editIcon}
-                      />
-                      <img
-                        alt="Delete"
-                        style={{ width: "auto", height: "34px" }}
-                        onClick={() => handleDelete(interview.NIC)}
-                        className="btn btn-sm btn-outline-secondary"
-                        src={removeIcon}
-                      />
+                      <button
+                        className="btn btn-sm btn-success ms-1"
+                        onClick={() =>
+                          sendSingleEmail(interview.email, interview.NIC)
+                        }
+                        disabled={isEmailRecentlySent(interview.email)}
+                        title={
+                          isEmailRecentlySent(interview.email)
+                            ? "Email sent recently"
+                            : "Send login details"
+                        }
+                      >
+                        Send Mails
+                      </button>
                     </div>
                   </td>
                 </tr>
@@ -483,10 +387,10 @@ export default function InterviewTables({
     <div className="container-fluid px-4">
       <div className="card mb-4">
         <div className="card-header">
-          <h5 className="mb-0">Last 7 Days Interviews</h5>
+          <h5 className="mb-0">Interviews</h5>
         </div>
         <div className="card-body">
-          {/* Search bar for Last 7 Days */}
+          {/* Search bar for All Interviews */}
           <div className="row mb-3">
             <div className="col-md-6">
               <div className="input-group">
@@ -497,14 +401,14 @@ export default function InterviewTables({
                   type="text"
                   className="form-control"
                   placeholder="Search by NIC, Name, or Email..."
-                  value={lastSevenDaysFilter}
-                  onChange={(e) => setLastSevenDaysFilter(e.target.value)}
+                  value={allInterviewsFilter}
+                  onChange={(e) => setAllInterviewsFilter(e.target.value)}
                 />
-                {lastSevenDaysFilter && (
+                {allInterviewsFilter && (
                   <button
                     className="btn btn-outline-secondary"
                     type="button"
-                    onClick={() => setLastSevenDaysFilter("")}
+                    onClick={() => setAllInterviewsFilter("")}
                     title="Clear filter"
                   >
                     <i className="bi bi-x"></i>
@@ -512,98 +416,56 @@ export default function InterviewTables({
                 )}
               </div>
             </div>
-            <div className="col-md-6 d-flex justify-content-end align-items-center">
-              {selectedLastSevenDays.length > 0 && (
+            <div className="col-md-3 ms-auto">
+              <div className="btn-group float-end" role="group">
+                <button
+                  type="button"
+                  className={`btn ${
+                    showLoginDetailsTable
+                      ? "btn-primary"
+                      : "btn-outline-primary"
+                  }`}
+                  onClick={() => onToggleView()}
+                >
+                  <i className="bi bi-key me-1"></i>
+                  Login Details
+                </button>
+                <button
+                  type="button"
+                  className={`btn ${
+                    !showLoginDetailsTable
+                      ? "btn-primary"
+                      : "btn-outline-primary"
+                  }`}
+                  onClick={() => onToggleView()}
+                >
+                  <i className="bi bi-calendar-event me-1"></i>
+                  Meeting Schedule
+                </button>
+              </div>
+            </div>
+            <div className="col-md-4 d-flex justify-content-end align-items-center">
+              {selectedAllInterviews.length > 0 && (
                 <button
                   className="btn btn-primary"
-                  onClick={sendBulkEmailsLastSevenDays}
+                  onClick={sendBulkEmailsAllInterviews}
                 >
-                  Send Bulk Emails ({selectedLastSevenDays.length})
+                  Send Bulk Emails ({selectedAllInterviews.length})
                 </button>
               )}
             </div>
           </div>
 
-          {filterInterviews(lastSevenDays, lastSevenDaysFilter).length > 0 ? (
-            renderTable(
-              filterInterviews(lastSevenDays, lastSevenDaysFilter),
-              "Last 7 Days Interviews"
-            )
-          ) : lastSevenDaysFilter ? (
+          {filterInterviews(allInterviews, allInterviewsFilter).length > 0 ? (
+            renderTable(filterInterviews(allInterviews, allInterviewsFilter))
+          ) : allInterviewsFilter ? (
             <p className="text-muted">
               No interviews match your search criteria
             </p>
           ) : (
-            <p className="text-muted">No interviews in the last 7 days</p>
+            <p className="text-muted">No interviews</p>
           )}
         </div>
-      </div>
-
-      <div className="card mb-4">
-        <div
-          className="card-header d-flex justify-content-between align-items-center"
-          style={{ cursor: "pointer" }}
-          onClick={() => setShowallInterviews(!showallInterviews)}
-        >
-          <h5 className="mb-0">All Interviews</h5>
-          <i
-            className={`bi bi-chevron-${showallInterviews ? "up" : "down"}`}
-          ></i>
-        </div>
-        {showallInterviews && (
-          <div className="card-body">
-            {/* Search bar for All Interviews */}
-            <div className="row mb-3">
-              <div className="col-md-6">
-                <div className="input-group">
-                  <span className="input-group-text">
-                    <i className="bi bi-search"></i>
-                  </span>
-                  <input
-                    type="text"
-                    className="form-control"
-                    placeholder="Search by NIC, Name, or Email..."
-                    value={allInterviewsFilter}
-                    onChange={(e) => setAllInterviewsFilter(e.target.value)}
-                  />
-                  {allInterviewsFilter && (
-                    <button
-                      className="btn btn-outline-secondary"
-                      type="button"
-                      onClick={() => setAllInterviewsFilter("")}
-                      title="Clear filter"
-                    >
-                      <i className="bi bi-x"></i>
-                    </button>
-                  )}
-                </div>
-              </div>
-              <div className="col-md-6 d-flex justify-content-end align-items-center">
-                {selectedAllInterviews.length > 0 && (
-                  <button
-                    className="btn btn-primary"
-                    onClick={sendBulkEmailsAllInterviews}
-                  >
-                    Send Bulk Emails ({selectedAllInterviews.length})
-                  </button>
-                )}
-              </div>
-            </div>
-
-            {filterInterviews(allInterviews, allInterviewsFilter).length > 0 ? (
-              renderTable(
-                filterInterviews(allInterviews, allInterviewsFilter),
-                "All Interviews"
-              )
-            ) : allInterviewsFilter ? (
-              <p className="text-muted">
-                No interviews match your search criteria
-              </p>
-            ) : (
-              <p className="text-muted">No interviews</p>
-            )}
-          </div>
-        )}
       </div>
 
       {/* Bootstrap Modal for Interview Details */}
@@ -701,6 +563,13 @@ export default function InterviewTables({
                   }}
                 >
                   Edit Interview
+                </button>
+                <button
+                  type="button"
+                  className="btn btn-danger"
+                  onClick={() => handleDelete(selectedInterview.NIC)}
+                >
+                  Delete Interview
                 </button>
               </div>
             </div>
