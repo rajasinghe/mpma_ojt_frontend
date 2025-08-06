@@ -1,6 +1,10 @@
 import { createRoot } from "react-dom/client";
 import "./index.css";
-import { createBrowserRouter, RouterProvider, Navigate } from "react-router-dom";
+import {
+  createBrowserRouter,
+  RouterProvider,
+  Navigate,
+} from "react-router-dom";
 import Base from "./Pages/Base.tsx";
 import TraineeDetailsAddPage from "./Pages/TraineeDetailsAddPage.tsx";
 import "bootstrap/dist/css/bootstrap.css";
@@ -65,6 +69,7 @@ import ViewPaymentDetails from "./Pages/ViewPaymentDetails.tsx";
 import TraineeDetailsPage from "./Pages/TraineeDetailsPage.tsx";
 import UserUpdatePage from "./Pages/Admin/UserUpdatePage.tsx";
 import NotificationPage from "./Pages/NotificationPage.tsx";
+import PortalAccountPage from "./Pages/PortalAccountPage.tsx";
 
 export const setToken = () => {
   const token = localStorage.getItem("token");
@@ -152,6 +157,11 @@ const router = createBrowserRouter([
             path: "trainees/details",
             element: <TraineeDetailsPage />,
             loader: traineeDetailsPageLoader,
+          },
+          {
+            path: "trainees/portal_account",
+            element: <PortalAccountPage />,
+            loader: registeredTraineesLoader,
           },
           {
             path: "attendence/new",

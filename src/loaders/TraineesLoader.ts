@@ -30,7 +30,11 @@ export const newTraineesInsertPageLoader = async () => {
     api.get("api/institutes"),
     api.get("api/programs"),
   ]);
-  return { periods: periods.data, institutes: institutes.data, programs: programs.data };
+  return {
+    periods: periods.data,
+    institutes: institutes.data,
+    programs: programs.data,
+  };
 };
 
 export const traineeAddSchedulePageLoader = async ({ params }: any) => {
@@ -76,7 +80,9 @@ export const traineeAddSchedulePageLoader = async ({ params }: any) => {
   }
 };
 
-export const traineePersonalDetailsUpdatePageLoader = async ({ params }: any) => {
+export const traineePersonalDetailsUpdatePageLoader = async ({
+  params,
+}: any) => {
   //need to fetch institutes ,trainee details,programs
   //if the trainee is cinec/naita and more cinec/naita students are available if available only cinec/naita is available as a institute
   //for other normal students if trainees are inserted from respective reg pattern then only the matching program code programs are allowed in the program list.
@@ -100,7 +106,10 @@ export const traineeBankDetailsLoader = async ({ params }: any) => {
   if (traineeResponse.status == "fulfilled") {
     trainee = traineeResponse.value.data;
     if (paymentResponse.status == "fulfilled") {
-      console.log("payment response full filled data-", paymentResponse.value.data);
+      console.log(
+        "payment response full filled data-",
+        paymentResponse.value.data
+      );
       trainee.bankDetails = paymentResponse.value.data;
     }
   } else {
@@ -117,4 +126,14 @@ export const traineeDetailsPageLoader = async () => {
   ]);
 
   return traineeDetails.data;
+};
+
+export const registeredTraineesLoader = async (): Promise<
+  RegisteredTrainee[]
+> => {
+  const [registeredTrainees] = await Promise.all([
+    api.get("api/portal/getRegisteredTrainees"),
+  ]);
+
+  return registeredTrainees.data;
 };
