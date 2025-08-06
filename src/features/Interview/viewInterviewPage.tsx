@@ -21,7 +21,7 @@ export default function ViewInterviewPage() {
     [key: number]: string;
   }>({});
   const [loadingDepartments, setLoadingDepartments] = useState(true);
-  const [showLoginDetailsTable, setShowLoginDetailsTable] = useState(true);
+  const [showLoginDetailsTable, setShowLoginDetailsTable] = useState(false);
 
   const { state } = useNavigation();
   const InterviewDetails = useLoaderData() as any;

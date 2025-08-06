@@ -165,7 +165,7 @@ export default function InterviewTables({
       title: "Send Bulk Emails?",
       text: showLoginDetailsTable
         ? `Send login details to ${selectedInterviewsData.length} trainees?`
-        : `Send meeting schedule and document requirements to ${selectedInterviewsData.length} trainees?`,
+        : `Send document requirements to ${selectedInterviewsData.length} trainees?`,
       icon: "question",
       showCancelButton: true,
       confirmButtonText: "Yes, send all",
@@ -175,8 +175,8 @@ export default function InterviewTables({
     if (confirm.isConfirmed) {
       try {
         const endpoint = showLoginDetailsTable
-          ? "api/trainee/sendLoginMails"
-          : "api/trainee/sendMeetingMails";
+          ? "api/trainee/sendMails"
+          : "api/trainee/sendDocumentRequirements";
 
         await api.post(endpoint, {
           data: selectedInterviewsData,
@@ -216,7 +216,11 @@ export default function InterviewTables({
 
     if (confirm.isConfirmed) {
       try {
-        await api.post("api/trainee/sendMails", {
+        const endpoint = showLoginDetailsTable
+          ? "api/trainee/sendMails"
+          : "api/trainee/sendDocumentRequirements";
+
+        await api.post(endpoint, {
           data: [
             {
               email: email,
@@ -384,198 +388,199 @@ export default function InterviewTables({
   };
 
   return (
-    <div className="container-fluid px-4">
-      <div className="card mb-4">
-        <div className="card-header">
-          <h5 className="mb-0">Interviews</h5>
-        </div>
-        <div className="card-body">
-          {/* Search bar for All Interviews */}
-          <div className="row mb-3">
-            <div className="col-md-6">
-              <div className="input-group">
-                <span className="input-group-text">
-                  <i className="bi bi-search"></i>
-                </span>
-                <input
-                  type="text"
-                  className="form-control"
-                  placeholder="Search by NIC, Name, or Email..."
-                  value={allInterviewsFilter}
-                  onChange={(e) => setAllInterviewsFilter(e.target.value)}
-                />
-                {allInterviewsFilter && (
-                  <button
-                    className="btn btn-outline-secondary"
-                    type="button"
-                    onClick={() => setAllInterviewsFilter("")}
-                    title="Clear filter"
-                  >
-                    <i className="bi bi-x"></i>
-                  </button>
-                )}
-              </div>
-            </div>
-            <div className="col-md-3 ms-auto">
-              <div className="btn-group float-end" role="group">
-                <button
-                  type="button"
-                  className={`btn ${
-                    showLoginDetailsTable
-                      ? "btn-primary"
-                      : "btn-outline-primary"
-                  }`}
-                  onClick={() => onToggleView()}
-                >
-                  <i className="bi bi-key me-1"></i>
-                  Login Details
-                </button>
-                <button
-                  type="button"
-                  className={`btn ${
-                    !showLoginDetailsTable
-                      ? "btn-primary"
-                      : "btn-outline-primary"
-                  }`}
-                  onClick={() => onToggleView()}
-                >
-                  <i className="bi bi-calendar-event me-1"></i>
-                  Meeting Schedule
-                </button>
-              </div>
-            </div>
-            <div className="col-md-4 d-flex justify-content-end align-items-center">
-              {selectedAllInterviews.length > 0 && (
-                <button
-                  className="btn btn-primary"
-                  onClick={sendBulkEmailsAllInterviews}
-                >
-                  Send Bulk Emails ({selectedAllInterviews.length})
-                </button>
-              )}
-            </div>
-          </div>
-
-          {filterInterviews(allInterviews, allInterviewsFilter).length > 0 ? (
-            renderTable(filterInterviews(allInterviews, allInterviewsFilter))
-          ) : allInterviewsFilter ? (
-            <p className="text-muted">
-              No interviews match your search criteria
-            </p>
-          ) : (
-            <p className="text-muted">No interviews</p>
+    <>
+      <div className="col-md-6 px-4 pb-2">
+        <div className="input-group">
+          <span className="input-group-text">
+            <i className="bi bi-search"></i>
+          </span>
+          <input
+            type="text"
+            className="form-control"
+            placeholder="Search by NIC, Name, or Email..."
+            value={allInterviewsFilter}
+            onChange={(e) => setAllInterviewsFilter(e.target.value)}
+          />
+          {allInterviewsFilter && (
+            <button
+              className="btn btn-outline-secondary"
+              type="button"
+              onClick={() => setAllInterviewsFilter("")}
+              title="Clear filter"
+            >
+              <i className="bi bi-x"></i>
+            </button>
           )}
         </div>
       </div>
-
-      {/* Bootstrap Modal for Interview Details */}
-      {showModal && selectedInterview && (
-        <div
-          className="modal fade show"
-          style={{ display: "block", backgroundColor: "rgba(0,0,0,0.5)" }}
-          tabIndex={-1}
-          role="dialog"
-          aria-labelledby="interviewDetailsModal"
-          aria-hidden="true"
-        >
-          <div className="modal-dialog modal-lg" role="document">
-            <div className="modal-content">
-              <div className="modal-header">
-                <h5 className="modal-title" id="interviewDetailsModal">
-                  Interview Details - {selectedInterview.name}
-                </h5>
-                <button
-                  type="button"
-                  className="btn-close"
-                  onClick={handleCloseModal}
-                  aria-label="Close"
-                ></button>
-              </div>
-              <div className="modal-body">
-                <div className="row">
-                  <div className="col-md-6">
-                    <h6 className="fw-bold">Basic Information</h6>
-                    <p>
-                      <strong>NIC:</strong> {selectedInterview.NIC}
-                    </p>
-                    <p>
-                      <strong>Name:</strong> {selectedInterview.name}
-                    </p>
-                    <p>
-                      <strong>Email:</strong> {selectedInterview.email}
-                    </p>
-                    <p>
-                      <strong>Start Date:</strong>{" "}
-                      {moment(selectedInterview.date).format("YYYY-MM-DD")}
-                    </p>
-                    <p>
-                      <strong>Duration:</strong>{" "}
-                      {selectedInterview.duration || "Not specified"}
-                    </p>
-                    <p>
-                      <strong>Interview Date:</strong>{" "}
-                      {moment(selectedInterview.createdAt).format("YYYY-MM-DD")}
-                    </p>
-                  </div>
-                  <div className="col-md-6">
-                    <h6 className="fw-bold">Departments</h6>
-                    {selectedInterview.departments.length > 0 ? (
-                      selectedInterview.departments.map((dept, index) => (
-                        <div key={dept.id} className="mb-2">
-                          <p className="mb-1">
-                            <strong>
-                              {departmentNames[dept.id] ||
-                                `Department ${dept.id}`}
-                            </strong>
-                          </p>
-                          {dept.fromDate && dept.toDate && (
-                            <p className="text-muted small mb-0">
-                              From: {moment(dept.fromDate).format("YYYY-MM-DD")}
-                              <br />
-                              To: {moment(dept.toDate).format("YYYY-MM-DD")}
-                            </p>
-                          )}
-                          {index < selectedInterview.departments.length - 1 && (
-                            <hr />
-                          )}
-                        </div>
-                      ))
-                    ) : (
-                      <p className="text-muted">No departments assigned</p>
-                    )}
-                  </div>
+      <div className="container-fluid px-4">
+        <div className="card mb-4">
+          <div className="card-header">
+            <h5 className="mb-0">Interviews</h5>
+          </div>
+          <div className="card-body">
+            {/* Search bar for All Interviews */}
+            <div className="row mb-3">
+              <div className="col-md-4">
+                <div className="btn-group" role="group">
+                  <button
+                    type="button"
+                    className={`btn interview-toggle-btn ${
+                      showLoginDetailsTable ? "active" : ""
+                    }`}
+                    onClick={() => onToggleView()}
+                  >
+                    <i className="bi bi-key me-1"></i>
+                    Login Details
+                  </button>
+                  <button
+                    type="button"
+                    className={`btn interview-toggle-btn ${
+                      !showLoginDetailsTable ? "active" : ""
+                    }`}
+                    onClick={() => onToggleView()}
+                  >
+                    <i className="bi bi-folder me-1"></i>
+                    Documents
+                  </button>
                 </div>
               </div>
-              <div className="modal-footer">
+              <div className="col-md-4 ms-auto d-flex justify-content-end">
                 <button
-                  type="button"
-                  className="btn btn-secondary"
-                  onClick={handleCloseModal}
-                >
-                  Close
-                </button>
-                <button
-                  type="button"
                   className="btn btn-primary"
-                  onClick={() => {
-                    navigate(`${selectedInterview.NIC}/edit`);
-                    handleCloseModal();
-                  }}
+                  onClick={sendBulkEmailsAllInterviews}
+                  disabled={selectedAllInterviews.length === 0}
                 >
-                  Edit Interview
-                </button>
-                <button
-                  type="button"
-                  className="btn btn-danger"
-                  onClick={() => handleDelete(selectedInterview.NIC)}
-                >
-                  Delete Interview
+                  Send Bulk Emails ({selectedAllInterviews.length})
                 </button>
               </div>
             </div>
+
+            {filterInterviews(allInterviews, allInterviewsFilter).length > 0 ? (
+              renderTable(filterInterviews(allInterviews, allInterviewsFilter))
+            ) : allInterviewsFilter ? (
+              <p className="text-muted">
+                No interviews match your search criteria
+              </p>
+            ) : (
+              <p className="text-muted">No interviews</p>
+            )}
           </div>
         </div>
-      )}
-    </div>
+
+        {/* Bootstrap Modal for Interview Details */}
+        {showModal && selectedInterview && (
+          <div
+            className="modal fade show"
+            style={{ display: "block", backgroundColor: "rgba(0,0,0,0.5)" }}
+            tabIndex={-1}
+            role="dialog"
+            aria-labelledby="interviewDetailsModal"
+            aria-hidden="true"
+          >
+            <div className="modal-dialog modal-lg" role="document">
+              <div className="modal-content">
+                <div className="modal-header">
+                  <h5 className="modal-title" id="interviewDetailsModal">
+                    Interview Details - {selectedInterview.name}
+                  </h5>
+                  <button
+                    type="button"
+                    className="btn-close"
+                    onClick={handleCloseModal}
+                    aria-label="Close"
+                  ></button>
+                </div>
+                <div className="modal-body">
+                  <div className="row">
+                    <div className="col-md-6">
+                      <h6 className="fw-bold">Basic Information</h6>
+                      <p>
+                        <strong>NIC:</strong> {selectedInterview.NIC}
+                      </p>
+                      <p>
+                        <strong>Name:</strong> {selectedInterview.name}
+                      </p>
+                      <p>
+                        <strong>Email:</strong> {selectedInterview.email}
+                      </p>
+                      <p>
+                        <strong>Start Date:</strong>{" "}
+                        {moment(selectedInterview.date).format("YYYY-MM-DD")}
+                      </p>
+                      <p>
+                        <strong>Duration:</strong>{" "}
+                        {selectedInterview.duration || "Not specified"}
+                      </p>
+                      <p>
+                        <strong>Interview Date:</strong>{" "}
+                        {moment(selectedInterview.createdAt).format(
+                          "YYYY-MM-DD"
+                        )}
+                      </p>
+                    </div>
+                    <div className="col-md-6">
+                      <h6 className="fw-bold">Departments</h6>
+                      {selectedInterview.departments.length > 0 ? (
+                        selectedInterview.departments.map((dept, index) => (
+                          <div key={dept.id} className="mb-2">
+                            <p className="mb-1">
+                              <strong>
+                                {departmentNames[dept.id] ||
+                                  `Department ${dept.id}`}
+                              </strong>
+                            </p>
+                            {dept.fromDate && dept.toDate && (
+                              <p className="text-muted small mb-0">
+                                From:{" "}
+                                {moment(dept.fromDate).format("YYYY-MM-DD")}
+                                <br />
+                                To: {moment(dept.toDate).format("YYYY-MM-DD")}
+                              </p>
+                            )}
+                            {index <
+                              selectedInterview.departments.length - 1 && (
+                              <hr />
+                            )}
+                          </div>
+                        ))
+                      ) : (
+                        <p className="text-muted">No departments assigned</p>
+                      )}
+                    </div>
+                  </div>
+                </div>
+                <div className="modal-footer">
+                  <button
+                    type="button"
+                    className="btn btn-secondary"
+                    onClick={handleCloseModal}
+                  >
+                    Close
+                  </button>
+                  <button
+                    type="button"
+                    className="btn btn-primary"
+                    onClick={() => {
+                      navigate(`${selectedInterview.NIC}/edit`);
+                      handleCloseModal();
+                    }}
+                  >
+                    Edit Interview
+                  </button>
+                  <button
+                    type="button"
+                    className="btn btn-danger"
+                    onClick={() => handleDelete(selectedInterview.NIC)}
+                  >
+                    Delete Interview
+                  </button>
+                </div>
+              </div>
+            </div>
+          </div>
+        )}
+      </div>
+    </>
   );
 }

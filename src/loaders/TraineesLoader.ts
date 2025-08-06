@@ -141,7 +141,7 @@ export const registeredTraineesLoader = async (): Promise<
   RegisteredTrainee[]
 > => {
   const [registeredTrainees] = await Promise.all([
-    api.get("api/trainee/getRegisteredTrainees"),
+    api.get("api/portal/getRegisteredTrainees"),
   ]);
 
   return registeredTrainees.data;

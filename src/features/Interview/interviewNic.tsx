@@ -66,7 +66,7 @@ export default function InterviewNic({
     try {
       // Fetch all interviews
       const response = await api.get("/api/interview");
-      const response2 = await api.get(`/api/trainee/NIC_check/${data.NIC}`);
+      const response2 = await api.get(`/api/portal/NIC_check/${data.NIC}`);
 
       const interviews: InterviewData[] = response.data.InterviewDetails || [];
       const trainees = response2.data || false;

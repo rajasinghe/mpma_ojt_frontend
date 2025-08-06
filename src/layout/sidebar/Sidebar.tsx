@@ -39,13 +39,6 @@ const Sidebar = ({ user }: Props) => {
           inactive_icon: "bi-folder",
         },
         {
-          name: "Pending Trainees",
-          route: "/OJT/trainees/pending_trainees",
-          regex: /^\/OJT\/trainees\/pending_trainees/i,
-          active_icon: "bi-hourglass-split",
-          inactive_icon: "bi-hourglass",
-        },
-        {
           name: "Portal Account",
           route: "/OJT/trainees/portal_account",
           regex: /^\/OJT\/trainees\/portal_account/i,

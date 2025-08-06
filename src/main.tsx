@@ -62,7 +62,6 @@ import { traineeDetailsPageLoader } from "./loaders/TraineesLoader.ts";
 import PaymentsPage from "./Pages/PaymentsPage.tsx";
 import ViewPaymentDetails from "./Pages/ViewPaymentDetails.tsx";
 import TraineeDetailsPage from "./Pages/TraineeDetailsPage.tsx";
-import PendingTraineesPage from "./Pages/PendingTraineesPage.tsx";
 import PortalAccountPage from "./Pages/PortalAccountPage.tsx";
 
 export const setToken = () => {
@@ -143,11 +142,6 @@ const router = createBrowserRouter([
             path: "trainees/details",
             element: <TraineeDetailsPage />,
             loader: traineeDetailsPageLoader,
-          },
-          {
-            path: "trainees/pending_trainees",
-            element: <PendingTraineesPage />,
-            loader: registeredTraineesLoader,
           },
           {
             path: "trainees/portal_account",

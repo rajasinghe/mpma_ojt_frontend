@@ -43,7 +43,7 @@ type CreateAccountFormData = z.infer<typeof createAccountSchema>;
 
 const TraineesWithoutPortalAccounts = async () => {
   const [traineesWithoutPortalAccounts] = await Promise.all([
-    api.get("api/trainee/without-portal-account"),
+    api.get("api/portal/without-portal-account"),
   ]);
 
   return traineesWithoutPortalAccounts.data;
@@ -357,10 +357,7 @@ export default function PortalAccountPage() {
         };
       }
 
-      const response = await api.post(
-        "api/trainee/create-account",
-        requestData
-      );
+      const response = await api.post("api/portal/create-account", requestData);
 
       console.log(response.data.message);
 
@@ -490,7 +487,7 @@ export default function PortalAccountPage() {
     if (!username || username.length < 3) return true; // Let Zod handle basic validation
 
     try {
-      const response = await api.get(`api/trainee/username/${username}`);
+      const response = await api.get(`api/portal/username/${username}`);
       return !response.data.exists || "Username already exists";
     } catch (error) {
       return "Error checking username availability";
@@ -548,16 +545,15 @@ export default function PortalAccountPage() {
                 />
                 <div className="d-flex justify-content-between align-items-center">
                   <div>
-                    {selectedTrainees.length > 0 && (
-                      <div className="mb-3">
-                        <button
-                          className="btn btn-primary me-2"
-                          onClick={sendBulkEmails}
-                        >
-                          Send Bulk Emails ({selectedTrainees.length})
-                        </button>
-                      </div>
-                    )}
+                    <div className="mb-3">
+                      <button
+                        className="btn btn-primary me-2"
+                        onClick={sendBulkEmails}
+                        disabled={selectedTrainees.length === 0}
+                      >
+                        Send Bulk Emails ({selectedTrainees.length})
+                      </button>
+                    </div>
                   </div>
                 </div>
               </div>
@@ -710,16 +706,15 @@ export default function PortalAccountPage() {
               />
               <div className="d-flex justify-content-between align-items-center">
                 <div>
-                  {selectedPendingTrainees.length > 0 && (
-                    <div className="mb-3">
-                      <button
-                        className="btn btn-primary me-2"
-                        onClick={sendBulkPendingEmails}
-                      >
-                        Resend Emails ({selectedPendingTrainees.length})
-                      </button>
-                    </div>
-                  )}
+                  <div className="mb-3">
+                    <button
+                      className="btn btn-primary me-2"
+                      onClick={sendBulkPendingEmails}
+                      disabled={selectedPendingTrainees.length === 0}
+                    >
+                      Resend Emails ({selectedPendingTrainees.length})
+                    </button>
+                  </div>
                 </div>
               </div>
             </div>
