@@ -81,3 +81,62 @@ export function getMonthName(monthNumber: number) {
 
   return months[monthNumber - 1];
 }
+
+export function getDateDifferenceFormatted(date1: string | Date, date2: string | Date): string {
+  let start = new Date(date1);
+  let end = new Date(date2);
+  let negative = false;
+
+  // Check if the duration should be negative
+  if (start > end) {
+    [start, end] = [end, start];
+    negative = true;
+  }
+
+  // Include the end date (make range inclusive)
+  end.setDate(end.getDate() + 1);
+
+  let years = end.getFullYear() - start.getFullYear();
+  let months = end.getMonth() - start.getMonth();
+  let days = end.getDate() - start.getDate();
+
+  if (days < 0) {
+    months--;
+    const prevMonth = new Date(end.getFullYear(), end.getMonth(), 0);
+    days += prevMonth.getDate();
+  }
+
+  if (months < 0) {
+    years--;
+    months += 12;
+  }
+
+  const parts: string[] = [];
+  if (years > 0) parts.push(`${years} year${years !== 1 ? 's' : ''}`);
+  if (months > 0) parts.push(`${months} month${months !== 1 ? 's' : ''}`);
+  if (days > 0 || (!years && !months)) parts.push(`${days} day${days !== 1 ? 's' : ''}`);
+
+  const result = parts.join(' ') || '0 days';
+  return negative ? `- ${result}` : result;
+}
+
+  export function getShortEmail(email: string, maxLength: number = 25): string {
+    if (email.length <= maxLength) return email;
+    
+    const [user, domain] = email.split('@');
+    if (!domain) return email; // Invalid email format
+    
+    // Calculate available space for user part (accounting for @ and domain)
+    const domainPart = domain.length > 8 ? `${domain.slice(0, 6)}...` : domain;
+    const availableUserSpace = maxLength - domainPart.length - 1; // -1 for @
+    
+    // If user part is too long, truncate it
+    if (user.length > availableUserSpace - 3) { // -3 for ...
+      const truncatedUser = user.length > 6 
+        ? `${user.slice(0, 3)}...${user.slice(-2)}`
+        : `${user.slice(0, Math.max(1, availableUserSpace - 3))}...`;
+      return `${truncatedUser}@${domainPart}`;
+    }
+    
+    return `${user}@${domainPart}`;
+  }

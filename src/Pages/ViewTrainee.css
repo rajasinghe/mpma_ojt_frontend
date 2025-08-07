@@ -4,28 +4,6 @@
     /* display: none; */
 }
 
-.position{
-    top: 0;
-    right: 0;
-    width: 8px;
-    height: 8px;
-    padding: 0;
-    transform: translate(50%, -50%);
-}
-
-.position-relative {
-    position: relative;
-}
-
-.rounded-circle {
-    width: 10px;
-    height: 10px;
-}
-
-.table thead th {
-  white-space: nowrap; /* Prevent header text wrapping */
-}
-
 /* Ensure sticky header stays above content */
 .table-dark.position-sticky {
   z-index: 1;
