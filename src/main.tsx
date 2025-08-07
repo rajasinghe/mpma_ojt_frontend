@@ -8,6 +8,8 @@ import "bootstrap-icons/font/bootstrap-icons.css";
 import "bootstrap/dist/js/bootstrap.bundle.min";
 import "@fortawesome/fontawesome-free/css/all.min.css";
 import ViewTraineesPage from "./Pages/ViewTraineesPage.tsx";
+
+import { SessionProvider } from "./contexts/SessionContext.tsx";
 import {
   newTraineesInsertPageLoader,
   traineeAddSchedulePageLoader,
@@ -226,5 +228,7 @@ const router = createBrowserRouter([
 ]);
 
 createRoot(document.getElementById("root")!).render(
-  <RouterProvider router={router} />
+  <SessionProvider>
+    <RouterProvider router={router} />
+  </SessionProvider>
 );

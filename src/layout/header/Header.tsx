@@ -1,7 +1,8 @@
 import { ReactNode } from "react";
 import logo from "../../../src/assets/SLPA_Logo-Cu9TOj32.png";
 import "./style.css";
-import { Link } from 'react-router-dom';
+import { Link } from "react-router-dom";
+import { useSession } from "../../contexts/SessionContext";
 
 interface Props {
   children?: ReactNode;
@@ -9,12 +10,32 @@ interface Props {
 }
 
 export default function Header({ user }: Props) {
+  const { sessionTimeLeft } = useSession();
+  function getInitials(name: string): string {
+    const names = name.trim().split(" ");
+    if (names.length === 1) return names[0][0].toUpperCase();
+    return (names[0][0] + names[names.length - 1][0]).toUpperCase();
+  }
 
-function getInitials(name: string): string {
-  const names = name.trim().split(" ");
-  if (names.length === 1) return names[0][0].toUpperCase();
-  return (names[0][0] + names[names.length - 1][0]).toUpperCase();
-}
+  // Format time remaining for display
+  const formatTimeRemaining = (milliseconds: number) => {
+    const totalMinutes = Math.floor(milliseconds / (1000 * 60));
+    const hours = Math.floor(totalMinutes / 60);
+    const minutes = totalMinutes % 60;
+
+    if (hours > 0) {
+      return `${hours}h ${minutes}m`;
+    }
+    return `${minutes}m`;
+  };
+
+  // Get status color based on time remaining
+  const getStatusColor = (milliseconds: number) => {
+    const minutes = Math.floor(milliseconds / (1000 * 60));
+    if (minutes <= 5) return "text-danger";
+    if (minutes <= 15) return "text-warning";
+    return "text-success";
+  };
 
   //need to get the notifications for that user
   return (
@@ -31,7 +52,19 @@ function getInitials(name: string): string {
 
         <nav className="header-nav ms-auto notifi-profile">
           <ul className="d-flex align-items-center">
-            {/* End Search Icon */}
+            {/* Session Status Indicator */}
+            <li className="nav-item me-3">
+              <div className="d-flex align-items-center">
+                <i
+                  className={`bi bi-clock me-2 ${getStatusColor(
+                    sessionTimeLeft
+                  )}`}
+                ></i>
+                <span className={`small ${getStatusColor(sessionTimeLeft)}`}>
+                  Session: {formatTimeRemaining(sessionTimeLeft)}
+                </span>
+              </div>
+            </li>
 
             <li className="nav-item dropdown">
               <a className="nav-link nav-icon" data-bs-toggle="dropdown">
@@ -41,9 +74,12 @@ function getInitials(name: string): string {
               {/* End Notification Icon */}
               <ul className="dropdown-menu dropdown-menu-end dropdown-menu-arrow notifications">
                 <li className="dropdown-header">
-                  You have <span className="notifi-count">04</span> new notifications
+                  You have <span className="notifi-count">04</span> new
+                  notifications
                   <a href="#">
-                    <span className="badge rounded-pill bg-primary p-2 ms-2">View all</span>
+                    <span className="badge rounded-pill bg-primary p-2 ms-2">
+                      View all
+                    </span>
                   </a>
                 </li>
 
@@ -54,7 +90,8 @@ function getInitials(name: string): string {
                   <div>
                     <h4>Lorem Ipsum</h4>
                     <p>
-                      Quae dolorem earum veritatis oditseno kia jnwjdnjw nwndwijd d wdjw wdwndwndiw.
+                      Quae dolorem earum veritatis oditseno kia jnwjdnjw
+                      nwndwijd d wdjw wdwndwndiw.
                     </p>
                     <p>30 min. ago</p>
                   </div>
@@ -65,15 +102,19 @@ function getInitials(name: string): string {
             {/* End Notification Nav */}
 
             <li className="nav-item pe-3">
-              <Link 
-                to="/OJT/user_profile" 
+              <Link
+                to="/OJT/user_profile"
                 className="nav-link nav-profile d-flex align-items-center pe-0"
               >
                 <div
                   className="d-flex align-items-center justify-content-center rounded-circle bg-primary text-white fw-semibold text-uppercase"
                   style={{ width: "34px", height: "34px", fontSize: "0.85rem" }}
                 >
-                  {user?.name === "MPMA -SUPER ADMIN" ? "SA" : user?.name? getInitials(user.name): ""}
+                  {user?.name === "MPMA -SUPER ADMIN"
+                    ? "SA"
+                    : user?.name
+                    ? getInitials(user.name)
+                    : ""}
                 </div>
               </Link>
             </li>
