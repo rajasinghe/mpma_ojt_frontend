@@ -38,13 +38,6 @@ const Sidebar = ({ user }: Props) => {
           active_icon: "bi-folder-fill",
           inactive_icon: "bi-folder",
         },
-        {
-          name: "Portal Account",
-          route: "/OJT/trainees/portal_account",
-          regex: /^\/OJT\/trainees\/portal_account/i,
-          active_icon: "bi-person-badge-fill",
-          inactive_icon: "bi-person-badge",
-        },
       ],
     },
     {
@@ -231,44 +224,27 @@ const Sidebar = ({ user }: Props) => {
     }
   }, [user]);
 
-  // State to control the sidebar toggle
-  const [isSidebarToggled, setIsSidebarToggled] = useState(false);
   let { pathname } = useLocation();
-
   const navigation = useNavigation();
 
   useEffect(() => {
     console.log(navigation);
   }, [navigation]);
 
-  // Function to toggle the sidebar state
-  const handleSidebarToggle = () => {
-    setIsSidebarToggled(!isSidebarToggled);
-    document.body.classList.toggle("toggle-sidebar");
-  };
-
   return (
     <>
-      {/* Toggle Sidebar Button */}
-      <i
-        className="bi bi-list toggle-sidebar-btn"
-        onClick={handleSidebarToggle}
-      ></i>
       {/* Sidebar Component */}
-      <aside
-        id="sidebar"
-        className={`sidebar ${isSidebarToggled ? "toggle-sidebar" : ""}`}
-      >
-        <div className="d-flex">
-          {/* Close Button */}
-          <i
-            className="bi bi-x-circle toggle-close-btn ms-auto"
-            onClick={handleSidebarToggle}
-          ></i>
-        </div>
-        <div className="d-flex logo align-items-center mb-3">
-          <img src={logo} alt="logo" />
-          <span className="d-lg-block">MPMA</span>
+      <aside id="sidebar" className="sidebar">
+        <div className="d-flex logo align-items-center mb-4 px-2">
+          <div className="logo-container">
+            <img src={logo} alt="logo" className="logo-image" />
+          </div>
+          <div className="logo-text">
+            <span className="d-lg-block brand-name">
+              MPMA <small style={{ fontSize: "0.6em" }}>OJT</small>
+            </span>
+            <small className="brand-subtitle">Management System</small>
+          </div>
         </div>
         <ul className="sidebar-nav" id="sidebar-nav">
           <li className="nav-heading">Main Menu</li>
@@ -294,11 +270,14 @@ const Sidebar = ({ user }: Props) => {
                     </Link>
                     <div className="w-100 d-flex">
                       <button
-                        className="btn btn-sm ms-auto"
+                        className="btn btn-sm ms-auto submenu-toggle"
                         data-bs-toggle="collapse"
                         data-bs-target={`#submenu-${link.name}`}
+                        aria-expanded="false"
                       >
-                        <i className={`bi bi-chevron-expand`}></i>
+                        <i
+                          className={`bi bi-chevron-down transition-transform`}
+                        ></i>
                       </button>
                     </div>
                   </a>

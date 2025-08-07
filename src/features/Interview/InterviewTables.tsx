@@ -242,12 +242,16 @@ export default function InterviewTables({
           timer: 2000,
           showConfirmButton: false,
         });
-      } catch (error) {
-        console.error("Error sending email:", error);
+      } catch (error: any) {
+        const errorMessage =
+          error.response?.data?.message ||
+          error.message ||
+          "An unexpected error occurred while sending the email";
+        console.error("Error sending email:", errorMessage);
         Swal.fire({
           icon: "error",
-          title: "Failed!",
-          text: `Could not send email to ${email}.`,
+          title: "Email Sending Failed!",
+          text: `${errorMessage[0]}.`,
         });
       }
     }
