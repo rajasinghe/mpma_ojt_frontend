@@ -13,6 +13,7 @@ import { useNavigate } from "react-router-dom";
 const schema = z.object({
   name: z.string().min(1, "Enter the user name"),
   TEL_NO: z.string().regex(/^\d{9,10}$/, "Invalid Format, e.g., 0771231231"),
+  email: z.string().email("Invalid email format").optional(),
   Jstart_date: z.string().date("Select a starting date for the journey"),
   period: z.object({
     label: z.string().min(1),
@@ -84,7 +85,15 @@ export default function TraineeForm({
   const onSubmit = async (data: any) => {
     console.log(data);
 
-    if (nic && endDate && regNo && attNo && selectedPeriod && program && institute) {
+    if (
+      nic &&
+      endDate &&
+      regNo &&
+      attNo &&
+      selectedPeriod &&
+      program &&
+      institute
+    ) {
       Swal.fire({
         title: "Are you Sure?",
         text: "",
@@ -123,6 +132,7 @@ export default function TraineeForm({
             reset({
               name: "",
               TEL_NO: "",
+              email: "",
               Jstart_date: "",
             });
             navigate(0);
@@ -137,11 +147,19 @@ export default function TraineeForm({
             footer: '<a href="#">Why do I have this issue?</a>',
           });
 
-          if (errors.response && errors.response.data && errors.response.data.errors) {
+          if (
+            errors.response &&
+            errors.response.data &&
+            errors.response.data.errors
+          ) {
             const errorObject = errors.response.data.errors;
             for (const key in errorObject) {
               const error = errorObject[key][0];
-              setError(key as keyof TraineeFormValues, { message: error }, { shouldFocus: true });
+              setError(
+                key as keyof TraineeFormValues,
+                { message: error },
+                { shouldFocus: true }
+              );
             }
             Swal.fire({
               icon: "error",
@@ -180,17 +198,39 @@ export default function TraineeForm({
       {/* disabled={regNo == null && attNo == null} */}
       <fieldset disabled={regNo == null && attNo == null}>
         <div className="border border-dark p-2 rounded-2 mt-3">
-          <div className="fs-5 fw-semibold mb-2">Trainee Personal Information</div>
+          <div className="fs-5 fw-semibold mb-2">
+            Trainee Personal Information
+          </div>
           <div className="mb-3">
             <label className="form-label">Trainee Name</label>
             <input type="text" className="form-control" {...register("name")} />
-            {errors.name && <p className="text-danger">{errors.name.message}</p>}
+            {errors.name && (
+              <p className="text-danger">{errors.name.message}</p>
+            )}
           </div>
 
           <div className="mb-3">
             <label className="form-label">Tel No</label>
-            <input type="text" className="form-control" {...register("TEL_NO")} />
-            {errors.TEL_NO && <p className="text-danger">{errors.TEL_NO.message}</p>}
+            <input
+              type="text"
+              className="form-control"
+              {...register("TEL_NO")}
+            />
+            {errors.TEL_NO && (
+              <p className="text-danger">{errors.TEL_NO.message}</p>
+            )}
+          </div>
+
+          <div className="mb-3">
+            <label className="form-label">Email (optional)</label>
+            <input
+              type="text"
+              className="form-control"
+              {...register("email")}
+            />
+            {errors.email && (
+              <p className="text-danger">{errors.email.message}</p>
+            )}
           </div>
         </div>
 
@@ -207,7 +247,7 @@ export default function TraineeForm({
                   isDisabled={periodsDisable}
                   onChange={(value) => {
                     value && setSelectedPeriod(parseInt(value.value));
-                    field.onChange(value || { value: "", label: ""});
+                    field.onChange(value || { value: "", label: "" });
                   }}
                   options={periodsList.map((period: any) => {
                     return {
@@ -219,7 +259,9 @@ export default function TraineeForm({
                 />
               )}
             />
-            {errors.period && <p className="text-danger">{errors.period.message}</p>}
+            {errors.period && (
+              <p className="text-danger">{errors.period.message}</p>
+            )}
             <div className="">
               <button
                 type="button"
@@ -232,7 +274,10 @@ export default function TraineeForm({
               </button>
             </div>
           </div>
-          <AddPeriodModal setperiods={setPeriods} visibilityState={periodModalVisibility} />
+          <AddPeriodModal
+            setperiods={setPeriods}
+            visibilityState={periodModalVisibility}
+          />
 
           <div className="container row px-0">
             <div className="w-50">
@@ -247,12 +292,17 @@ export default function TraineeForm({
                   const startDate = new Date(value.target.value);
                   if (selectedPeriod) {
                     try {
-                      const endDate = endDateCalculator(periodsList, selectedPeriod, startDate);
+                      const endDate = endDateCalculator(
+                        periodsList,
+                        selectedPeriod,
+                        startDate
+                      );
                       console.log(endDate);
                       setEndDate(endDate);
                       setPeriodsDisable(true);
                     } catch (error) {
-                      if (error) setError("root", { message: "check the period" });
+                      if (error)
+                        setError("root", { message: "check the period" });
                       console.log(error);
                     }
                   } else {
@@ -261,7 +311,9 @@ export default function TraineeForm({
                   register("Jstart_date").onChange(value);
                 }}
               />
-              {errors.Jstart_date && <p className="text-danger">{errors.Jstart_date.message}</p>}
+              {errors.Jstart_date && (
+                <p className="text-danger">{errors.Jstart_date.message}</p>
+              )}
             </div>
             <div className="w-50  ">
               <label>End Date</label>
@@ -290,47 +342,53 @@ export default function TraineeForm({
         </div>
       </fieldset>
 
-        <div className=" d-flex">
-          <div className="ms-auto d-flex ">
-            <button
-              className="btn btn-danger mt-3"
-              type="button"
-              onClick={() => {
-                reset();
-                setNic(null);
-                setProgram(null);
-                setInstitute(null);
-                setSelectedPeriod(null);
-                setEndDate(null);
-                setPeriodsDisable(false);
-                setPeriods(periods);
-    
-                // Reset the reg number states
-                regNoState[1](null);
-                ATT_NOstate[1](null);
-                nicDisable[1](false); 
+      <div className=" d-flex">
+        <div className="ms-auto d-flex ">
+          <button
+            className="btn btn-danger mt-3"
+            type="button"
+            onClick={() => {
+              reset();
+              setNic(null);
+              setProgram(null);
+              setInstitute(null);
+              setSelectedPeriod(null);
+              setEndDate(null);
+              setPeriodsDisable(false);
+              setPeriods(periods);
 
-                console.log(selectedPeriod);
-                console.log(errors);
-              }}
-              disabled={!nic || isSubmitting}
-            >
-              {" "}
+              // Reset the reg number states
+              regNoState[1](null);
+              ATT_NOstate[1](null);
+              nicDisable[1](false);
 
-              Reset
-            </button>
+              console.log(selectedPeriod);
+              console.log(errors);
+            }}
+            disabled={!nic || isSubmitting}
+          >
+            {" "}
+            Reset
+          </button>
 
-            <button disabled={!nic || isSubmitting || regNo == null && attNo == null} type="submit" className="btn btn-primary mt-3 ms-2">
-              {isSubmitting ? "Submiting...." : "Submit"}
-            </button>
-          </div>
+          <button
+            disabled={!nic || isSubmitting || (regNo == null && attNo == null)}
+            type="submit"
+            className="btn btn-primary mt-3 ms-2"
+          >
+            {isSubmitting ? "Submiting...." : "Submit"}
+          </button>
         </div>
-
+      </div>
     </form>
   );
 }
 
-const endDateCalculator = (periods: any[], selectedPeriod: number, startDate: Date): Date => {
+const endDateCalculator = (
+  periods: any[],
+  selectedPeriod: number,
+  startDate: Date
+): Date => {
   try {
     console.log("calc");
     const endDate = new Date(startDate);

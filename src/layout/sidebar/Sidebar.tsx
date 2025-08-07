@@ -38,6 +38,13 @@ const Sidebar = ({ user }: Props) => {
           active_icon: "bi-folder-fill",
           inactive_icon: "bi-folder",
         },
+        {
+          name: "Portal Account",
+          route: "/OJT/trainees/portal_account",
+          regex: /^\/OJT\/trainees\/portal_account/i,
+          active_icon: "bi-person-badge-fill",
+          inactive_icon: "bi-person-badge",
+        },
       ],
     },
     {

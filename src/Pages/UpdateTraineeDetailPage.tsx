@@ -11,6 +11,7 @@ import RegNumbers from "../Components/traineeForm/RegNumbers";
 const schema = z.object({
   name: z.string().min(1, "Enter the user name"),
   TEL_NO: z.string().regex(/^\d{9,10}$/, "Invalid Format, e.g., 0771231231"),
+  email: z.string().email("Invalid email format").optional(),
 });
 
 // Infer the types.
@@ -32,8 +33,12 @@ export default function UpdateTraineeDetailsPage() {
   const regNoState = useState<string | null>(loaderData.trainee.REG_NO);
   const ATT_NOstate = useState<number | null>(loaderData.trainee.ATT_NO);
 
-  const [program, setProgram] = useState<number | null>(loaderData.trainee.training_program_id);
-  const [institute, setInstitute] = useState<number | null>(loaderData.trainee.institute_id);
+  const [program, setProgram] = useState<number | null>(
+    loaderData.trainee.training_program_id
+  );
+  const [institute, setInstitute] = useState<number | null>(
+    loaderData.trainee.institute_id
+  );
 
   const [regNo] = regNoState;
   const [attNo] = ATT_NOstate;
@@ -63,6 +68,7 @@ export default function UpdateTraineeDetailsPage() {
     defaultValues: {
       name: loaderData.trainee.name,
       TEL_NO: loaderData.trainee.contact_no + "",
+      email: loaderData.trainee.email || "",
     },
   });
 
@@ -99,7 +105,10 @@ export default function UpdateTraineeDetailsPage() {
             };
 
             console.log(body);
-            const response = await api.put(`/api/trainee/${loaderData.trainee.id}`, body);
+            const response = await api.put(
+              `/api/trainee/${loaderData.trainee.id}`,
+              body
+            );
             console.log(response);
             Swal.fire({
               title: "updated!",
@@ -118,11 +127,19 @@ export default function UpdateTraineeDetailsPage() {
             footer: '<a href="#">Why do I have this issue?</a>',
           });
 
-          if (errors.response && errors.response.data && errors.response.data.errors) {
+          if (
+            errors.response &&
+            errors.response.data &&
+            errors.response.data.errors
+          ) {
             const errorObject = errors.response.data.errors;
             for (const key in errorObject) {
               const error = errorObject[key][0];
-              setError(key as keyof TraineeFormValues, { message: error }, { shouldFocus: true });
+              setError(
+                key as keyof TraineeFormValues,
+                { message: error },
+                { shouldFocus: true }
+              );
             }
             Swal.fire({
               icon: "error",
@@ -172,23 +189,52 @@ export default function UpdateTraineeDetailsPage() {
           {/* disabled={regNo == null && attNo == null} */}
           <fieldset disabled={regNo == null && attNo == null}>
             <div className="border border-dark p-2 rounded-2 mt-3">
-              <div className="fs-5 fw-semibold mb-2">Trainee Personal Information</div>
+              <div className="fs-5 fw-semibold mb-2">
+                Trainee Personal Information
+              </div>
               <div className="mb-3">
                 <label className="form-label">Trainee Name</label>
-                <input type="text" className="form-control" {...register("name")} />
-                {errors.name && <p className="text-danger">{errors.name.message}</p>}
+                <input
+                  type="text"
+                  className="form-control"
+                  {...register("name")}
+                />
+                {errors.name && (
+                  <p className="text-danger">{errors.name.message}</p>
+                )}
               </div>
 
               <div className="mb-3">
                 <label className="form-label">Tel No</label>
-                <input type="text" className="form-control" {...register("TEL_NO")} />
-                {errors.TEL_NO && <p className="text-danger">{errors.TEL_NO.message}</p>}
+                <input
+                  type="text"
+                  className="form-control"
+                  {...register("TEL_NO")}
+                />
+                {errors.TEL_NO && (
+                  <p className="text-danger">{errors.TEL_NO.message}</p>
+                )}
+              </div>
+
+              <div className="mb-3">
+                <label className="form-label">Email (optional)</label>
+                <input
+                  type="text"
+                  className="form-control"
+                  {...register("email")}
+                />
+                {errors.email && (
+                  <p className="text-danger">{errors.email.message}</p>
+                )}
               </div>
             </div>
             <div className="d-flex mt-2">
               <div className="me-auto">
-                <button type="button" className="btn btn-primary"
-                  onClick={() => navigate(-1)}>
+                <button
+                  type="button"
+                  className="btn btn-primary"
+                  onClick={() => navigate(-1)}
+                >
                   <i className="bi bi-arrow-left"></i>
                 </button>
               </div>
