@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import moment from "moment";
 import { useNavigate } from "react-router-dom";
 import Swal from "sweetalert2";
@@ -18,6 +18,15 @@ interface Interview {
     fromDate: string;
     toDate: string;
   }[];
+}
+
+interface EmailDetail {
+  id: number;
+  NIC: string;
+  type: "login" | "documents";
+  count: number;
+  createdAt: string;
+  updatedAt: string;
 }
 
 interface Props {
@@ -43,9 +52,6 @@ export default function InterviewTables({
   const [selectedAllInterviews, setSelectedAllInterviews] = useState<string[]>(
     []
   );
-  const [emailSentTrainees, setEmailSentTrainees] = useState<{
-    [key: string]: number;
-  }>({});
 
   // Processing states for buttons
   const [processingEmails, setProcessingEmails] = useState<{
@@ -53,7 +59,24 @@ export default function InterviewTables({
   }>({});
   const [isBulkProcessing, setIsBulkProcessing] = useState(false);
 
+  // Email details from backend
+  const [emailDetails, setEmailDetails] = useState<EmailDetail[]>([]);
+
   const navigate = useNavigate();
+
+  // Fetch email details on component mount
+  useEffect(() => {
+    const fetchEmailDetails = async () => {
+      try {
+        const response = await api.get("api/interview/email-details");
+        setEmailDetails(response.data.emailDetails || []);
+      } catch (error) {
+        console.error("Error fetching email details:", error);
+      }
+    };
+
+    fetchEmailDetails();
+  }, []);
 
   const handleShowDetails = (interview: Interview) => {
     setSelectedInterview(interview);
@@ -140,11 +163,28 @@ export default function InterviewTables({
     }
   };
 
-  // Check if email was sent within last 2 minutes
-  const isEmailRecentlySent = (email: string) => {
-    const sentTime = emailSentTrainees[email];
-    if (!sentTime) return false;
-    return Date.now() - sentTime < 2 * 60 * 1000; // 2 minutes
+  // Helper functions for email details
+  const getEmailDetail = (NIC: string, type: "login" | "documents") => {
+    return emailDetails.find(
+      (detail) => detail.NIC === NIC && detail.type === type
+    );
+  };
+
+  const isEmailRecentlySentFromBackend = (
+    NIC: string,
+    type: "login" | "documents"
+  ) => {
+    const emailDetail = getEmailDetail(NIC, type);
+    if (!emailDetail) return false;
+
+    const updatedTime = new Date(emailDetail.updatedAt).getTime();
+    const currentTime = Date.now();
+    return currentTime - updatedTime < 2 * 60 * 1000; // 2 minutes
+  };
+
+  const hasEmailBeenSent = (NIC: string, type: "login" | "documents") => {
+    const emailDetail = getEmailDetail(NIC, type);
+    return emailDetail && emailDetail.count > 0;
   };
 
   const sendBulkEmailsAllInterviews = async () => {
@@ -165,6 +205,7 @@ export default function InterviewTables({
       .map((interview) => ({
         email: interview.email,
         NIC: interview.NIC,
+        name: interview.name,
       }));
 
     const confirm = await Swal.fire({
@@ -197,16 +238,20 @@ export default function InterviewTables({
         });
 
         setSelectedAllInterviews([]);
+
+        // Refresh email details after successful bulk send
+        const response = await api.get("api/interview/email-details");
+        setEmailDetails(response.data.emailDetails || []);
       } catch (error: any) {
         const errorMessage =
-          error.response?.data?.message ||
+          error.response?.data?.message[0] ||
           error.message ||
           "An unexpected error occurred while sending the email";
         console.error("Error sending bulk emails:", error);
         Swal.fire({
           icon: "error",
           title: "Send bulk emails Failed!",
-          text: `${errorMessage[0]}.`,
+          text: `${errorMessage}.`,
         });
       } finally {
         // Reset processing states
@@ -216,15 +261,24 @@ export default function InterviewTables({
     }
   };
 
-  const sendSingleEmail = async (email: string, NIC: string) => {
+  const sendSingleEmail = async (
+    email: string,
+    NIC: string,
+    name: string,
+    isResend: boolean = false
+  ) => {
     const confirm = await Swal.fire({
       title: "Are you sure?",
       text: showLoginDetailsTable
-        ? `Send login details to ${email}?`
-        : `Send meeting schedule and document requirements to ${email}?`,
+        ? isResend
+          ? `Resend login details to ${email}?`
+          : `Send login details to ${email}?`
+        : isResend
+        ? `Resend document requirements to ${email}?`
+        : `Send document requirements to ${email}?`,
       icon: "question",
       showCancelButton: true,
-      confirmButtonText: "Yes, send it",
+      confirmButtonText: isResend ? "Yes, resend it" : "Yes, send it",
       cancelButtonText: "Cancel",
     });
 
@@ -245,21 +299,14 @@ export default function InterviewTables({
             {
               email: email,
               NIC: NIC,
+              name: name,
             },
           ],
         });
 
-        // Mark email as sent with timestamp
-        setEmailSentTrainees((prev) => ({
-          ...prev,
-          [email]: Date.now(),
-        }));
-
-        Swal.fire({
-          icon: "success",
-          title: "Success!",
-          text: "Email sent successfully.",
-        });
+        // Refresh email details after successful send
+        const response = await api.get("api/interview/email-details");
+        setEmailDetails(response.data.emailDetails || []);
       } catch (error: any) {
         const errorMessage =
           error.response?.data?.message ||
@@ -391,39 +438,73 @@ export default function InterviewTables({
                       >
                         Details
                       </button>
-                      <button
-                        className="btn btn-sm btn-success ms-1"
-                        onClick={() =>
-                          sendSingleEmail(interview.email, interview.NIC)
-                        }
-                        disabled={
-                          isEmailRecentlySent(interview.email) ||
-                          processingEmails[interview.email] ||
-                          isBulkProcessing
-                        }
-                        title={
-                          isEmailRecentlySent(interview.email)
-                            ? "Email sent recently"
-                            : processingEmails[interview.email]
-                            ? "Sending email..."
-                            : isBulkProcessing
-                            ? "Bulk email in progress..."
-                            : "Send login details"
-                        }
-                      >
-                        {processingEmails[interview.email] ? (
-                          <>
-                            <span
-                              className="spinner-border spinner-border-sm me-1"
-                              role="status"
-                              aria-hidden="true"
-                            ></span>
-                            Processing...
-                          </>
-                        ) : (
-                          "Send Mails"
-                        )}
-                      </button>
+                      {interview.email &&
+                        (() => {
+                          const emailType = showLoginDetailsTable
+                            ? "login"
+                            : "documents";
+                          const hasBeenSent = hasEmailBeenSent(
+                            interview.NIC,
+                            emailType
+                          );
+                          const isRecentlySent = isEmailRecentlySentFromBackend(
+                            interview.NIC,
+                            emailType
+                          );
+                          const isProcessing =
+                            processingEmails[interview.email];
+
+                          return (
+                            <button
+                              className={`btn btn-sm ms-1 ${
+                                hasBeenSent ? "btn-warning" : "btn-success"
+                              }`}
+                              onClick={() =>
+                                sendSingleEmail(
+                                  interview.email,
+                                  interview.NIC,
+                                  interview.name,
+                                  hasBeenSent
+                                )
+                              }
+                              disabled={
+                                isRecentlySent ||
+                                isProcessing ||
+                                isBulkProcessing
+                              }
+                              title={
+                                isRecentlySent
+                                  ? "Email sent recently (wait 2 minutes)"
+                                  : isProcessing
+                                  ? "Sending email..."
+                                  : isBulkProcessing
+                                  ? "Bulk email in progress..."
+                                  : hasBeenSent
+                                  ? showLoginDetailsTable
+                                    ? "Resend login details"
+                                    : "Resend document requirements"
+                                  : showLoginDetailsTable
+                                  ? "Send login details"
+                                  : "Send document requirements"
+                              }
+                            >
+                              {isProcessing ? (
+                                <>
+                                  <span
+                                    className="spinner-border spinner-border-sm me-1"
+                                    role="status"
+                                    aria-hidden="true"
+                                  ></span>
+                                  Processing...
+                                </>
+                              ) : hasBeenSent ? (
+                                "Resend"
+                              ) : (
+                                "Send Mails"
+                              )}
+                            </button>
+                          );
+                        })()}
                     </div>
                   </td>
                 </tr>
