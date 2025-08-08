@@ -62,6 +62,11 @@ export default function InterviewTables({
   // Email details from backend
   const [emailDetails, setEmailDetails] = useState<EmailDetail[]>([]);
 
+  // Track disabled states for 2-minute cooldown
+  const [disabledEmails, setDisabledEmails] = useState<{
+    [key: string]: { timestamp: number; type: "login" | "documents" };
+  }>({});
+
   const navigate = useNavigate();
 
   // Fetch email details on component mount
@@ -76,6 +81,29 @@ export default function InterviewTables({
     };
 
     fetchEmailDetails();
+  }, []);
+
+  // Clean up expired disabled states every minute
+  useEffect(() => {
+    const interval = setInterval(() => {
+      const now = Date.now();
+      setDisabledEmails((prev) => {
+        const updated = { ...prev };
+        let hasChanges = false;
+
+        Object.keys(updated).forEach((key) => {
+          if (now - updated[key].timestamp >= 2 * 60 * 1000) {
+            // 2 minutes
+            delete updated[key];
+            hasChanges = true;
+          }
+        });
+
+        return hasChanges ? updated : prev;
+      });
+    }, 60000); // Check every minute
+
+    return () => clearInterval(interval);
   }, []);
 
   const handleShowDetails = (interview: Interview) => {
@@ -154,9 +182,32 @@ export default function InterviewTables({
       allInterviews,
       allInterviewsFilter
     ).filter((interview) => interview.email);
+
     if (e.target.checked) {
+      // Only select interviews that are not disabled
+      const enabledInterviews = interviewsWithEmail.filter((interview) => {
+        const emailType = showLoginDetailsTable ? "login" : "documents";
+        const isDisabledLocally = isEmailDisabledLocally(
+          interview.email,
+          emailType
+        );
+        const isRecentlySentLogin = isEmailRecentlySentFromBackend(
+          interview.NIC,
+          "login"
+        );
+        const isRecentlySentDocuments = isEmailRecentlySentFromBackend(
+          interview.NIC,
+          "documents"
+        );
+        const isDisabled =
+          isDisabledLocally ||
+          isRecentlySentLogin ||
+          isRecentlySentDocuments ||
+          isBulkProcessing;
+        return !isDisabled;
+      });
       setSelectedAllInterviews(
-        interviewsWithEmail.map((interview) => interview.NIC)
+        enabledInterviews.map((interview) => interview.NIC)
       );
     } else {
       setSelectedAllInterviews([]);
@@ -185,6 +236,24 @@ export default function InterviewTables({
   const hasEmailBeenSent = (NIC: string, type: "login" | "documents") => {
     const emailDetail = getEmailDetail(NIC, type);
     return emailDetail && emailDetail.count > 0;
+  };
+
+  // Check if email is disabled due to local 2-minute cooldown (any type disables both)
+  const isEmailDisabledLocally = (
+    email: string,
+    type: "login" | "documents"
+  ) => {
+    const disabledInfo = disabledEmails[email];
+    if (!disabledInfo) return false;
+
+    const now = Date.now();
+    return now - disabledInfo.timestamp < 2 * 60 * 1000; // 2 minutes
+  };
+
+  // Get email send count for display
+  const getEmailSendCount = (NIC: string, type: "login" | "documents") => {
+    const emailDetail = getEmailDetail(NIC, type);
+    return emailDetail ? emailDetail.count : 0;
   };
 
   const sendBulkEmailsAllInterviews = async () => {
@@ -230,14 +299,24 @@ export default function InterviewTables({
 
       try {
         const endpoint = showLoginDetailsTable
-          ? "api/trainee/sendMails"
-          : "api/trainee/sendDocumentRequirements";
+          ? "api/interview/sendMails"
+          : "api/interview/sendDocumentRequirements";
 
         await api.post(endpoint, {
           data: selectedInterviewsData,
         });
 
         setSelectedAllInterviews([]);
+
+        // Set 2-minute cooldown for all emails that were sent (disables both login and document buttons)
+        const emailType = showLoginDetailsTable ? "login" : "documents";
+        const now = Date.now();
+        const newDisabledEmails = selectedInterviewsData.reduce((acc, item) => {
+          acc[item.email] = { timestamp: now, type: emailType };
+          return acc;
+        }, {} as { [key: string]: { timestamp: number; type: "login" | "documents" } });
+
+        setDisabledEmails((prev) => ({ ...prev, ...newDisabledEmails }));
 
         // Refresh email details after successful bulk send
         const response = await api.get("api/interview/email-details");
@@ -291,8 +370,8 @@ export default function InterviewTables({
 
       try {
         const endpoint = showLoginDetailsTable
-          ? "api/trainee/sendMails"
-          : "api/trainee/sendDocumentRequirements";
+          ? "api/interview/sendMails"
+          : "api/interview/sendDocumentRequirements";
 
         await api.post(endpoint, {
           data: [
@@ -303,6 +382,13 @@ export default function InterviewTables({
             },
           ],
         });
+
+        // Set 2-minute cooldown for this email (disables both login and document buttons)
+        const emailType = showLoginDetailsTable ? "login" : "documents";
+        setDisabledEmails((prev) => ({
+          ...prev,
+          [email]: { timestamp: Date.now(), type: emailType },
+        }));
 
         // Refresh email details after successful send
         const response = await api.get("api/interview/email-details");
@@ -340,6 +426,29 @@ export default function InterviewTables({
       (interview) => interview.email
     );
 
+    // Get only enabled (non-disabled) interviews for "Select All" logic
+    const enabledInterviews = interviewsWithEmail.filter((interview) => {
+      const emailType = showLoginDetailsTable ? "login" : "documents";
+      const isDisabledLocally = isEmailDisabledLocally(
+        interview.email,
+        emailType
+      );
+      const isRecentlySentLogin = isEmailRecentlySentFromBackend(
+        interview.NIC,
+        "login"
+      );
+      const isRecentlySentDocuments = isEmailRecentlySentFromBackend(
+        interview.NIC,
+        "documents"
+      );
+      const isDisabled =
+        isDisabledLocally ||
+        isRecentlySentLogin ||
+        isRecentlySentDocuments ||
+        isBulkProcessing;
+      return !isDisabled;
+    });
+
     return (
       <div className="table-responsive">
         <table className="table table-striped table-sm table-bordered table-hover">
@@ -349,11 +458,14 @@ export default function InterviewTables({
                 <input
                   type="checkbox"
                   checked={
-                    selectedInterviews.length === interviewsWithEmail.length &&
-                    interviewsWithEmail.length > 0
+                    enabledInterviews.length > 0 &&
+                    enabledInterviews.every((interview) =>
+                      selectedInterviews.includes(interview.NIC)
+                    )
                   }
                   onChange={handleSelectAll}
-                  title="Select all trainees with email"
+                  title="Select all enabled trainees with email"
+                  disabled={enabledInterviews.length === 0}
                 />
               </th>
               <th>NIC</th>
@@ -377,13 +489,50 @@ export default function InterviewTables({
                   className={isFuture ? "future-interview-row" : ""}
                 >
                   <td>
-                    {interview.email ? (
-                      <input
-                        type="checkbox"
-                        checked={selectedInterviews.includes(interview.NIC)}
-                        onChange={() => handleSelectInterview(interview.NIC)}
-                      />
-                    ) : null}
+                    {interview.email
+                      ? (() => {
+                          const emailType = showLoginDetailsTable
+                            ? "login"
+                            : "documents";
+                          const isDisabledLocally = isEmailDisabledLocally(
+                            interview.email,
+                            emailType
+                          );
+                          const isRecentlySentLogin =
+                            isEmailRecentlySentFromBackend(
+                              interview.NIC,
+                              "login"
+                            );
+                          const isRecentlySentDocuments =
+                            isEmailRecentlySentFromBackend(
+                              interview.NIC,
+                              "documents"
+                            );
+                          const isDisabled =
+                            isDisabledLocally ||
+                            isRecentlySentLogin ||
+                            isRecentlySentDocuments ||
+                            isBulkProcessing;
+
+                          return (
+                            <input
+                              type="checkbox"
+                              checked={selectedInterviews.includes(
+                                interview.NIC
+                              )}
+                              onChange={() =>
+                                handleSelectInterview(interview.NIC)
+                              }
+                              disabled={isDisabled}
+                              title={
+                                isDisabled
+                                  ? "Cannot select while email sending is disabled"
+                                  : ""
+                              }
+                            />
+                          );
+                        })()
+                      : null}
                   </td>
                   <td>{interview.NIC}</td>
                   <td>{interview.name}</td>
@@ -451,8 +600,30 @@ export default function InterviewTables({
                             interview.NIC,
                             emailType
                           );
+                          // Check if any email type was recently sent from backend
+                          const isRecentlySentLogin =
+                            isEmailRecentlySentFromBackend(
+                              interview.NIC,
+                              "login"
+                            );
+                          const isRecentlySentDocuments =
+                            isEmailRecentlySentFromBackend(
+                              interview.NIC,
+                              "documents"
+                            );
+                          const isAnyRecentlySent =
+                            isRecentlySentLogin || isRecentlySentDocuments;
+
+                          const isDisabledLocally = isEmailDisabledLocally(
+                            interview.email,
+                            emailType
+                          );
                           const isProcessing =
                             processingEmails[interview.email];
+                          const sendCount = getEmailSendCount(
+                            interview.NIC,
+                            emailType
+                          );
 
                           return (
                             <button
@@ -468,12 +639,13 @@ export default function InterviewTables({
                                 )
                               }
                               disabled={
-                                isRecentlySent ||
+                                isAnyRecentlySent ||
+                                isDisabledLocally ||
                                 isProcessing ||
                                 isBulkProcessing
                               }
                               title={
-                                isRecentlySent
+                                isAnyRecentlySent || isDisabledLocally
                                   ? "Email sent recently (wait 2 minutes)"
                                   : isProcessing
                                   ? "Sending email..."
@@ -498,9 +670,13 @@ export default function InterviewTables({
                                   Processing...
                                 </>
                               ) : hasBeenSent ? (
-                                "Resend"
+                                sendCount > 1 ? (
+                                  `Resend(${sendCount})`
+                                ) : (
+                                  "Resend"
+                                )
                               ) : (
-                                "Send Mails"
+                                "Send Mail"
                               )}
                             </button>
                           );
