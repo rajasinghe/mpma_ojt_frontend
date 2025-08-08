@@ -47,6 +47,12 @@ export default function InterviewTables({
     [key: string]: number;
   }>({});
 
+  // Processing states for buttons
+  const [processingEmails, setProcessingEmails] = useState<{
+    [key: string]: boolean;
+  }>({});
+  const [isBulkProcessing, setIsBulkProcessing] = useState(false);
+
   const navigate = useNavigate();
 
   const handleShowDetails = (interview: Interview) => {
@@ -173,6 +179,14 @@ export default function InterviewTables({
     });
 
     if (confirm.isConfirmed) {
+      // Set bulk processing state and disable all send mail buttons
+      setIsBulkProcessing(true);
+      const allEmails = selectedInterviewsData.reduce((acc, item) => {
+        acc[item.email] = true;
+        return acc;
+      }, {} as { [key: string]: boolean });
+      setProcessingEmails(allEmails);
+
       try {
         const endpoint = showLoginDetailsTable
           ? "api/trainee/sendMails"
@@ -183,21 +197,21 @@ export default function InterviewTables({
         });
 
         setSelectedAllInterviews([]);
-
-        Swal.fire({
-          icon: "success",
-          title: "Bulk Emails Sent!",
-          text: `Emails successfully sent to ${selectedInterviewsData.length} trainees`,
-          timer: 2000,
-          showConfirmButton: false,
-        });
-      } catch (error) {
+      } catch (error: any) {
+        const errorMessage =
+          error.response?.data?.message ||
+          error.message ||
+          "An unexpected error occurred while sending the email";
         console.error("Error sending bulk emails:", error);
         Swal.fire({
           icon: "error",
-          title: "Failed!",
-          text: "Could not send bulk emails.",
+          title: "Send bulk emails Failed!",
+          text: `${errorMessage[0]}.`,
         });
+      } finally {
+        // Reset processing states
+        setIsBulkProcessing(false);
+        setProcessingEmails({});
       }
     }
   };
@@ -215,6 +229,12 @@ export default function InterviewTables({
     });
 
     if (confirm.isConfirmed) {
+      // Set processing state for this specific email
+      setProcessingEmails((prev) => ({
+        ...prev,
+        [email]: true,
+      }));
+
       try {
         const endpoint = showLoginDetailsTable
           ? "api/trainee/sendMails"
@@ -237,10 +257,8 @@ export default function InterviewTables({
 
         Swal.fire({
           icon: "success",
-          title: "Email Sent!",
-          text: `Email successfully sent to ${email}`,
-          timer: 2000,
-          showConfirmButton: false,
+          title: "Success!",
+          text: "Email sent successfully.",
         });
       } catch (error: any) {
         const errorMessage =
@@ -252,6 +270,13 @@ export default function InterviewTables({
           icon: "error",
           title: "Email Sending Failed!",
           text: `${errorMessage[0]}.`,
+        });
+      } finally {
+        // Reset processing state for this email
+        setProcessingEmails((prev) => {
+          const newState = { ...prev };
+          delete newState[email];
+          return newState;
         });
       }
     }
@@ -371,14 +396,33 @@ export default function InterviewTables({
                         onClick={() =>
                           sendSingleEmail(interview.email, interview.NIC)
                         }
-                        disabled={isEmailRecentlySent(interview.email)}
+                        disabled={
+                          isEmailRecentlySent(interview.email) ||
+                          processingEmails[interview.email] ||
+                          isBulkProcessing
+                        }
                         title={
                           isEmailRecentlySent(interview.email)
                             ? "Email sent recently"
+                            : processingEmails[interview.email]
+                            ? "Sending email..."
+                            : isBulkProcessing
+                            ? "Bulk email in progress..."
                             : "Send login details"
                         }
                       >
-                        Send Mails
+                        {processingEmails[interview.email] ? (
+                          <>
+                            <span
+                              className="spinner-border spinner-border-sm me-1"
+                              role="status"
+                              aria-hidden="true"
+                            ></span>
+                            Processing...
+                          </>
+                        ) : (
+                          "Send Mails"
+                        )}
                       </button>
                     </div>
                   </td>
@@ -453,9 +497,29 @@ export default function InterviewTables({
                 <button
                   className="btn btn-primary"
                   onClick={sendBulkEmailsAllInterviews}
-                  disabled={selectedAllInterviews.length === 0}
+                  disabled={
+                    selectedAllInterviews.length === 0 || isBulkProcessing
+                  }
+                  title={
+                    isBulkProcessing
+                      ? "Sending bulk emails..."
+                      : selectedAllInterviews.length === 0
+                      ? "Select trainees to send bulk emails"
+                      : "Send bulk emails to selected trainees"
+                  }
                 >
-                  Send Bulk Emails ({selectedAllInterviews.length})
+                  {isBulkProcessing ? (
+                    <>
+                      <span
+                        className="spinner-border spinner-border-sm me-1"
+                        role="status"
+                        aria-hidden="true"
+                      ></span>
+                      Processing...
+                    </>
+                  ) : (
+                    `Send Bulk Emails (${selectedAllInterviews.length})`
+                  )}
                 </button>
               </div>
             </div>
