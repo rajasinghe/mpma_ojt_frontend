@@ -53,31 +53,10 @@ function LoginComponent({}: LoginComponentProps) {
       setIsLoading(true);
       console.log(data);
 
-      // Show loading state
-      Swal.fire({
-        title: "Signing you in...",
-        text: "Please wait while we verify your credentials",
-        allowOutsideClick: false,
-        allowEscapeKey: false,
-        showConfirmButton: false,
-        didOpen: () => {
-          Swal.showLoading();
-        },
-      });
-
       const response = await api.post("auth/login", data);
       sessionLogin(response.data);
 
       console.log(response.data);
-
-      // Success feedback
-      await Swal.fire({
-        icon: "success",
-        title: "Welcome!",
-        text: "Login successful. Redirecting...",
-        timer: 1500,
-        showConfirmButton: false,
-      });
 
       navigate("/OJT/trainees");
     } catch (error: any) {
