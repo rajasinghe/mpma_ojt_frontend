@@ -120,14 +120,14 @@ export default function InterviewNic({
           onClick={handleSubmit(onValidate)}
         >
           {isSubmitting ? (
-            <>
+            <div className="d-flex align-items-center">
+              <span>Validating...</span>
               <span
-                className="spinner-border spinner-border-sm me-2"
+                className="spinner-border spinner-border-sm ms-2"
                 role="status"
                 aria-hidden="true"
               ></span>
-              Validating...
-            </>
+            </div>
           ) : (
             "Validate"
           )}

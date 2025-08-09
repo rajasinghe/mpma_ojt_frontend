@@ -191,7 +191,13 @@ export default function ViewInterviewPage() {
         <MainContainer title="Interviews" breadCrumbs={["Home", "Interviews"]}>
           <SubContainer>
             <div className="pt-4">
-              <div className="mb-3 d-flex justify-content-end px-4">
+              <div className="mb-3 d-flex justify-content-between align-items-center px-4">
+                <Link
+                  to={"/OJT/interview/new"}
+                  className="btn btn-primary btn-sm"
+                >
+                  Add New Interview
+                </Link>
                 <button
                   className="btn btn-info btn-sm"
                   onClick={handleShowSummary}
@@ -210,16 +216,6 @@ export default function ViewInterviewPage() {
                 }
               />
             </div>
-            <section className="px-2 mt-1">
-              <div className="d-flex mt-2">
-                <Link
-                  to={"/OJT/interview/new"}
-                  className="btn btn-primary btn-sm ms-auto"
-                >
-                  Add New Interview
-                </Link>
-              </div>
-            </section>
           </SubContainer>
         </MainContainer>
       )}

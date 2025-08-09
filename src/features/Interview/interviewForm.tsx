@@ -17,6 +17,22 @@ interface DepartmentSummary {
   interview_count: number;
 }
 
+interface ActiveTraineeSummary {
+  department_id: number;
+  department_name: string;
+  active_count: number;
+  new_count: number;
+}
+
+interface ActiveTraineeSummaryResponse {
+  date: string;
+  summary: ActiveTraineeSummary[];
+  totals: {
+    total_active: number;
+    total_new: number;
+  };
+}
+
 const schema = z
   .object({
     name: z.string().optional(),
@@ -154,6 +170,10 @@ export default function InterviewForm(Interview: InterviewProps) {
   const [departmentSummary, setDepartmentSummary] = useState<
     DepartmentSummary[]
   >([]);
+  const [activeTraineeSummary, setActiveTraineeSummary] =
+    useState<ActiveTraineeSummaryResponse | null>(null);
+  const [loadingActiveTraineeSummary, setLoadingActiveTraineeSummary] =
+    useState(false);
   const navigate = useNavigate();
   const isEditing = Interview.isEditing || false;
 
@@ -189,6 +209,11 @@ export default function InterviewForm(Interview: InterviewProps) {
   ];
   const startDate = watch("startDate");
   const duration = watch("duration");
+
+  // Create a serialized version of selections to ensure useEffect triggers
+  const selectionsString = JSON.stringify(
+    selections.map((s) => s.department_id)
+  );
   const lastDeptRef = useRef<HTMLDivElement | null>(null);
   const [prevCount, setPrevCount] = useState(selections.length);
 
@@ -198,6 +223,23 @@ export default function InterviewForm(Interview: InterviewProps) {
   const departmentSummaryLoader = async () => {
     const response = await api.get("api/department/summary");
     return response.data;
+  };
+
+  const fetchActiveTraineeSummary = async (date: string) => {
+    if (!date) return;
+
+    try {
+      setLoadingActiveTraineeSummary(true);
+      const response = await api.get(
+        `/api/trainee/activeTraineeSummary/${date}`
+      );
+      setActiveTraineeSummary(response.data);
+    } catch (error) {
+      console.error("Error fetching active trainee summary:", error);
+      setActiveTraineeSummary(null);
+    } finally {
+      setLoadingActiveTraineeSummary(false);
+    }
   };
 
   useEffect(() => {
@@ -221,6 +263,22 @@ export default function InterviewForm(Interview: InterviewProps) {
     };
     loadDepartments();
   }, []);
+
+  // Fetch active trainee summary when start date changes and departments are selected
+  useEffect(() => {
+    const hasDate = Boolean(startDate);
+    const hasDepartment = selections.some((sel) => sel.department_id > 0);
+
+    if (hasDate && hasDepartment) {
+      // Always fetch when both conditions are met
+      console.log("Fetching active trainee summary for:", startDate);
+      fetchActiveTraineeSummary(startDate);
+    } else {
+      // Clear summary if either date or department is missing
+      console.log("Clearing active trainee summary");
+      setActiveTraineeSummary(null);
+    }
+  }, [startDate, selectionsString]);
 
   const departmentOptions = departmentSummary.map((dept) => ({
     value: dept.dep_id,
@@ -472,7 +530,7 @@ export default function InterviewForm(Interview: InterviewProps) {
                   />
 
                   {selection.department_id > 0 && (
-                    <div className="mt-2 small">
+                    <div className="mt-2">
                       {(() => {
                         const summary = departmentSummary.find(
                           (dept) => dept.dep_id === selection.department_id
@@ -480,24 +538,129 @@ export default function InterviewForm(Interview: InterviewProps) {
 
                         if (!summary)
                           return (
-                            <div className="text-muted">Summary not found</div>
+                            <div className="text-muted small">
+                              Department summary not found
+                            </div>
                           );
 
                         return (
-                          <div className="d-flex gap-3 text-muted">
-                            <span>
-                              Total department Interviews:{" "}
-                              {summary.interview_count}
-                            </span>
-                            <span>
-                              Current Active Trainees: {summary.active_count}
-                            </span>
-                            <span>Max Capacity: {summary.max_count}</span>
+                          <div className="p-2 bg-light rounded">
+                            <div className="small fw-bold text-secondary mb-1">
+                              Current Department Status
+                            </div>
+                            <div className="row g-2 small">
+                              <div className="col-4">
+                                <div className="text-center">
+                                  <div className="text-muted">Max Capacity</div>
+                                  <div className="fw-bold text-info">
+                                    {summary.max_count}
+                                  </div>
+                                </div>
+                              </div>
+                              <div className="col-4">
+                                <div className="text-center">
+                                  <div className="text-muted">Interviews</div>
+                                  <div className="fw-bold text-dark">
+                                    {summary.interview_count}
+                                  </div>
+                                </div>
+                              </div>
+                              <div className="col-4">
+                                <div className="text-center">
+                                  <div className="text-muted">Active Now</div>
+                                  <div className="fw-bold text-primary">
+                                    {summary.active_count}
+                                  </div>
+                                </div>
+                              </div>
+                            </div>
                           </div>
                         );
                       })()}
                     </div>
                   )}
+
+                  {/* Active Trainee Summary for selected department on start date */}
+                  {selection.department_id > 0 &&
+                    startDate &&
+                    activeTraineeSummary && (
+                      <div className="mt-2 p-2 bg-success bg-opacity-10 border border-success border-opacity-25 rounded">
+                        {loadingActiveTraineeSummary ? (
+                          <div className="d-flex align-items-center">
+                            <div
+                              className="spinner-border spinner-border-sm me-2"
+                              role="status"
+                            >
+                              <span className="visually-hidden">
+                                Loading...
+                              </span>
+                            </div>
+                            <span className="small">
+                              Loading trainee summary...
+                            </span>
+                          </div>
+                        ) : (
+                          (() => {
+                            const deptSummary =
+                              activeTraineeSummary.summary.find(
+                                (dept) =>
+                                  dept.department_id === selection.department_id
+                              );
+
+                            if (!deptSummary) {
+                              return (
+                                <div className="text-muted small">
+                                  No trainee data available for{" "}
+                                  {activeTraineeSummary.date}
+                                </div>
+                              );
+                            }
+
+                            return (
+                              <div>
+                                <div className="small fw-bold text-success mb-1">
+                                  📅 Trainee Summary for{" "}
+                                  {activeTraineeSummary.date}
+                                </div>
+                                <div className="row g-2 small">
+                                  <div className="col-4">
+                                    <div className="text-center">
+                                      <div className="text-muted">
+                                        Trainee Count
+                                      </div>
+                                      <div className="fw-bold text-primary">
+                                        {deptSummary.active_count}
+                                      </div>
+                                    </div>
+                                  </div>
+                                  <div className="col-4">
+                                    <div className="text-center">
+                                      <div className="text-muted">
+                                        New Trainees
+                                      </div>
+                                      <div className="fw-bold text-success">
+                                        {deptSummary.new_count}
+                                      </div>
+                                    </div>
+                                  </div>
+                                  <div className="col-4">
+                                    <div className="text-center">
+                                      <div className="text-muted">
+                                        Total Active
+                                      </div>
+                                      <div className="fw-bold text-info">
+                                        {deptSummary.active_count +
+                                          deptSummary.new_count}
+                                      </div>
+                                    </div>
+                                  </div>
+                                </div>
+                              </div>
+                            );
+                          })()
+                        )}
+                      </div>
+                    )}
                 </div>
                 <div>
                   <button

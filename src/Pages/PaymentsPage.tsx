@@ -439,7 +439,13 @@ export default function PaymentsPage() {
         <MainContainer title="Payments" breadCrumbs={["Home", "Payments"]}>
           {/*search bar  */}
           <SubContainer>
-            <div className="bg-body-secondary p-2 mb-2 rounded-2 position-relative">
+            <div
+              className="bg-body-secondary p-2 mb-2 rounded-2 position-relative"
+              style={{
+                maxWidth: "1200px",
+                margin: "0 auto",
+              }}
+            >
               {/* serach box */}
               <div className="d-flex">
                 <input

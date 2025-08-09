@@ -450,9 +450,12 @@ export default function InterviewTables({
     });
 
     return (
-      <div className="table-responsive">
+      <div
+        className="table-responsive"
+        style={{ maxHeight: "53vh", overflowY: "auto" }}
+      >
         <table className="table table-striped table-sm table-bordered table-hover">
-          <thead className="table-dark">
+          <thead className="table-dark sticky-top">
             <tr className="small">
               <th>
                 <input
@@ -720,7 +723,10 @@ export default function InterviewTables({
         </div>
       </div>
       <div className="container-fluid px-4">
-        <div className="card mb-4">
+        <div
+          className="card mb-4"
+          style={{ maxWidth: "1200px", margin: "0 auto" }}
+        >
           <div className="card-header">
             <h5 className="mb-0">Interviews</h5>
           </div>
