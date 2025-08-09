@@ -694,6 +694,7 @@ export default function InterviewTables({
 
   return (
     <>
+      {/* Search bar for All Interviews */}
       <div className="col-md-6 px-4 pb-2">
         <div className="input-group">
           <span className="input-group-text">
@@ -724,7 +725,6 @@ export default function InterviewTables({
             <h5 className="mb-0">Interviews</h5>
           </div>
           <div className="card-body">
-            {/* Search bar for All Interviews */}
             <div className="row mb-3">
               <div className="col-md-4">
                 <div className="btn-group" role="group">
