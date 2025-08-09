@@ -116,23 +116,35 @@ type InterviewProps = {
 };
 
 // Helper function to calculate end date based on duration
+// Uses the same logic as endDateCalculator() in helper.ts
 const calculateEndDate = (
   startDate: string,
   duration: { value: number; unit: string }
 ): string => {
   if (!startDate || !duration.value || !duration.unit) return "";
 
-  const endDate = new Date(startDate);
+  try {
+    const endDate = new Date(startDate);
 
-  if (duration.unit === "week") {
-    endDate.setDate(endDate.getDate() + duration.value * 7);
-  } else if (duration.unit === "month") {
-    endDate.setMonth(endDate.getMonth() + duration.value);
-  } else if (duration.unit === "year") {
-    endDate.setFullYear(endDate.getFullYear() + duration.value);
+    // Add duration based on unit type (following endDateCalculator logic)
+    if (duration.unit === "year") {
+      endDate.setFullYear(endDate.getFullYear() + duration.value);
+    } else if (duration.unit === "month") {
+      endDate.setMonth(endDate.getMonth() + duration.value);
+    } else if (duration.unit === "week") {
+      endDate.setDate(endDate.getDate() + duration.value * 7);
+    } else if (duration.unit === "day") {
+      endDate.setDate(endDate.getDate() + duration.value);
+    }
+
+    // Subtract 1 day to make the end date inclusive (following endDateCalculator logic)
+    endDate.setDate(endDate.getDate() - 1);
+
+    return endDate.toISOString().split("T")[0];
+  } catch (error) {
+    console.log("Error calculating end date:", error);
+    return "";
   }
-
-  return endDate.toISOString().split("T")[0];
 };
 
 export default function InterviewForm(Interview: InterviewProps) {
@@ -474,9 +486,12 @@ export default function InterviewForm(Interview: InterviewProps) {
                         return (
                           <div className="d-flex gap-3 text-muted">
                             <span>
-                              Total Interviews: {summary.interview_count}
+                              Total department Interviews:{" "}
+                              {summary.interview_count}
                             </span>
-                            <span>Active Trainees: {summary.active_count}</span>
+                            <span>
+                              Current Active Trainees: {summary.active_count}
+                            </span>
                             <span>Max Capacity: {summary.max_count}</span>
                           </div>
                         );
