@@ -17,6 +17,14 @@ instance.interceptors.response.use(
   (error) => {
     // Handle 401 Unauthorized responses (session expired)
     if (error.response?.status === 401) {
+      // Don't intercept authentication failures from login endpoint
+      // Let the LoginComponent handle these with proper error messages
+      if (error.config?.url?.includes("auth/login")) {
+        return Promise.reject(error);
+      }
+
+      console.log("Session expired - clearing tokens and redirecting to login");
+
       // Clear the token from localStorage
       localStorage.removeItem("token");
       localStorage.removeItem("sessionStartTime");

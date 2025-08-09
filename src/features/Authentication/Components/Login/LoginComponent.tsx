@@ -51,16 +51,19 @@ function LoginComponent({}: LoginComponentProps) {
   const onSubmit: SubmitHandler<loginRequest> = async (data) => {
     try {
       setIsLoading(true);
-      console.log(data);
+      console.log("Attempting login with username:", data.username);
 
       const response = await api.post("auth/login", data);
       sessionLogin(response.data);
 
-      console.log(response.data);
+      // Mark that user has logged in before
+      localStorage.setItem("hasLoggedIn", "true");
+
+      console.log("Login successful:", response.data);
 
       navigate("/OJT/trainees");
     } catch (error: any) {
-      console.log(error);
+      console.log("Login failed:", error);
 
       // Enhanced error handling
       let errorMessage = "An unexpected error occurred. Please try again.";
@@ -71,16 +74,29 @@ function LoginComponent({}: LoginComponentProps) {
           errorTitle = "Invalid Credentials";
           errorMessage =
             "The username or password you entered is incorrect. Please check your credentials and try again.";
+        } else if (error.response?.status === 404) {
+          errorTitle = "User Not Found";
+          errorMessage =
+            "No account found with this username. Please check your username or contact your administrator.";
+        } else if (error.response?.status === 403) {
+          errorTitle = "Account Suspended";
+          errorMessage =
+            "Your account has been suspended. Please contact your administrator for assistance.";
         } else if (error.response?.status === 429) {
           errorTitle = "Too Many Attempts";
           errorMessage =
             "Too many login attempts. Please wait a few minutes before trying again.";
         } else if (error.response?.data?.message) {
           errorMessage = error.response.data.message;
+        } else if (error.code === "ERR_NETWORK" || error.code === "ECONNREFUSED") {
+          errorTitle = "Connection Error";
+          errorMessage =
+            "Unable to connect to the server. Please check your internet connection and try again.";
         }
       }
 
-      Swal.fire({
+      // Show error message and stay on login page
+      await Swal.fire({
         icon: "error",
         title: errorTitle,
         text: errorMessage,
