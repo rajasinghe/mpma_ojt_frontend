@@ -6,6 +6,7 @@ import TraineeDetailsAddPage from "./Pages/TraineeDetailsAddPage.tsx";
 import "bootstrap/dist/css/bootstrap.css";
 import "bootstrap-icons/font/bootstrap-icons.css";
 import "bootstrap/dist/js/bootstrap.bundle.min";
+import "@fortawesome/fontawesome-free/css/all.min.css";
 import ViewTraineesPage from "./Pages/ViewTraineesPage.tsx";
 import {
   newTraineesInsertPageLoader,
@@ -32,18 +33,36 @@ import ErrorHandler from "./Components/ErrorHandler.tsx";
 import TraineeBankDetailsUpdatePage from "./Pages/TraineeBankDetailsUpdatePage.tsx";
 import TraineeDetailsUpdatePage from "./Pages/Admin/TraineeDetailsUpdate.tsx";
 import UserProfilePage from "./Pages/UserProfilePage.tsx";
-import { createUserLoader, profileLoader, viewUsersPageLoader } from "./loaders/UserLoaders.ts";
-import { departmentSummaryLoader, singleDepartmentLoader } from "./loaders/DepartmentLoader.ts";
+import {
+  createUserLoader,
+  profileLoader,
+  viewUsersPageLoader,
+} from "./loaders/UserLoaders.ts";
+import {
+  departmentSummaryLoader,
+  singleDepartmentLoader,
+} from "./loaders/DepartmentLoader.ts";
 import DepartmentsPage from "./Pages/DepartmentsPage.tsx";
 import DepartmentPage from "./Pages/DepartmentPage.tsx";
 import api from "./api.ts";
 import AddUsersPage from "./Pages/Admin/AddUserPage.tsx";
 import ViewUsersPage from "./Pages/Admin/ViewUsersPage.tsx";
 import { inboxLoader } from "./loaders/inboxLoader.ts";
+import GeneratePaymentSlip from "./Pages/GeneratePaymentSlip.tsx";
+import {
+  PaymentSlipLoader,
+  paymentDetailsLoader,
+} from "./loaders/PaymentSlipLoader.ts";
 import NewInterviewPage from "./features/Interview/interviewPage.tsx";
 import ViewInterviewPage from "./features/Interview/viewInterviewPage.tsx";
 import EditInterviewPage from "./features/Interview/editInterviewPage.tsx";
-import {InterviewLoader} from "./loaders/InterviewLoader.ts";
+import { InterviewLoader } from "./loaders/InterviewLoader.ts";
+import { traineeDetailsPageLoader } from "./loaders/TraineesLoader.ts";
+import PaymentsPage from "./Pages/PaymentsPage.tsx";
+import ViewPaymentDetails from "./Pages/ViewPaymentDetails.tsx";
+import TraineeDetailsPage from "./Pages/TraineeDetailsPage.tsx";
+import UserUpdatePage from "./Pages/Admin/UserUpdatePage.tsx";
+import NotificationPage from "./Pages/NotificationPage.tsx";
 
 export const setToken = () => {
   const token = localStorage.getItem("token");
@@ -120,6 +139,11 @@ const router = createBrowserRouter([
             loader: traineeAddSchedulePageLoader,
           },
           {
+            path: "trainees/details",
+            element: <TraineeDetailsPage />,
+            loader: traineeDetailsPageLoader,
+          },
+          {
             path: "attendence/new",
             element: <UploadAttendenceSheet />,
           },
@@ -127,6 +151,20 @@ const router = createBrowserRouter([
             path: "attendence",
             element: <AttendencesPage />,
             loader: viewAttendenceLoader,
+          },
+          {
+            path: "payments",
+            element: <PaymentsPage />,
+            loader: paymentDetailsLoader,
+          },
+          {
+            path: "payments/paymentslipgenerate",
+            element: <GeneratePaymentSlip />,
+            loader: PaymentSlipLoader,
+          },
+          {
+            path: "payments/:id/view",
+            element: <ViewPaymentDetails />,
           },
           {
             path: "calender",
@@ -173,10 +211,20 @@ const router = createBrowserRouter([
             loader: viewUsersPageLoader,
             element: <ViewUsersPage />,
           },
+          {
+            path: "users/:id/update",
+            element: <UserUpdatePage />,
+          },
+          {
+            path: "notifications",
+            element: <NotificationPage />,
+          },
         ],
       },
     ],
   },
 ]);
 
-createRoot(document.getElementById("root")!).render(<RouterProvider router={router} />);
+createRoot(document.getElementById("root")!).render(
+  <RouterProvider router={router} />
+);

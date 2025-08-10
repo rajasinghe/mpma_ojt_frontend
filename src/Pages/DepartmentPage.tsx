@@ -9,6 +9,10 @@ import Swal from "sweetalert2";
 import api from "../api";
 import { MainContainer } from "../layout/containers/main_container/MainContainer";
 import SubContainer from "../layout/containers/sub_container/SubContainer";
+import { utils, writeFileXLSX } from "xlsx";
+import { getShortEmail } from '../helpers';
+
+
 export default function DepartmentPage() {
   const { state } = useNavigation();
   const { department, interviewSummary } = useLoaderData() as any;
@@ -46,6 +50,36 @@ export default function DepartmentPage() {
     }
   };
 
+  const handleDownload = async () => {
+    try {
+      const headers = [
+        "Name",
+        "Attendence No",
+        "Registration No",
+        "Start Date",
+        "End Date",
+      ];
+      const dataRows = department.schedules.map((schedule: any) => {
+        return [
+          schedule.trainee.name,
+          schedule.trainee.ATT_NO,
+          schedule.trainee.REG_NO,
+          schedule.start_date,
+          schedule.end_date,
+        ];
+      });
+
+      const rows = [headers, ...dataRows];
+      const book = utils.book_new();
+
+      const sheet = utils.aoa_to_sheet(rows);
+      utils.book_append_sheet(book, sheet, "Register");
+      writeFileXLSX(book, `${department.name} department.xlsx`, { bookType: "xlsx" });
+    } catch (error) {
+      console.log(error);
+    }
+  };
+
   const handleDelete = async (id: number) => {
     try {
       const response = await Swal.fire({
@@ -64,7 +98,7 @@ export default function DepartmentPage() {
             Swal.showLoading();
           },
         });
-        const response = await api.delete(`api/interview/${id}`);
+        const response = await api.delete(`api/interview/by-id/${id}`);
         console.log(response);
         refetchInterviews();
         Swal.fire({
@@ -103,7 +137,7 @@ export default function DepartmentPage() {
               <div className=" fs-5 fw-bolder">Active Trainees</div>
 
               <div className="border border-2 rounded-2 p-1 mx-auto" style={{maxWidth: "1200px"}}>
-                <div>
+                <div className="table-responsive">
                   <table className="table table-striped table-sm table-bordered w-100">
                     <thead className="table-dark">
                       <tr className="small" style={{ fontSize: "" }}>
@@ -139,8 +173,18 @@ export default function DepartmentPage() {
                       ))}
                     </tbody>
                   </table>
-                </div>
+                </div>           
               </div>
+                <div
+                  className="d-flex m-1 mx-auto justify-content-end"
+                  style={{
+                  height: "4vh", maxWidth: "1200px",
+                  }}
+                  >
+                <button className="btn btn-success btn-sm" onClick={handleDownload}>
+                  Download Records
+                </button>
+                </div> 
             </div>
             <div className="container-fluid border border-dark rounded-2 my-2 py-2" style={{maxWidth: "1200px"}}>
               <div className=" fs-5 fw-bolder">Interviewed List</div>
@@ -155,13 +199,13 @@ export default function DepartmentPage() {
                       <thead className="table-dark">
                         <tr className="small" style={{ fontSize: "" }}>
                           <th></th>
-                          <th>name</th>
+                          <th>Name/Email</th>
                           <th>NIC</th>
                           <th>Start Date</th>
+                          <th>Duration</th>
                           <th>Interviewed Date</th>
                           <th>Interviewed Time</th>
                           <th>Options</th>
-                          <th>Duration</th>
                         </tr>
                       </thead>
                       <tbody>
@@ -170,10 +214,43 @@ export default function DepartmentPage() {
                           return (
                             <tr key={`${interview.id}`}>
                               <td>{index + 1}</td>
-                              <td>{interview.name}</td>
+                              <td style={{ whiteSpace: 'pre-line', minWidth: 180, maxWidth: 240 }}>
+                                <div>{interview.name}</div>
+                                <div
+                                  style={{
+                                    fontSize: '0.9em',
+                                    color: '#555',
+                                    display: 'flex',
+                                    alignItems: 'center',
+                                    gap: 4,
+                                    maxWidth: 220,
+                                  }}
+                                >
+                                  <span
+                                    title={interview.email}
+                                    style={{
+                                      display: 'inline-block',
+                                      maxWidth: 140,
+                                      verticalAlign: 'bottom',
+                                      fontFamily: 'monospace',
+                                    }}
+                                  >
+                                    {getShortEmail(interview.email, 20)}
+                                  </span>
+                                  <button
+                                    type="button"
+                                    className="btn btn-link btn-sm p-0"
+                                    style={{ fontSize: '1em', flexShrink: 0 }}
+                                    onClick={() => navigator.clipboard.writeText(interview.email)}
+                                    title="Copy email"
+                                  >
+                                    <i className="bi bi-clipboard"></i>
+                                  </button>
+                                </div>
+                              </td>
                               <td>{interview.NIC}</td>
                               <td>{moment(interview.date).format("YYYY-MM-DD")}</td>
-                              
+                              <td>{interview.duration}</td>
                               <td>{createdAt.format("YYYY-MM-DD")}</td>
                               <td>{createdAt.format("hh:mm:ss A")}</td>
                               <td style={{ verticalAlign: "middle" }}>

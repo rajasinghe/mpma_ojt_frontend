@@ -13,6 +13,7 @@ interface InterviewDetail {
   id: number;
   NIC: string;
   name: string;
+  email: string;
   date: string;
   duration: string;
   departments: Department[];
@@ -20,7 +21,8 @@ interface InterviewDetail {
 
 export default function EditInterviewPage() {
   const { NIC } = useParams();
-  const interviewDetails = useLoaderData() as InterviewDetail[];
+  const interviews: any = useLoaderData();
+  const interviewDetails: InterviewDetail[] = interviews.allInterviews;
 
   function parseDuration(durationString: string) {
     const [value, unit] = durationString.split(" ");
@@ -47,7 +49,7 @@ export default function EditInterviewPage() {
           id={interviewData.id}
           NIC={interviewData.NIC}
           selections={interviewData.departments.map(dept => ({
-            departmentId: dept.id,
+            departmentId: dept.id, // Assuming dep_id is the correct field for department ID
             fromDate: dept.fromDate,
             toDate: dept.toDate,
           }))} 
@@ -57,6 +59,7 @@ export default function EditInterviewPage() {
           }} 
           startDate={interviewData.date} 
           name={interviewData.name}
+          email={interviewData.email}
           nicValidated={true}
           nicDisable={true}
           isEditing={true}

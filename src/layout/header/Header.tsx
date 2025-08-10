@@ -73,7 +73,7 @@ function getInitials(name: string): string {
                   className="d-flex align-items-center justify-content-center rounded-circle bg-primary text-white fw-semibold text-uppercase"
                   style={{ width: "34px", height: "34px", fontSize: "0.85rem" }}
                 >
-                  {user.name === "MPMA -SUPER ADMIN" ? "SA" : getInitials(user.name)}
+                  {user?.name === "MPMA -SUPER ADMIN" ? "SA" : user?.name? getInitials(user.name): ""}
                 </div>
               </Link>
             </li>
