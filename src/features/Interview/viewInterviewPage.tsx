@@ -257,6 +257,7 @@ export default function ViewInterviewPage() {
                       className="form-control"
                       value={selectedDate}
                       onChange={(e) => handleDateChange(e.target.value)}
+                      min={new Date().toISOString().split("T")[0]} // Disable past dates
                     />
                   </div>
                   <div className="col-md-8 d-flex align-items-end">

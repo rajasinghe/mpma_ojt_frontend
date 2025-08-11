@@ -33,6 +33,8 @@ interface loaderProps {
   traineesWithoutBank350: number[];
   allGOVTrainees: any[];
   meanPayment: number;
+  traineeCount: number;
+  maxPayAmount: number;
 }
 
 const filterSchema = z.object({
@@ -80,6 +82,18 @@ export default function PaymentsPage() {
   );
   const [prePayAmount, setprePayAmount] = useState<number>(
     loaderData.meanPayment
+  );
+  const [pretraineeCount, setpretraineeCount] = useState<number>(
+    loaderData.traineeCount
+  );
+  const [premaxPayAmount, setpremaxPayAmount] = useState<number>(
+    loaderData.maxPayAmount
+  );
+  const [maxPayAmount, setMaxPayAmount] = useState<number>(
+    loaderData.maxPayAmount
+  );
+  const [traineeCount, setTraineeCount] = useState<number>(
+    loaderData.traineeCount
   );
 
   const [filterVisible, setFilterVisible] = useState(false);
@@ -171,7 +185,11 @@ export default function PaymentsPage() {
             setTrainees(paymentSummary.data.selectTrainees);
             setTraineesInModel(paymentSummary.data.selectTrainees);
             setPayAmount(paymentSummary.data.meanPayment);
+            setMaxPayAmount(paymentSummary.data.maxPayAmount);
+            setTraineeCount(paymentSummary.data.traineeCount);
             setprePayAmount(paymentSummary.data.meanPayment);
+            setpretraineeCount(paymentSummary.data.traineeCount);
+            setpremaxPayAmount(paymentSummary.data.maxPayAmount);
 
             const other = getUniqueGOVTrainees(
               paymentSummary.data.selectTrainees,
@@ -320,13 +338,19 @@ export default function PaymentsPage() {
         }),
       ]);
 
+      console.log("Payment Summary Data:", paymentSummary.data);
+
       setPaymentSummary(paymentSummary.data.traineesWithoutBankDetails);
       setPaymentListSummary(paymentSummary.data.traineesWithoutBank350);
 
       setTrainees(paymentSummary.data.selectTrainees);
       setTraineesInModel(paymentSummary.data.selectTrainees);
       setPayAmount(paymentSummary.data.meanPayment);
+      setMaxPayAmount(paymentSummary.data.maxPayAmount);
+      setTraineeCount(paymentSummary.data.traineeCount);
       setprePayAmount(paymentSummary.data.meanPayment);
+      setpretraineeCount(paymentSummary.data.traineeCount);
+      setpremaxPayAmount(paymentSummary.data.maxPayAmount);
 
       const other = getUniqueGOVTrainees(
         paymentSummary.data.selectTrainees,
@@ -1008,28 +1032,64 @@ export default function PaymentsPage() {
                 <div className=" fw-bold  w-100 ">Change Payment List</div>
               </Modal.Header>
               <Modal.Body>
-                <form className="d-flex flex-column gap-2">
-                  <div className="form-group">
-                    <label htmlFor="amount" className="form-label">
-                      Payment per day
+                <form className="d-flex flex-column gap-1">
+                  <div className="row g-2">
+                    <div className="col-md-6">
+                      <div className="form-group mb-1">
+                        <label htmlFor="amount" className="form-label">
+                          Payment per day
+                        </label>
+                        <input
+                          type="number"
+                          className="form-control"
+                          id="amount"
+                          placeholder="Enter amount per day"
+                          value={payAmountperDay}
+                          onChange={(e) => {
+                            setPayAmount(Number(e.target.value));
+                          }}
+                        />
+                      </div>
+                    </div>
+                    <div className="col-md-6">
+                      <div className="form-group mb-1">
+                        <label htmlFor="traineeCount" className="form-label">
+                          Trainee Count
+                        </label>
+                        <input
+                          type="number"
+                          className="form-control"
+                          id="traineeCount"
+                          placeholder="Enter trainee count"
+                          value={traineeCount}
+                          onChange={(e) => {
+                            setTraineeCount(Number(e.target.value));
+                          }}
+                        />
+                      </div>
+                    </div>
+                  </div>
+                  <div className="form-group mb-1">
+                    <label htmlFor="maxPayAmount" className="form-label">
+                      Max Payment Amount
                     </label>
                     <input
                       type="number"
                       className="form-control"
-                      id="amount"
-                      placeholder="Enter amount per day"
-                      value={payAmountperDay}
+                      id="maxPayAmount"
+                      placeholder="Enter max payment amount"
+                      value={maxPayAmount}
                       onChange={(e) => {
-                        setPayAmount(Number(e.target.value));
+                        setMaxPayAmount(Number(e.target.value));
                       }}
                     />
                   </div>
                 </form>
                 {/* Add space between form and table */}
-                <div style={{ height: "16px" }} />
+                <div style={{ height: "10px" }} />
                 <div
                   className="border border-2 rounded-2 p-1 mx-auto shadow-sm bg-white"
-                  style={{ maxHeight: "53vh", overflowY: "auto" }}
+                  style={{ maxHeight: "45vh", overflowY: "auto" }}
                 >
                   <table className="table table-hover table-bordered table-striped align-middle text-center">
                     <thead
@@ -1045,7 +1105,7 @@ export default function PaymentsPage() {
                         <th className="bg-dark text-white">NO</th>
                         <th className="bg-dark text-white">ATT_NO</th>
                         <th className="bg-dark text-white">NAME</th>
-                        <th className="bg-dark text-white">ATTN COUNT</th>
+                        <th className="bg-dark text-white">ATT_COU</th>
                         <th className="bg-dark text-white">Actions</th>
                       </tr>
                     </thead>
@@ -1099,7 +1159,9 @@ export default function PaymentsPage() {
                     // Check if there are no removed trainees and pay amount per day hasn't changed
                     if (
                       removedTrainees.length === 0 &&
-                      payAmountperDay === prePayAmount
+                      payAmountperDay === prePayAmount &&
+                      traineeCount === pretraineeCount &&
+                      maxPayAmount === premaxPayAmount
                     ) {
                       Swal.fire({
                         icon: "info",
@@ -1136,16 +1198,31 @@ export default function PaymentsPage() {
                         );
                       }
 
-                      if (payAmountperDay !== prePayAmount) {
+                      // Update payment configuration using unified endpoint
+                      if (
+                        payAmountperDay !== prePayAmount ||
+                        maxPayAmount !== premaxPayAmount ||
+                        traineeCount !== pretraineeCount
+                      ) {
                         requests.push(
-                          api.post("api/payments/updatePaymentPerDay", {
+                          api.post("api/payments/updatePaymentConfiguration", {
                             year: Number(filterOptions?.year?.value),
                             month: Number(filterOptions?.month?.value),
-                            newAmount: payAmountperDay,
+                            paymentPerDay:
+                              payAmountperDay === prePayAmount
+                                ? undefined
+                                : payAmountperDay,
+                            maxPayAmount:
+                              maxPayAmount === premaxPayAmount
+                                ? undefined
+                                : maxPayAmount,
+                            traineeCount:
+                              traineeCount === pretraineeCount
+                                ? undefined
+                                : traineeCount,
                           })
                         );
                       }
-
                       await Promise.all(requests);
 
                       Swal.fire({

@@ -455,7 +455,7 @@ export default function InterviewTables({
         style={{ maxHeight: "53vh", overflowY: "auto" }}
       >
         <table className="table table-striped table-sm table-bordered table-hover">
-          <thead className="table-dark sticky-top">
+          <thead className="table-dark position-sticky top-0">
             <tr className="small">
               <th>
                 <input

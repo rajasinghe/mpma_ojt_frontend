@@ -2,16 +2,18 @@ import api from "../api";
 
 export const PaymentSlipLoader = async () => {
   const [summaryResponse] = await Promise.all([
-    api.get("/api/attendence/getDateSummary")
+    api.get("/api/attendence/getDateSummary"),
   ]);
 
   return {
-    summaryData: summaryResponse.data
+    summaryData: summaryResponse.data,
   };
 };
 
 export const paymentDetailsLoader = async () => {
-  const attendenceSummaryResponse = await api.get("/api/attendence/getDateSummary");
+  const attendenceSummaryResponse = await api.get(
+    "/api/attendence/getDateSummary"
+  );
 
   // Extract max year and month from the summary data
   const summaryData = attendenceSummaryResponse.data;
@@ -20,19 +22,25 @@ export const paymentDetailsLoader = async () => {
   let maxYear = 0;
   let maxMonth = 0;
 
-if (Array.isArray(summaryData) && summaryData.length > 0) {
-  summaryData.forEach((item: { year: number; months?: number[] }) => {
-    if (item.year > maxYear) {
-      maxYear = item.year;
-    }
-  });
+  if (Array.isArray(summaryData) && summaryData.length > 0) {
+    summaryData.forEach((item: { year: number; months?: number[] }) => {
+      if (item.year > maxYear) {
+        maxYear = item.year;
+      }
+    });
 
-  // Find the item with maxYear and get its max month
-  const yearItem = summaryData.find((item: { year: number }) => item.year === maxYear);
-  if (yearItem && Array.isArray(yearItem.months) && yearItem.months.length > 0) {
-    maxMonth = Math.max(...yearItem.months);
+    // Find the item with maxYear and get its max month
+    const yearItem = summaryData.find(
+      (item: { year: number }) => item.year === maxYear
+    );
+    if (
+      yearItem &&
+      Array.isArray(yearItem.months) &&
+      yearItem.months.length > 0
+    ) {
+      maxMonth = Math.max(...yearItem.months);
+    }
   }
-}
 
   // Fetch payment summary using max year and month
   const paymentSummary = await api.get("api/payments/generatePaySlip/summary", {
@@ -49,5 +57,7 @@ if (Array.isArray(summaryData) && summaryData.length > 0) {
     selectTrainees: paymentSummary.data.selectTrainees,
     allGOVTrainees: paymentSummary.data.allGOVTrainees,
     meanPayment: paymentSummary.data.meanPayment,
+    traineeCount: paymentSummary.data.traineeCount,
+    maxPayAmount: paymentSummary.data.maxPayAmount,
   };
-}
+};

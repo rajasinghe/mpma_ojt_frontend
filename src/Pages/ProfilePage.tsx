@@ -214,15 +214,6 @@ export default function ProfilePage() {
             </div>
           )}
         </div>
-        <div className="container-fluid border border-dark rounded-2 my-2 py-2">
-          <div className=" fs-5 fw-bolder">Portal details</div>
-
-          <div className="mt-2">
-            <Link to={`/#`} className="btn btn-sm btn-primary">
-              Edit
-            </Link>
-          </div>
-        </div>
       </SubContainer>
     </MainContainer>
   );
