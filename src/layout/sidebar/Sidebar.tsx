@@ -2,6 +2,9 @@ import { useEffect, useState } from "react";
 import "./style.css";
 import logo from "../../assets/SLPA_Logo-Cu9TOj32.png";
 import { Link, useLocation, useNavigation } from "react-router-dom";
+import { useSession } from "../../contexts/SessionContext";
+import Loader from "../../Components/ui/Loader/Loader";
+
 interface Props {
   user: any;
 }
@@ -16,6 +19,12 @@ interface RouteLink {
 }
 
 const Sidebar = ({ user }: Props) => {
+  const { isLoading } = useSession();
+
+  if (isLoading || !user) {
+    return <Loader />;
+  }
+
   const initLinks: RouteLink[] = [
     {
       name: "Trainees",

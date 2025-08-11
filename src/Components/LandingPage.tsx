@@ -41,13 +41,10 @@ export default function LandingPage() {
   // Helper function to check network connectivity
   const checkNetworkConnection = async () => {
     try {
-      // Simple connectivity check
-      await fetch(api.defaults.baseURL + "/health", {
-        method: "HEAD",
-        mode: "no-cors",
-      });
+      // Use existing auth endpoint instead of non-existent health endpoint
+      await api.head("/auth");
       return true;
-    } catch {
+    } catch (error) {
       return false;
     }
   };

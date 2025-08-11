@@ -11,6 +11,7 @@ import Swal from "sweetalert2";
 interface SessionContextType {
   isAuthenticated: boolean;
   user: any;
+  isLoading: boolean;
   sessionTimeLeft: number;
   isSessionWarningVisible: boolean;
   login: (token: string) => void;
@@ -53,6 +54,7 @@ export const SessionProvider: React.FC<SessionProviderProps> = ({
 }) => {
   const [isAuthenticated, setIsAuthenticated] = useState<boolean>(false);
   const [user, setUser] = useState<any>(null);
+  const [isLoading, setIsLoading] = useState<boolean>(true);
   const [sessionTimeLeft, setSessionTimeLeft] = useState<number>(() => {
     const token = localStorage.getItem("token");
     if (!token) return 0;
@@ -160,12 +162,16 @@ export const SessionProvider: React.FC<SessionProviderProps> = ({
       const token = localStorage.getItem("token");
       if (token && isAuthenticated) {
         try {
+          setIsLoading(true);
           const response = await api.get("/auth");
           setUser(response.data);
         } catch (error) {
-          // Error will be handled by the interceptor
           console.error("Authentication failed:", error);
+        } finally {
+          setIsLoading(false);
         }
+      } else {
+        setIsLoading(false);
       }
     };
 
@@ -175,6 +181,7 @@ export const SessionProvider: React.FC<SessionProviderProps> = ({
   const value: SessionContextType = {
     isAuthenticated,
     user,
+    isLoading,
     sessionTimeLeft,
     isSessionWarningVisible,
     login,
