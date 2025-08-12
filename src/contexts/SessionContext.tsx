@@ -163,14 +163,17 @@ export const SessionProvider: React.FC<SessionProviderProps> = ({
       if (token && isAuthenticated) {
         try {
           setIsLoading(true);
+          setUser(null); // Clear previous user data before fetching new
           const response = await api.get("/auth");
           setUser(response.data);
         } catch (error) {
           console.error("Authentication failed:", error);
+          setUser(null); // Clear user on auth failure
         } finally {
           setIsLoading(false);
         }
       } else {
+        setUser(null); // Clear user when not authenticated
         setIsLoading(false);
       }
     };

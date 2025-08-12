@@ -1,6 +1,6 @@
 import { createRoot } from "react-dom/client";
 import "./index.css";
-import { createBrowserRouter, RouterProvider } from "react-router-dom";
+import { createBrowserRouter, RouterProvider, Navigate } from "react-router-dom";
 import Base from "./Pages/Base.tsx";
 import TraineeDetailsAddPage from "./Pages/TraineeDetailsAddPage.tsx";
 import "bootstrap/dist/css/bootstrap.css";
@@ -88,10 +88,18 @@ const router = createBrowserRouter([
     element: <LandingPage />,
     children: [
       {
-        path: "/OJT",
+        index: true, // This handles the exact "/" path
+        element: <Navigate to="/OJT/trainees" replace />,
+      },
+      {
+        path: "OJT",
         element: <Base />,
         errorElement: <ErrorHandler />,
         children: [
+          {
+            index: true, // This handles "/OJT" without trailing path
+            element: <Navigate to="trainees" replace />,
+          },
           {
             path: "inbox",
             loader: inboxLoader,
