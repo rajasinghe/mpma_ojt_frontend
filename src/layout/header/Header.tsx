@@ -29,12 +29,12 @@ export default function Header({ user }: Props) {
     return `${minutes}m`;
   };
 
-  // Get status color based on time remaining
-  const getStatusColor = (milliseconds: number) => {
+  // Get status class based on time remaining
+  const getStatusClass = (milliseconds: number) => {
     const minutes = Math.floor(milliseconds / (1000 * 60));
-    if (minutes <= 5) return "text-danger";
-    if (minutes <= 15) return "text-warning";
-    return "text-success";
+    if (minutes <= 5) return "session-status-danger";
+    if (minutes <= 15) return "session-status-warning";
+    return "session-status-success";
   };
   // State to track sidebar toggle action (not the actual open/closed state)
   const [isSidebarToggled, setIsSidebarToggled] = useState(false);
@@ -156,13 +156,9 @@ export default function Header({ user }: Props) {
             <ul className="d-flex align-items-center gap-3">
               {/* Session Status Indicator */}
               <li className="nav-item me-3">
-                <div className="d-flex align-items-center">
-                  <i
-                    className={`bi bi-clock me-2 ${getStatusColor(
-                      sessionTimeLeft
-                    )}`}
-                  ></i>
-                  <span className={`small ${getStatusColor(sessionTimeLeft)}`}>
+                <div className={`session-indicator ${getStatusClass(sessionTimeLeft)}`}>
+                  <i className="bi bi-clock"></i>
+                  <span>
                     Session: {formatTimeRemaining(sessionTimeLeft)}
                   </span>
                 </div>

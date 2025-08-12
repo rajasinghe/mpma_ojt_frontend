@@ -330,6 +330,74 @@
   padding: 3px 6px;
 }
 
+/* Session Status Indicator */
+.session-indicator {
+  display: flex;
+  align-items: center;
+  background: rgba(248, 249, 250, 0.8);
+  border: 1px solid rgba(65, 84, 241, 0.15);
+  border-radius: 12px;
+  padding: 8px 12px;
+  font-size: 13px;
+  font-weight: 500;
+  transition: all 0.2s ease;
+}
+
+.session-indicator:hover {
+  background: rgba(248, 249, 250, 1);
+  border-color: rgba(65, 84, 241, 0.25);
+  box-shadow: 0 2px 8px rgba(1, 41, 112, 0.1);
+}
+
+.session-indicator .bi-clock {
+  font-size: 14px;
+  margin-right: 6px;
+}
+
+/* Session status colors */
+.session-status-success {
+  color: #198754;
+  border-color: rgba(25, 135, 84, 0.2);
+}
+
+.session-status-success:hover {
+  background: rgba(25, 135, 84, 0.05);
+  border-color: rgba(25, 135, 84, 0.3);
+}
+
+.session-status-warning {
+  color: #fd7e14;
+  border-color: rgba(253, 126, 20, 0.2);
+}
+
+.session-status-warning:hover {
+  background: rgba(253, 126, 20, 0.05);
+  border-color: rgba(253, 126, 20, 0.3);
+}
+
+.session-status-danger {
+  color: #dc3545;
+  border-color: rgba(220, 53, 69, 0.2);
+}
+
+.session-status-danger:hover {
+  background: rgba(220, 53, 69, 0.05);
+  border-color: rgba(220, 53, 69, 0.3);
+}
+
+/* Mobile responsive adjustments for session indicator */
+@media (max-width: 768px) {
+  .session-indicator {
+    padding: 6px 10px;
+    font-size: 12px;
+  }
+
+  .session-indicator .bi-clock {
+    font-size: 12px;
+    margin-right: 4px;
+  }
+}
+
 /* Enhanced Notifications Dropdown */
 .header-nav .notifications {
   inset: 8px -15px auto auto !important;
