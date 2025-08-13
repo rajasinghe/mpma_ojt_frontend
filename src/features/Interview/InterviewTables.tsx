@@ -186,11 +186,7 @@ export default function InterviewTables({
     if (e.target.checked) {
       // Only select interviews that are not disabled
       const enabledInterviews = interviewsWithEmail.filter((interview) => {
-        const emailType = showLoginDetailsTable ? "login" : "documents";
-        const isDisabledLocally = isEmailDisabledLocally(
-          interview.email,
-          emailType
-        );
+        const isDisabledLocally = isEmailDisabledLocally(interview.email);
         const isRecentlySentLogin = isEmailRecentlySentFromBackend(
           interview.NIC,
           "login"
@@ -239,10 +235,7 @@ export default function InterviewTables({
   };
 
   // Check if email is disabled due to local 2-minute cooldown (any type disables both)
-  const isEmailDisabledLocally = (
-    email: string,
-    type: "login" | "documents"
-  ) => {
+  const isEmailDisabledLocally = (email: string) => {
     const disabledInfo = disabledEmails[email];
     if (!disabledInfo) return false;
 
@@ -428,11 +421,7 @@ export default function InterviewTables({
 
     // Get only enabled (non-disabled) interviews for "Select All" logic
     const enabledInterviews = interviewsWithEmail.filter((interview) => {
-      const emailType = showLoginDetailsTable ? "login" : "documents";
-      const isDisabledLocally = isEmailDisabledLocally(
-        interview.email,
-        emailType
-      );
+      const isDisabledLocally = isEmailDisabledLocally(interview.email);
       const isRecentlySentLogin = isEmailRecentlySentFromBackend(
         interview.NIC,
         "login"
@@ -494,12 +483,8 @@ export default function InterviewTables({
                   <td>
                     {interview.email
                       ? (() => {
-                          const emailType = showLoginDetailsTable
-                            ? "login"
-                            : "documents";
                           const isDisabledLocally = isEmailDisabledLocally(
-                            interview.email,
-                            emailType
+                            interview.email
                           );
                           const isRecentlySentLogin =
                             isEmailRecentlySentFromBackend(
@@ -599,10 +584,6 @@ export default function InterviewTables({
                             interview.NIC,
                             emailType
                           );
-                          const isRecentlySent = isEmailRecentlySentFromBackend(
-                            interview.NIC,
-                            emailType
-                          );
                           // Check if any email type was recently sent from backend
                           const isRecentlySentLogin =
                             isEmailRecentlySentFromBackend(
@@ -618,8 +599,7 @@ export default function InterviewTables({
                             isRecentlySentLogin || isRecentlySentDocuments;
 
                           const isDisabledLocally = isEmailDisabledLocally(
-                            interview.email,
-                            emailType
+                            interview.email
                           );
                           const isProcessing =
                             processingEmails[interview.email];

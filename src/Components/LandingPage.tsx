@@ -104,7 +104,10 @@ export default function LandingPage() {
 
       // Navigate only after successful authentication
       if (location.pathname === "/") {
-        navigate("/OJT/trainees");
+        // Add small delay to ensure SessionContext is ready
+        setTimeout(() => {
+          navigate("/OJT/trainees");
+        }, 200);
       }
     } catch (error: any) {
       console.error("Authentication failed:", error);

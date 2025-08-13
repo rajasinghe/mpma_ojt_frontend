@@ -2,20 +2,38 @@ import axios from "axios";
 import Swal from "sweetalert2";
 
 const instance = axios.create({
-  baseURL: "http://localhost:4000", //https://mpmaojt.slpa.lk
+  baseURL: "http://10.70.4.34:8000", //https://mpmaojt.slpa.lk http://10.70.4.34:9000/
   headers: {
     Accept: "application/json",
   },
 });
 
-// Response interceptor to handle session expiration
-instance.interceptors.response.use(
-  (response) => {
-    // Return successful responses as-is
-    return response;
+// Add request interceptor for network errors
+instance.interceptors.request.use(
+  (config) => {
+    return config;
   },
   (error) => {
-    // Handle 401 Unauthorized responses (session expired)
+    return Promise.reject(error);
+  }
+);
+
+// Enhanced response interceptor
+instance.interceptors.response.use(
+  (response) => {
+    return response;
+  },
+  async (error) => {
+    // Handle network errors with retry
+    if (error.code === "ERR_NETWORK" || error.code === "ECONNREFUSED") {
+      console.log("Network error detected, retrying...");
+
+      // Retry once after 1 second
+      await new Promise((resolve) => setTimeout(resolve, 1000));
+      return instance.request(error.config);
+    }
+
+    // Existing 401 handling...
     if (error.response?.status === 401) {
       // Don't intercept authentication failures from login endpoint
       // Let the LoginComponent handle these with proper error messages
