@@ -280,7 +280,9 @@ export default function PaymentsPage() {
     }
   };
 
-  const handleDownload = async () => {
+  const handleDownload = async (
+    downloadType: "selected" | "all_gov" = "selected"
+  ) => {
     try {
       const response = await api.post(
         "api/payments/downloadPaymentDetails",
@@ -291,6 +293,7 @@ export default function PaymentsPage() {
             trainees: matchingTrainees.map(
               (trainee: any) => trainee.trainee_id
             ),
+            downloadType: downloadType,
           },
         },
         {
@@ -301,7 +304,7 @@ export default function PaymentsPage() {
       const contentDisposition = response.headers["content-disposition"];
       const filename = contentDisposition
         ? contentDisposition.split("filename=")[1].replace(/['"]/g, "")
-        : `Attendance_${filterOptions?.year?.value}_${filterOptions?.month?.value}.xlsx`;
+        : `Payment_Data_${filterOptions?.year?.value}_${filterOptions?.month?.value}.xlsx`;
 
       // Create blob URL and trigger download
       const url = window.URL.createObjectURL(new Blob([response.data]));
@@ -314,13 +317,13 @@ export default function PaymentsPage() {
 
       window.URL.revokeObjectURL(url); // Clean up the URL object
     } catch (error: any) {
-      console.error("Error downloading payment records:", error);
+      console.error("Error downloading trainee data:", error);
       Swal.fire({
         icon: "error",
         title: "Oops...",
         text:
           error.message ||
-          "An unexpected error occurred while downloading the payment records.",
+          "An unexpected error occurred while downloading the trainee data.",
         footer: '<a href="#">Why do I have this issue?</a>',
       });
     }
@@ -901,14 +904,33 @@ export default function PaymentsPage() {
             </div>
 
             <div className="d-flex justify-content-between align-items-center mt-2 mb-2">
-              <div>
+              <div className="dropdown">
                 <button
+                  className="btn btn-success btn-sm dropdown-toggle"
                   type="button"
-                  className="btn btn-success btn-sm ms-2"
-                  onClick={handleDownload}
+                  data-bs-toggle="dropdown"
+                  aria-expanded="false"
                 >
-                  Download Payment Records
+                  Download Payment Details
                 </button>
+                <ul className="dropdown-menu">
+                  <li>
+                    <button
+                      className="dropdown-item"
+                      onClick={() => handleDownload("selected")}
+                    >
+                      Selected Trainees
+                    </button>
+                  </li>
+                  <li>
+                    <button
+                      className="dropdown-item"
+                      onClick={() => handleDownload("all_gov")}
+                    >
+                      All Trainees
+                    </button>
+                  </li>
+                </ul>
               </div>
               <div>
                 <button
