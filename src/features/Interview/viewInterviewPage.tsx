@@ -17,20 +17,23 @@ interface DepartmentSummary {
   interview_count: number;
 }
 
-interface ActiveTraineeSummary {
+interface DepartmentData {
   department_id: number;
   department_name: string;
-  active_count: number;
   new_count: number;
 }
 
-interface ActiveTraineeSummaryResponse {
+interface MondaySummary {
   date: string;
-  summary: ActiveTraineeSummary[];
-  totals: {
-    total_active: number;
-    total_new: number;
-  };
+  departments: DepartmentData[];
+  total: number;
+}
+
+interface InterviewSummaryResponse {
+  setNumber: number;
+  mondayDates: string[];
+  mondaySummaries: MondaySummary[];
+  grandTotal: number;
 }
 
 export default function ViewInterviewPage() {
@@ -40,14 +43,12 @@ export default function ViewInterviewPage() {
   const [loadingDepartments, setLoadingDepartments] = useState(true);
   const [showLoginDetailsTable, setShowLoginDetailsTable] = useState(false);
 
-  // Active Trainee Summary Modal States
+  // Interview Summary Modal States
   const [showSummaryModal, setShowSummaryModal] = useState(false);
   const [summaryData, setSummaryData] =
-    useState<ActiveTraineeSummaryResponse | null>(null);
+    useState<InterviewSummaryResponse | null>(null);
   const [summaryLoading, setSummaryLoading] = useState(false);
-  const [selectedDate, setSelectedDate] = useState(
-    moment().format("YYYY-MM-DD")
-  );
+  const [currentSetNumber, setCurrentSetNumber] = useState(1);
 
   const { state } = useNavigation();
   const InterviewDetails = useLoaderData() as any;
@@ -81,20 +82,20 @@ export default function ViewInterviewPage() {
     }
   };
 
-  // Fetch Active Trainee Summary
-  const fetchActiveTraineeSummary = async (date: string) => {
+  // Fetch Interview Summary
+  const fetchInterviewSummary = async (setNumber: number) => {
     try {
       setSummaryLoading(true);
       const response = await api.get(
-        `/api/trainee/activeTraineeSummary/${date}`
+        `/api/interview/activeInterviewSummary/${setNumber}`
       );
       setSummaryData(response.data);
     } catch (error) {
-      console.error("Error fetching active trainee summary:", error);
+      console.error("Error fetching interview summary:", error);
       Swal.fire({
         icon: "error",
         title: "Error",
-        text: "Failed to load active trainee summary",
+        text: "Failed to load interview summary",
       });
     } finally {
       setSummaryLoading(false);
@@ -104,18 +105,27 @@ export default function ViewInterviewPage() {
   // Handle Summary Modal
   const handleShowSummary = () => {
     setShowSummaryModal(true);
-    fetchActiveTraineeSummary(selectedDate);
+    setCurrentSetNumber(1);
+    fetchInterviewSummary(1);
   };
 
   const handleCloseSummaryModal = () => {
     setShowSummaryModal(false);
     setSummaryData(null);
+    setCurrentSetNumber(1);
   };
 
-  const handleDateChange = (newDate: string) => {
-    setSelectedDate(newDate);
-    if (showSummaryModal) {
-      fetchActiveTraineeSummary(newDate);
+  const handleNextSet = () => {
+    const nextSet = currentSetNumber + 1;
+    setCurrentSetNumber(nextSet);
+    fetchInterviewSummary(nextSet);
+  };
+
+  const handlePreviousSet = () => {
+    if (currentSetNumber > 1) {
+      const prevSet = currentSetNumber - 1;
+      setCurrentSetNumber(prevSet);
+      fetchInterviewSummary(prevSet);
     }
   };
 
@@ -201,10 +211,10 @@ export default function ViewInterviewPage() {
                 <button
                   className="btn btn-info btn-sm"
                   onClick={handleShowSummary}
-                  title="View Active Trainee Summary"
+                  title="View Interview Summary for Next 4 Mondays"
                 >
-                  <i className="bi bi-graph-up me-1"></i>
-                  Summary
+                  <i className="bi bi-calendar-week me-1"></i>
+                  Interview Summary
                 </button>
               </div>
               <InterviewTables
@@ -220,22 +230,27 @@ export default function ViewInterviewPage() {
         </MainContainer>
       )}
 
-      {/* Active Trainee Summary Modal */}
+      {/* Interview Summary Modal */}
       {showSummaryModal && (
         <div
           className="modal fade show"
           style={{ display: "block", backgroundColor: "rgba(0,0,0,0.5)" }}
           tabIndex={-1}
           role="dialog"
-          aria-labelledby="activeTraineeSummaryModal"
+          aria-labelledby="interviewSummaryModal"
           aria-hidden="true"
+          onClick={handleCloseSummaryModal}
         >
-          <div className="modal-dialog modal-lg" role="document">
+          <div
+            className="modal-dialog modal-lg"
+            role="document"
+            onClick={(e) => e.stopPropagation()}
+          >
             <div className="modal-content">
               <div className="modal-header">
-                <h5 className="modal-title" id="activeTraineeSummaryModal">
-                  <i className="bi bi-graph-up me-2"></i>
-                  Active Trainee Summary
+                <h5 className="modal-title" id="interviewSummaryModal">
+                  <i className="bi bi-calendar-week me-2"></i>
+                  Interview Summary (Set {currentSetNumber})
                 </h5>
                 <button
                   type="button"
@@ -245,32 +260,31 @@ export default function ViewInterviewPage() {
                 ></button>
               </div>
               <div className="modal-body">
-                {/* Date Selector */}
+                {/* Navigation Controls */}
                 <div className="row mb-4">
-                  <div className="col-md-4">
-                    <label htmlFor="summaryDate" className="form-label fw-bold">
-                      Select Date:
-                    </label>
-                    <input
-                      type="date"
-                      id="summaryDate"
-                      className="form-control"
-                      value={selectedDate}
-                      onChange={(e) => handleDateChange(e.target.value)}
-                      min={new Date().toISOString().split("T")[0]} // Disable past dates
-                    />
-                  </div>
-                  <div className="col-md-8 d-flex align-items-end">
-                    <div className="text-muted">
-                      <small>
-                        <i className="bi bi-info-circle me-1"></i>
-                        Shows active trainees and new trainees for the selected
-                        date
-                      </small>
+                  <div className="col-12 d-flex justify-content-between align-items-center">
+                    <button
+                      className="btn btn-outline-success"
+                      onClick={handlePreviousSet}
+                      disabled={currentSetNumber === 1}
+                    >
+                      <i className="bi bi-chevron-left me-1"></i>
+                      Previous 4 Mondays
+                    </button>
+                    <div className="text-center">
+                      <span className="badge bg-primary fs-6 px-3 py-2">
+                        Set {currentSetNumber}
+                      </span>
                     </div>
+                    <button
+                      className="btn btn-outline-success"
+                      onClick={handleNextSet}
+                    >
+                      Next 4 Mondays
+                      <i className="bi bi-chevron-right ms-1"></i>
+                    </button>
                   </div>
                 </div>
-
                 {/* Loading State */}
                 {summaryLoading && (
                   <div className="text-center py-4">
@@ -280,143 +294,162 @@ export default function ViewInterviewPage() {
                     <p className="mt-2 text-muted">Loading summary data...</p>
                   </div>
                 )}
-
                 {/* Summary Data */}
                 {!summaryLoading && summaryData && (
                   <>
-                    {/* Summary Cards */}
+                    {/* Grand Total Card */}
                     <div className="row mb-4">
-                      <div className="col-md-4">
+                      <div className="col-12">
                         <div className="card bg-primary text-white">
                           <div className="card-body text-center">
                             <h4 className="card-title">
-                              <i className="bi bi-people-fill me-2"></i>
-                              {summaryData.totals.total_active}
+                              <i className="bi bi-calendar-week me-2"></i>
+                              {summaryData.grandTotal}
                             </h4>
-                            <p className="card-text">Active Count</p>
-                          </div>
-                        </div>
-                      </div>
-                      <div className="col-md-4">
-                        <div className="card bg-success text-white">
-                          <div className="card-body text-center">
-                            <h4 className="card-title">
-                              <i className="bi bi-person-plus-fill me-2"></i>
-                              {summaryData.totals.total_new}
-                            </h4>
-                            <p className="card-text">New Count</p>
-                          </div>
-                        </div>
-                      </div>
-                      <div className="col-md-4">
-                        <div className="card bg-info text-white">
-                          <div className="card-body text-center">
-                            <h4 className="card-title">
-                              <i className="bi bi-plus-circle-fill me-2"></i>
-                              {summaryData.totals.total_active +
-                                summaryData.totals.total_new}
-                            </h4>
-                            <p className="card-text">Total Count</p>
+                            <p className="card-text">
+                              Total Interviews (4 Mondays)
+                            </p>
                           </div>
                         </div>
                       </div>
                     </div>
 
-                    {/* Department-wise Table */}
+                    {/* 4 Mondays Interview Table */}
                     <div className="table-responsive">
-                      <table className="table table-striped table-hover table-sm">
-                        <thead className="table-dark">
-                          <tr>
-                            <th scope="col">#</th>
-                            <th scope="col">Department</th>
-                            <th scope="col" className="text-center">
-                              Active Count
+                      <table className="table table-bordered table-sm">
+                        <thead>
+                          <tr className="table-dark">
+                            <th scope="col" className="text-start">
+                              Department
                             </th>
+                            {summaryData.mondaySummaries.map(
+                              (monday, index) => (
+                                <th
+                                  key={index}
+                                  scope="col"
+                                  className="text-center"
+                                >
+                                  {moment(monday.date).format("D-MMM")}
+                                </th>
+                              )
+                            )}
                             <th scope="col" className="text-center">
-                              New Count
-                            </th>
-                            <th scope="col" className="text-center">
-                              Total Count
+                              Total
                             </th>
                           </tr>
                         </thead>
                         <tbody>
-                          {summaryData.summary
-                            .filter(
-                              (dept) =>
-                                dept.active_count > 0 || dept.new_count > 0
-                            )
-                            .map((dept, index) => (
-                              <tr key={dept.department_id}>
-                                <th scope="row">{index + 1}</th>
-                                <td>
-                                  <strong>{dept.department_name}</strong>
-                                </td>
-                                <td className="text-center">
-                                  {dept.active_count}
-                                </td>
-                                <td className="text-center">
-                                  {dept.new_count}
-                                </td>
-                                <td className="text-center">
-                                  <strong>
-                                    {dept.active_count + dept.new_count}
-                                  </strong>
-                                </td>
-                              </tr>
-                            ))}
+                          {/* Get all unique departments */}
+                          {(() => {
+                            const allDepartments =
+                              summaryData.mondaySummaries[0]?.departments || [];
+                            return allDepartments
+                              .map((dept) => {
+                                const rowTotal =
+                                  summaryData.mondaySummaries.reduce(
+                                    (sum, monday) => {
+                                      const deptData = monday.departments.find(
+                                        (d) =>
+                                          d.department_id === dept.department_id
+                                      );
+                                      return sum + (deptData?.new_count || 0);
+                                    },
+                                    0
+                                  );
+
+                                // Only show departments that have interviews
+                                if (rowTotal === 0) return null;
+
+                                return (
+                                  <tr key={dept.department_id}>
+                                    <td className="fw-bold">
+                                      {dept.department_name}
+                                    </td>
+                                    {summaryData.mondaySummaries.map(
+                                      (monday, index) => {
+                                        const deptData =
+                                          monday.departments.find(
+                                            (d) =>
+                                              d.department_id ===
+                                              dept.department_id
+                                          );
+                                        const count = deptData?.new_count || 0;
+                                        return (
+                                          <td
+                                            key={index}
+                                            className="text-center"
+                                            style={{
+                                              fontWeight:
+                                                count > 0 ? "bold" : "normal",
+                                            }}
+                                          >
+                                            {count > 0 ? count : ""}
+                                          </td>
+                                        );
+                                      }
+                                    )}
+                                    <td className="text-center fw-bold">
+                                      {rowTotal}
+                                    </td>
+                                  </tr>
+                                );
+                              })
+                              .filter(Boolean);
+                          })()}
                         </tbody>
                         <tfoot className="table-secondary">
                           <tr>
-                            <th colSpan={2} className="text-end">
-                              <strong>Total:</strong>
+                            <th className="text-end">
+                              <strong>Total</strong>
                             </th>
+                            {summaryData.mondaySummaries.map(
+                              (monday, index) => (
+                                <th
+                                  key={index}
+                                  className="text-center"
+                                  style={{
+                                    color: "#000",
+                                    fontWeight: "bold",
+                                  }}
+                                >
+                                  {monday.total}
+                                </th>
+                              )
+                            )}
                             <th className="text-center">
-                              <strong>{summaryData.totals.total_active}</strong>
-                            </th>
-                            <th className="text-center">
-                              <strong>{summaryData.totals.total_new}</strong>
-                            </th>
-                            <th className="text-center">
-                              <strong>
-                                {summaryData.totals.total_active +
-                                  summaryData.totals.total_new}
-                              </strong>
+                              <strong>{summaryData.grandTotal}</strong>
                             </th>
                           </tr>
                         </tfoot>
                       </table>
                     </div>
 
-                    {/* Date Info */}
+                    {/* Date Range Info */}
                     <div className="mt-3">
                       <small className="text-muted">
-                        <i className="bi bi-calendar-event me-1"></i>
-                        Summary for:{" "}
+                        <i className="bi bi-calendar-range me-1"></i>
+                        Showing interviews for:{" "}
                         <strong>
-                          {moment(summaryData.date).format("MMMM DD, YYYY")}
+                          {moment(summaryData.mondayDates[0]).format("MMM DD")}{" "}
+                          -{" "}
+                          {moment(summaryData.mondayDates[3]).format(
+                            "MMM DD, YYYY"
+                          )}
                         </strong>
                       </small>
                     </div>
                   </>
                 )}
-
-                {/* No Data State */}
-                {!summaryLoading &&
-                  summaryData &&
-                  summaryData.summary.filter(
-                    (dept) => dept.active_count > 0 || dept.new_count > 0
-                  ).length === 0 && (
-                    <div className="text-center py-4">
-                      <i className="bi bi-inbox display-1 text-muted"></i>
-                      <h5 className="mt-3 text-muted">No Data Available</h5>
-                      <p className="text-muted">
-                        No trainee data found for the selected date.
-                      </p>
-                    </div>
-                  )}
               </div>
-              <div className="modal-footer">
+              <div className="modal-footer d-flex justify-content-between">
+                <button
+                  className="btn btn-outline-success"
+                  onClick={handlePreviousSet}
+                  disabled={currentSetNumber === 1}
+                >
+                  <i className="bi bi-chevron-left me-1"></i>
+                  Back
+                </button>
                 <button
                   type="button"
                   className="btn btn-secondary"
@@ -424,6 +457,13 @@ export default function ViewInterviewPage() {
                 >
                   <i className="bi bi-x-circle me-1"></i>
                   Close
+                </button>
+                <button
+                  className="btn btn-outline-success"
+                  onClick={handleNextSet}
+                >
+                  Next
+                  <i className="bi bi-chevron-right ms-1"></i>
                 </button>
               </div>
             </div>
