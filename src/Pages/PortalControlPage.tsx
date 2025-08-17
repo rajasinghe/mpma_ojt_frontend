@@ -72,7 +72,7 @@ type RegisteredTrainee = {
   start_date: string;
 };
 
-export default function PortalAccountPage() {
+export default function PortalControlPage() {
   const registeredTrainees = useLoaderData() as RegisteredTrainee[];
   const [traineesWithoutPortalAccounts, setTraineesWithoutPortalAccounts] =
     useState<any[]>([]);

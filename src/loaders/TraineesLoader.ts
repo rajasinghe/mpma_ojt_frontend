@@ -1,5 +1,18 @@
 import api from "../api.ts";
 
+export interface RegisteredTrainee {
+  id: number;
+  nickname: string;
+  username: string;
+  NIC: string;
+  status: string;
+  createdAt: string; // ISO date string
+  updatedAt: string; // ISO date string
+  Name: string;
+  start_date: string | null; // can be null
+  email: string;
+}
+
 export const viewTraineesPageLoader = async () => {
   console.log(api.defaults.headers.common.Authorization);
   const [trainees, departments, programmes, institutes] = await Promise.all([

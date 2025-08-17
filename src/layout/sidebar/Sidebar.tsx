@@ -46,13 +46,6 @@ const Sidebar = ({ user }: Props) => {
           active_icon: "bi-folder-fill",
           inactive_icon: "bi-folder",
         },
-        {
-          name: "Portal Account",
-          route: "/OJT/trainees/portal_account",
-          regex: /^\/OJT\/trainees\/portal_account/i,
-          active_icon: "bi-person-badge-fill",
-          inactive_icon: "bi-person-badge",
-        },
       ],
     },
     {
@@ -111,6 +104,13 @@ const Sidebar = ({ user }: Props) => {
             route: "/OJT/departments",
             active_icon: "bi-diagram-3-fill",
             inactive_icon: "bi-diagram-3",
+          },
+          {
+            name: "Portal Controls",
+            regex: /^\/OJT\/portal_controls/i,
+            route: "/OJT/portal_controls",
+            active_icon: "bi-person-badge-fill",
+            inactive_icon: "bi-person-badge",
           },
           {
             name: "Payments",
@@ -197,6 +197,19 @@ const Sidebar = ({ user }: Props) => {
                 inactive_icon: "bi-file-earmark-arrow-up",
               },
             ],
+          });
+        }
+        if (
+          user.accessLevels.find(
+            (accessLevel: any) => accessLevel.access == "portal_account:modify"
+          )
+        ) {
+          updatedLinks.push({
+            name: "Portal Controls",
+            regex: /^\/OJT\/portal_controls/i,
+            route: "/OJT/portal_controls",
+            active_icon: "bi-person-badge-fill",
+            inactive_icon: "bi-person-badge",
           });
         }
         if (

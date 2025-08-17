@@ -63,13 +63,16 @@ import NewInterviewPage from "./features/Interview/interviewPage.tsx";
 import ViewInterviewPage from "./features/Interview/viewInterviewPage.tsx";
 import EditInterviewPage from "./features/Interview/editInterviewPage.tsx";
 import { InterviewLoader } from "./loaders/InterviewLoader.ts";
-import { traineeDetailsPageLoader } from "./loaders/TraineesLoader.ts";
+import {
+  traineeDetailsPageLoader,
+  registeredTraineesLoader,
+} from "./loaders/TraineesLoader.ts";
 import PaymentsPage from "./Pages/PaymentsPage.tsx";
 import ViewPaymentDetails from "./Pages/ViewPaymentDetails.tsx";
 import TraineeDetailsPage from "./Pages/TraineeDetailsPage.tsx";
 import UserUpdatePage from "./Pages/Admin/UserUpdatePage.tsx";
 import NotificationPage from "./Pages/NotificationPage.tsx";
-import PortalAccountPage from "./Pages/PortalAccountPage.tsx";
+import PortalControlPage from "./Pages/PortalControlPage.tsx";
 
 export const setToken = () => {
   const token = localStorage.getItem("token");
@@ -159,8 +162,8 @@ const router = createBrowserRouter([
             loader: traineeDetailsPageLoader,
           },
           {
-            path: "trainees/portal_account",
-            element: <PortalAccountPage />,
+            path: "portal_controls",
+            element: <PortalControlPage />,
             loader: registeredTraineesLoader,
           },
           {
