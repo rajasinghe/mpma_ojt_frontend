@@ -13,7 +13,7 @@ import { useNavigate } from "react-router-dom";
 const schema = z.object({
   name: z.string().min(1, "Enter the user name"),
   TEL_NO: z.string().regex(/^\d{9,10}$/, "Invalid Format, e.g., 0771231231"),
-  email: z.string().email("Invalid email format").optional(),
+  email: z.string().nullable().optional(),
   Jstart_date: z.string().date("Select a starting date for the journey"),
   period: z.object({
     label: z.string().min(1),
@@ -112,6 +112,7 @@ export default function TraineeForm({
 
             const body = {
               ...data,
+              email: data.email || null,
               NIC_NO: nic,
               ATT_NO: attNo,
               REG_NO: regNo,
