@@ -73,6 +73,7 @@ import TraineeDetailsPage from "./Pages/TraineeDetailsPage.tsx";
 import UserUpdatePage from "./Pages/Admin/UserUpdatePage.tsx";
 import NotificationPage from "./Pages/NotificationPage.tsx";
 import PortalControlPage from "./Pages/PortalControlPage.tsx";
+import PortalAccountsPage from "./Pages/PortalAccountsPage.tsx";
 
 export const setToken = () => {
   const token = localStorage.getItem("token");
@@ -164,6 +165,11 @@ const router = createBrowserRouter([
           {
             path: "portal_controls",
             element: <PortalControlPage />,
+            loader: registeredTraineesLoader,
+          },
+          {
+            path: "portal_controls/accounts",
+            element: <PortalAccountsPage />,
             loader: registeredTraineesLoader,
           },
           {

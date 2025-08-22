@@ -111,6 +111,15 @@ const Sidebar = ({ user }: Props) => {
             route: "/OJT/portal_controls",
             active_icon: "bi-person-badge-fill",
             inactive_icon: "bi-person-badge",
+            subLinks: [
+              {
+                name: "Portal Accounts",
+                regex: /^\/OJT\/portal_controls\/accounts/i,
+                route: "/OJT/portal_controls/accounts",
+                active_icon: "bi-people-fill",
+                inactive_icon: "bi-people",
+              },
+            ],
           },
           {
             name: "Payments",
@@ -210,6 +219,15 @@ const Sidebar = ({ user }: Props) => {
             route: "/OJT/portal_controls",
             active_icon: "bi-person-badge-fill",
             inactive_icon: "bi-person-badge",
+            subLinks: [
+              {
+                name: "Portal Accounts",
+                regex: /^\/OJT\/portal_controls\/accounts/i,
+                route: "/OJT/portal_controls/accounts",
+                active_icon: "bi-people-fill",
+                inactive_icon: "bi-people",
+              },
+            ],
           });
         }
         if (
@@ -300,7 +318,7 @@ const Sidebar = ({ user }: Props) => {
                       <button
                         className="btn btn-sm ms-auto submenu-toggle"
                         data-bs-toggle="collapse"
-                        data-bs-target={`#submenu-${link.name}`}
+                        data-bs-target={`#submenu-${link.name.replace(/\s+/g, '-').toLowerCase()}`}
                         aria-expanded="false"
                       >
                         <i
@@ -312,7 +330,7 @@ const Sidebar = ({ user }: Props) => {
 
                   <ul
                     className="collapse"
-                    id={`submenu-${link.name}`}
+                    id={`submenu-${link.name.replace(/\s+/g, '-').toLowerCase()}`}
                     data-bs-parent="#sidebar-nav"
                   >
                     {link.subLinks.map((sublink) => (

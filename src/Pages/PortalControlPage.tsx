@@ -1,7 +1,7 @@
 import { useState, useEffect } from "react";
 import { MainContainer } from "../layout/containers/main_container/MainContainer";
 import SubContainer from "../layout/containers/sub_container/SubContainer";
-import { Link, useLoaderData } from "react-router-dom";
+import { Link } from "react-router-dom";
 import MiniLoader from "../Components/ui/Loader/MiniLoader";
 import moment from "moment";
 import api from "../api";
@@ -49,52 +49,19 @@ const TraineesWithoutPortalAccounts = async () => {
   return traineesWithoutPortalAccounts.data;
 };
 
-const PendingTrainees = async () => {
-  try {
-    const response = await api.get("api/portal/pending_trainees");
-    return response.data.data;
-  } catch (error) {
-    console.error("Error fetching pending trainees:", error);
-    return [];
-  }
-};
-
-//console.log("pending trainees", PendingTrainees.data);
-
-type RegisteredTrainee = {
-  id: number;
-  NIC: string;
-  nickname: string;
-  username: string;
-  status: string;
-  Name: string;
-  email: string;
-  start_date: string;
-};
+//console.log("pending trainees");
 
 export default function PortalControlPage() {
-  const registeredTrainees = useLoaderData() as RegisteredTrainee[];
   const [traineesWithoutPortalAccounts, setTraineesWithoutPortalAccounts] =
     useState<any[]>([]);
-  const [pendingTrainees, setPendingTrainees] = useState<any[]>([]);
   const [searchRegistered, setSearchRegistered] = useState("");
-  const [searchPending, setSearchPending] = useState("");
-  const [loadingPending, setLoadingPending] = useState(false);
   const [loading, setLoading] = useState(false);
   const [selectedTrainees, setSelectedTrainees] = useState<string[]>([]);
-  const [selectedPendingTrainees, setSelectedPendingTrainees] = useState<
-    string[]
-  >([]);
-  const [emailSentTrainees, setEmailSentTrainees] = useState<{
-    [key: string]: number;
-  }>({});
+  
 
   // Modal state
   const [showModal, setShowModal] = useState(false);
-  const [showEditModal, setShowEditModal] = useState(false);
   const [selectedTraineeForAccount, setSelectedTraineeForAccount] =
-    useState<any>(null);
-  const [selectedTraineeForEdit, setSelectedTraineeForEdit] =
     useState<any>(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
 
@@ -124,13 +91,6 @@ export default function PortalControlPage() {
     } else {
       setSelectedTrainees([]);
     }
-  };
-
-  // Check if email was sent within last 2 minutes
-  const isEmailRecentlySent = (email: string) => {
-    const sentTime = emailSentTrainees[email];
-    if (!sentTime) return false;
-    return Date.now() - sentTime < 2 * 60 * 1000; // 2 minutes
   };
 
   const sendBulkEmails = async () => {
@@ -167,129 +127,6 @@ export default function PortalControlPage() {
         });
 
         setSelectedTrainees([]);
-
-        Swal.fire({
-          icon: "success",
-          title: "Bulk Emails Sent!",
-          text: `Emails successfully sent to ${selectedTraineesData.length} trainees`,
-          timer: 2000,
-          showConfirmButton: false,
-        });
-      } catch (error) {
-        console.error("Error sending bulk emails:", error);
-        Swal.fire({
-          icon: "error",
-          title: "Failed!",
-          text: "Could not send bulk emails.",
-        });
-      }
-    }
-  };
-
-  // Pending trainees functions
-  const handleSelectPendingTrainee = (nic: string) => {
-    setSelectedPendingTrainees((prev) =>
-      prev.includes(nic) ? prev.filter((id) => id !== nic) : [...prev, nic]
-    );
-  };
-
-  const handleSelectAllPending = (e: React.ChangeEvent<HTMLInputElement>) => {
-    if (e.target.checked) {
-      setSelectedPendingTrainees(filteredPendingTrainees.map((t) => t.NIC));
-    } else {
-      setSelectedPendingTrainees([]);
-    }
-  };
-
-  const sendPendingEmail = async (email: string, NIC: string) => {
-    const confirm = await Swal.fire({
-      title: "Are you sure?",
-      text: `Send login details to ${email}?`,
-      icon: "question",
-      showCancelButton: true,
-      confirmButtonText: "Yes, send it",
-      cancelButtonText: "Cancel",
-    });
-
-    if (confirm.isConfirmed) {
-      try {
-        const response = await api.post("api/trainee/sendMails", {
-          data: [
-            {
-              email: email,
-              NIC: NIC,
-            },
-          ],
-        });
-
-        // Mark email as sent with timestamp
-        setEmailSentTrainees((prev) => ({
-          ...prev,
-          [email]: Date.now(),
-        }));
-
-        Swal.fire({
-          icon: "success",
-          title: "Email Sent!",
-          text: `Email successfully sent to ${email}`,
-          timer: 2000,
-          showConfirmButton: false,
-        });
-      } catch (error) {
-        console.error("Error sending email:", error);
-        Swal.fire({
-          icon: "error",
-          title: "Failed!",
-          text: `Could not send email to ${email}.`,
-        });
-      }
-    }
-  };
-
-  const sendBulkPendingEmails = async () => {
-    if (selectedPendingTrainees.length === 0) {
-      Swal.fire({
-        icon: "warning",
-        title: "No Selection",
-        text: "Please select at least one trainee to send emails.",
-      });
-      return;
-    }
-
-    // Create array of email and NIC pairs
-    const selectedTraineesData = pendingTrainees
-      .filter((t) => selectedPendingTrainees.includes(t.NIC))
-      .map((t) => ({
-        email: t.email,
-        NIC: t.NIC,
-      }));
-
-    const confirm = await Swal.fire({
-      title: "Send Bulk Emails?",
-      text: `Send login details to ${selectedTraineesData.length} trainees?`,
-      icon: "question",
-      showCancelButton: true,
-      confirmButtonText: "Yes, send all",
-      cancelButtonText: "Cancel",
-    });
-
-    if (confirm.isConfirmed) {
-      try {
-        const response = await api.post("api/trainee/sendMails", {
-          data: selectedTraineesData,
-        });
-
-        // Mark all emails as sent with timestamp
-        const now = Date.now();
-        setEmailSentTrainees((prev) => {
-          const updated = { ...prev };
-          selectedTraineesData.forEach((item) => {
-            updated[item.email] = now;
-          });
-          return updated;
-        });
-
-        setSelectedPendingTrainees([]);
 
         Swal.fire({
           icon: "success",
@@ -393,93 +230,22 @@ export default function PortalControlPage() {
     }
   };
 
-  // Edit trainee functionality
-  const openEditModal = (trainee: any) => {
-    setSelectedTraineeForEdit(trainee);
-    setShowEditModal(true);
-  };
-
-  const closeEditModal = () => {
-    setShowEditModal(false);
-    setSelectedTraineeForEdit(null);
-  };
-
-  const handleEditTrainee = async (trainee: any) => {
-    // This would typically open a form to edit trainee details
-    // For now, we'll show a simple prompt to edit email
-    const { value: newEmail } = await Swal.fire({
-      title: "Edit Trainee Email",
-      input: "email",
-      inputLabel: "Email address",
-      inputValue: trainee.email,
-      showCancelButton: true,
-      inputValidator: (value) => {
-        if (!value) {
-          return "You need to write something!";
-        }
-      },
-    });
-
-    if (newEmail) {
-      try {
-        const response = await api.put(
-          `api/trainee/update-email/${trainee.NIC}`,
-          {
-            email: newEmail,
-          }
-        );
-
-        // Update the pending trainees list
-        setPendingTrainees((prev) =>
-          prev.map((t) =>
-            t.NIC === trainee.NIC ? { ...t, email: newEmail } : t
-          )
-        );
-
-        Swal.fire({
-          icon: "success",
-          title: "Updated!",
-          text: `Email updated successfully to ${newEmail}`,
-          timer: 2000,
-          showConfirmButton: false,
-        });
-      } catch (error) {
-        console.error("Error updating email:", error);
-        Swal.fire({
-          icon: "error",
-          title: "Failed!",
-          text: "Could not update email.",
-        });
-      }
-    }
-  };
+  // Edit trainee functionality - moved to PortalAccounts page
 
   useEffect(() => {
     setLoading(true);
-    setLoadingPending(true);
-    Promise.all([TraineesWithoutPortalAccounts(), PendingTrainees()])
-      .then(([traineesResult, pendingResult]) => {
-        // Handle trainees without portal accounts
+    TraineesWithoutPortalAccounts()
+      .then((traineesResult) => {
         if (!Array.isArray(traineesResult)) {
           setTraineesWithoutPortalAccounts([]);
         } else {
           setTraineesWithoutPortalAccounts(traineesResult);
         }
-
-        // Handle pending trainees
-        if (!Array.isArray(pendingResult)) {
-          setPendingTrainees([]);
-        } else {
-          setPendingTrainees(pendingResult);
-        }
-
         setLoading(false);
-        setLoadingPending(false);
       })
       .catch((error) => {
         console.error("Error loading data:", error);
         setLoading(false);
-        setLoadingPending(false);
       });
   }, []);
 
@@ -494,27 +260,12 @@ export default function PortalControlPage() {
     }
   };
 
-  // Filtered pending trainees - exclude registered trainees from pending trainees
-  const filteredPendingTrainees = pendingTrainees
-    .filter(
-      (pendingTrainee) =>
-        !registeredTrainees.some(
-          (registeredTrainee) => registeredTrainee.NIC === pendingTrainee.NIC
-        )
-    )
-    .filter(
-      (t) =>
-        t.NIC?.toLowerCase().includes(searchPending.toLowerCase()) ||
-        t.name?.toLowerCase().includes(searchPending.toLowerCase()) ||
-        t.email?.toLowerCase().includes(searchPending.toLowerCase())
-    );
-
-  console.log("traineesWithoutPortalAccounts", registeredTrainees);
+  
 
   return (
     <MainContainer
-      title="Portal Account"
-      breadCrumbs={["Home", "Trainees", "Portal Account"]}
+      title="Create Account"
+      breadCrumbs={["Home", "Trainees", "Create Account"]}
     >
       <SubContainer>
         <div className="container-fluid border border-dark rounded-2 my-2 py-2">
@@ -682,186 +433,7 @@ export default function PortalControlPage() {
           )}
         </div>
 
-        {/* Pending Trainees Section */}
-        <div className="container-fluid border border-dark rounded-2 my-2 py-2">
-          <div className="card shadow-sm mb-3">
-            <div className="card-body d-flex align-items-center">
-              <i className="bi bi-person-check-fill me-2"></i>
-              <h5 className="card-title mb-0">Pending Trainees</h5>
-            </div>
-          </div>
-          {loadingPending ? (
-            <div className="text-black-50 text-center m-3">
-              No pending trainees
-            </div>
-          ) : (
-            <div className="d-flex justify-content-between align-items-center">
-              <input
-                type="text"
-                className="form-control mb-2"
-                placeholder="Search pending trainees..."
-                value={searchPending}
-                onChange={(e) => setSearchPending(e.target.value)}
-                style={{ maxWidth: 300 }}
-              />
-              <div className="d-flex justify-content-between align-items-center">
-                <div>
-                  <div className="mb-3">
-                    <button
-                      className="btn btn-primary me-2"
-                      onClick={sendBulkPendingEmails}
-                      disabled={selectedPendingTrainees.length === 0}
-                    >
-                      Resend Emails ({selectedPendingTrainees.length})
-                    </button>
-                  </div>
-                </div>
-              </div>
-            </div>
-          )}
-          {filteredPendingTrainees.length === 0 ? (
-            <div className="text-black-50 text-center m-3">
-              No pending trainees
-            </div>
-          ) : (
-            <div className="table-responsive rounded-2 table-scrollbar">
-              <table
-                className="table table-sm table-bordered w-100 table-striped align-middle text-center"
-                style={{ fontSize: "0.875rem" }}
-              >
-                <thead className="table-dark position-sticky top-0">
-                  <tr>
-                    <th>
-                      <input
-                        type="checkbox"
-                        checked={
-                          selectedPendingTrainees.length ===
-                            filteredPendingTrainees.length &&
-                          filteredPendingTrainees.length > 0
-                        }
-                        onChange={handleSelectAllPending}
-                      />
-                    </th>
-                    <th>NIC</th>
-                    <th>Name</th>
-                    <th>Email</th>
-                    <th>Date</th>
-                    <th>Actions</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {filteredPendingTrainees.map((trainee, idx) => (
-                    <tr key={idx}>
-                      <td>
-                        <input
-                          type="checkbox"
-                          checked={selectedPendingTrainees.includes(
-                            trainee.NIC
-                          )}
-                          onChange={() =>
-                            handleSelectPendingTrainee(trainee.NIC)
-                          }
-                        />
-                      </td>
-                      <td>{trainee.NIC}</td>
-                      <td>{trainee.nickname}</td>
-                      <td>{trainee.email || "No email"}</td>
-                      <td>{moment(trainee.date).format("YYYY-MM-DD")}</td>
-                      <td>
-                        <button
-                          className="btn btn-sm btn-primary me-1 m-1"
-                          onClick={() =>
-                            sendPendingEmail(trainee.email, trainee.NIC)
-                          }
-                          disabled={isEmailRecentlySent(trainee.email)}
-                          title={
-                            isEmailRecentlySent(trainee.email)
-                              ? "Email sent recently. Please wait 2 minutes."
-                              : "Send email"
-                          }
-                        >
-                          {isEmailRecentlySent(trainee.email)
-                            ? "Wait..."
-                            : "Resend"}
-                        </button>
-                        <button
-                          className="btn btn-sm btn-warning me-1 m-1"
-                          onClick={() => handleEditTrainee(trainee)}
-                        >
-                          Edit
-                        </button>
-                      </td>
-                    </tr>
-                  ))}
-                </tbody>
-              </table>
-            </div>
-          )}
-        </div>
-
-        <div className="container-fluid border border-dark rounded-2 my-2 py-2">
-          <div className="card shadow-sm mb-3">
-            <div className="card-body d-flex align-items-center">
-              <i className="bi bi-people-fill me-2"></i>
-              <h5 className="card-title mb-0">Portal Created Trainees</h5>
-            </div>
-          </div>
-          {registeredTrainees.length == 0 ? (
-            <div className="text-black-50 text-center m-3">
-              No registered trainees
-            </div>
-          ) : (
-            <>
-              <input
-                type="text"
-                className="form-control mb-2"
-                placeholder="Search registered trainees..."
-                value={searchRegistered}
-                onChange={(e) => setSearchRegistered(e.target.value)}
-                style={{ maxWidth: 300 }}
-              />
-              <div className="table-responsive rounded-2 table-scrollbar">
-                <table
-                  className="table table-sm table-bordered w-100 table-striped align-middle text-center"
-                  style={{ fontSize: "0.875rem" }}
-                >
-                  <thead className="table-dark position-sticky top-0">
-                    <tr>
-                      <th>NIC</th>
-                      <th>Name</th>
-                      <th>Email</th>
-                      <th>Start Date</th>
-                      <th>Actions</th>
-                    </tr>
-                  </thead>
-                  <tbody>
-                    {registeredTrainees.map((trainee, idx) => (
-                      <tr key={idx}>
-                        <td>{trainee.NIC}</td>
-                        <td>{trainee.nickname}</td>
-                        <td>{trainee?.email || "No email"}</td>
-                        <td>
-                          {moment(trainee.start_date).format("YYYY-MM-DD")}
-                        </td>
-                        <td>
-                          <button className="btn btn-sm btn-success me-1">
-                            Register
-                          </button>
-                          <button className="btn btn-sm btn-info me-1">
-                            View
-                          </button>
-                          <button className="btn btn-sm btn-danger">
-                            Delete
-                          </button>
-                        </td>
-                      </tr>
-                    ))}
-                  </tbody>
-                </table>
-              </div>
-            </>
-          )}
-        </div>
+        {/* Other sections moved to Portal Accounts page */}
       </SubContainer>
 
       {/* Create Account Modal */}
