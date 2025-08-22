@@ -24,7 +24,7 @@ const schema = z.object({
   attNo: z.coerce.number(),
   name: z.string().min(1, "Enter the user name"),
   TEL_NO: z.string().regex(/^\d{9,10}$/, "Invalid Format, e.g., 0771231231"),
-  email: z.string().email("Invalid email format").optional(),
+  email: z.string().nullable().optional(),
 });
 
 // Infer the types.
@@ -73,7 +73,7 @@ export default function UpdateTrainees() {
         ).name,
       },
       TEL_NO: loaderData.trainee.contact_no + "",
-      email: loaderData.trainee.email || "",
+      email: loaderData.trainee.email || null,
       regNo: loaderData.trainee.REG_NO,
       attNo: loaderData.trainee.ATT_NO,
     },
