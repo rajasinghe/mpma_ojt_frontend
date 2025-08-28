@@ -2,3 +2,31 @@
 tr.future-interview-row {
   background-color: #ffcccc !important;
 }
+
+/* Toggle button styles */
+.interview-toggle-btn {
+  transition: all 0.2s ease;
+}
+
+.interview-toggle-btn.active {
+  background-color: #28a745 !important;
+  border-color: #28a745 !important;
+  color: white !important;
+}
+
+.interview-toggle-btn.active:hover {
+  background-color: #218838 !important;
+  border-color: #1e7e34 !important;
+}
+
+.interview-toggle-btn:not(.active) {
+  background-color: #f8f9fa;
+  border-color: #28a745;
+  color: #28a745;
+}
+
+.interview-toggle-btn:not(.active):hover {
+  background-color: #e9ecef;
+  border-color: #28a745;
+  color: #28a745;
+}

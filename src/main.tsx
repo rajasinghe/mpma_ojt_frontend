@@ -1,6 +1,6 @@
 import { createRoot } from "react-dom/client";
 import "./index.css";
-import { createBrowserRouter, RouterProvider } from "react-router-dom";
+import { createBrowserRouter, RouterProvider, Navigate } from "react-router-dom";
 import Base from "./Pages/Base.tsx";
 import TraineeDetailsAddPage from "./Pages/TraineeDetailsAddPage.tsx";
 import "bootstrap/dist/css/bootstrap.css";
@@ -8,6 +8,8 @@ import "bootstrap-icons/font/bootstrap-icons.css";
 import "bootstrap/dist/js/bootstrap.bundle.min";
 import "@fortawesome/fontawesome-free/css/all.min.css";
 import ViewTraineesPage from "./Pages/ViewTraineesPage.tsx";
+
+import { SessionProvider } from "./contexts/SessionContext.tsx";
 import {
   newTraineesInsertPageLoader,
   traineeAddSchedulePageLoader,
@@ -56,6 +58,7 @@ import {
 import NewInterviewPage from "./features/Interview/interviewPage.tsx";
 import ViewInterviewPage from "./features/Interview/viewInterviewPage.tsx";
 import EditInterviewPage from "./features/Interview/editInterviewPage.tsx";
+import MultipleAttendancePage from "./features/Interview/multipleAttendancePage.tsx";
 import { InterviewLoader } from "./loaders/InterviewLoader.ts";
 import { traineeDetailsPageLoader } from "./loaders/TraineesLoader.ts";
 import PaymentsPage from "./Pages/PaymentsPage.tsx";
@@ -86,10 +89,18 @@ const router = createBrowserRouter([
     element: <LandingPage />,
     children: [
       {
-        path: "/OJT",
+        index: true, // This handles the exact "/" path
+        element: <Navigate to="/OJT/trainees" replace />,
+      },
+      {
+        path: "OJT",
         element: <Base />,
         errorElement: <ErrorHandler />,
         children: [
+          {
+            index: true, // This handles "/OJT" without trailing path
+            element: <Navigate to="trainees" replace />,
+          },
           {
             path: "inbox",
             loader: inboxLoader,
@@ -102,6 +113,10 @@ const router = createBrowserRouter([
           {
             path: "interview/new",
             element: <NewInterviewPage />,
+          },
+          {
+            path: "interview/multiple",
+            element: <MultipleAttendancePage />,
           },
           {
             path: "interview",
@@ -226,5 +241,7 @@ const router = createBrowserRouter([
 ]);
 
 createRoot(document.getElementById("root")!).render(
-  <RouterProvider router={router} />
+  <SessionProvider>
+    <RouterProvider router={router} />
+  </SessionProvider>
 );

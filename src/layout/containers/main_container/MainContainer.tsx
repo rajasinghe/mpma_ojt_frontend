@@ -5,7 +5,11 @@ interface MainContainer {
   children: ReactNode;
   title: string;
 }
-export const MainContainer = ({ children, breadCrumbs, title }: MainContainer) => {
+export const MainContainer = ({
+  children,
+  breadCrumbs,
+  title,
+}: MainContainer) => {
   return (
     <main
       id="main"
@@ -23,8 +27,10 @@ export const MainContainer = ({ children, breadCrumbs, title }: MainContainer) =
         <h1>{title}</h1>
         <nav className="ms-1">
           <ol className="breadcrumb">
-            {breadCrumbs.map((breadCrumb,index) => (   
-              <li key={index} className="breadcrumb-item active">{breadCrumb}</li>
+            {breadCrumbs.map((breadCrumb, index) => (
+              <li key={index} className="breadcrumb-item active">
+                {breadCrumb}
+              </li>
             ))}
           </ol>
         </nav>

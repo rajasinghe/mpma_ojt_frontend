@@ -59,17 +59,25 @@ type filterFormValues = z.infer<typeof filterSchema>;
 export default function ViewTraineesPage() {
   const loaderData = useLoaderData() as loaderProps;
   const [trainees, setTrainees] = useState<Trainee[]>(loaderData.trainees);
-  const [matchingTrainees, setMatchingTrainees] = useState<Trainee[]>(loaderData.trainees);
+  const [matchingTrainees, setMatchingTrainees] = useState<Trainee[]>(
+    loaderData.trainees
+  );
   const [keyword, setKeyword] = useState<string>("");
 
   const [filterVisible, setFilterVisible] = useState(false);
 
-  const [filterOptions, setFilterOptions] = useState<filterFormValues | null>(null);
-  const [resultCount, setResultCount] = useState<number>(loaderData.trainees.length);
+  const [filterOptions, setFilterOptions] = useState<filterFormValues | null>(
+    null
+  );
+  const [resultCount, setResultCount] = useState<number>(
+    loaderData.trainees.length
+  );
   const [searchCount, setSearchCount] = useState<number | null>(null);
 
   const [loading, setLoading] = useState<boolean>(false);
-  const [activeTrainees, setActiveTrainees] = useState<Trainee[]>(loaderData.trainees);
+  const [activeTrainees, setActiveTrainees] = useState<Trainee[]>(
+    loaderData.trainees
+  );
 
   const {
     register,
@@ -131,7 +139,9 @@ export default function ViewTraineesPage() {
           //set loading state
           console.log(filterParams);
           setLoading(true);
-          const data = await api.get("/api/trainee/filter_data", { params: filterParams });
+          const data = await api.get("/api/trainee/filter_data", {
+            params: filterParams,
+          });
           console.log(data);
           setLoading(false);
           setTrainees(data.data);
@@ -196,14 +206,13 @@ export default function ViewTraineesPage() {
   };
 
   const hasCurrentDepartment = (trainee: Trainee) => {
-
     if (!activeTrainees.some((t: Trainee) => t.id === trainee.id)) {
       return true; // Not consider inactive trainees
     }
 
     if (!trainee.schedules?.length) return false;
 
-    const today = new Date()
+    const today = new Date();
     today.setHours(0, 0, 0, 0); // Set time to midnight for accurate comparison
 
     return trainee.schedules.some((schedule) => {
@@ -263,7 +272,9 @@ export default function ViewTraineesPage() {
       setFilterOptions(data);
       setFilterVisible(false);
     } else {
-      setError("root", { message: "one of the filters must be used to filter data " });
+      setError("root", {
+        message: "one of the filters must be used to filter data ",
+      });
     }
     /*; */
   };
@@ -312,7 +323,10 @@ export default function ViewTraineesPage() {
                       <div>
                         <div>Filters Applied :-</div>
                         {filterOptions?.includeInactiveTrainees && (
-                          <span className="badge bg-danger ms-1" style={{ fontSize: "8px" }}>
+                          <span
+                            className="badge bg-danger ms-1"
+                            style={{ fontSize: "8px" }}
+                          >
                             Inactive Trainees
                           </span>
                         )}
@@ -353,7 +367,9 @@ export default function ViewTraineesPage() {
                             );
                           })}
 
-                        {filterOptions && filterOptions.start_date && filterOptions.end_date ? (
+                        {filterOptions &&
+                        filterOptions.start_date &&
+                        filterOptions.end_date ? (
                           <span
                             className="badge bg-primary ms-1"
                             style={{ fontSize: "8px" }}
@@ -410,15 +426,21 @@ export default function ViewTraineesPage() {
                                 <td>{trainee.name}</td>
                                 <td>{trainee.NIC_NO}</td>
                                 <td>{trainee.institute}</td>
-                                <td>{trainee.program}</td>                                
+                                <td>{trainee.program}</td>
                                 <td>
                                   <div>
                                     <Link
-                                      className={`btn btn-sm ${!hasCurrentDepartment(trainee) ? 'btn-primary' : 'btn-warning'}`}
+                                      className={`btn btn-sm ${
+                                        !hasCurrentDepartment(trainee)
+                                          ? "btn-primary"
+                                          : "btn-warning"
+                                      }`}
                                       to={`${trainee.id}/profile`}
-                                      style={{ width: '57px' }}
+                                      style={{ width: "57px" }}
                                     >
-                                      {!hasCurrentDepartment(trainee) ? 'Add' : 'Profile'}
+                                      {!hasCurrentDepartment(trainee)
+                                        ? "Add"
+                                        : "Profile"}
                                     </Link>
                                   </div>
                                 </td>
@@ -436,10 +458,16 @@ export default function ViewTraineesPage() {
                       height: "4vh",
                     }}
                   >
-                    <Link to={"/OJT/trainees/new"} className="btn btn-primary btn-sm ms-auto">
+                    <Link
+                      to={"/OJT/trainees/new"}
+                      className="btn btn-primary btn-sm ms-auto"
+                    >
                       Add New Trainee
                     </Link>
-                    <button className="btn btn-success btn-sm ms-2" onClick={handleDownload}>
+                    <button
+                      className="btn btn-success btn-sm ms-2"
+                      onClick={handleDownload}
+                    >
                       Download Records
                     </button>
                   </div>
@@ -457,7 +485,9 @@ export default function ViewTraineesPage() {
                   </Modal.Header>
                   <Modal.Body>
                     <form className="">
-                      {errors.root && <p className="text-danger m-0">{errors.root.message}</p>}
+                      {errors.root && (
+                        <p className="text-danger m-0">{errors.root.message}</p>
+                      )}
                       <div>
                         <div className=" fw-semibold">Training Programmes</div>
                         <div className="ps-1 mt-1">
@@ -469,10 +499,12 @@ export default function ViewTraineesPage() {
                                 <ReactSelect
                                   {...field}
                                   isMulti={true}
-                                  options={loaderData.programmes.map((programme) => ({
-                                    value: programme.id,
-                                    label: programme.name,
-                                  }))}
+                                  options={loaderData.programmes.map(
+                                    (programme) => ({
+                                      value: programme.id,
+                                      label: programme.name,
+                                    })
+                                  )}
                                 />
                               );
                             }}
@@ -490,10 +522,12 @@ export default function ViewTraineesPage() {
                                 <ReactSelect
                                   {...field}
                                   isMulti={true}
-                                  options={loaderData.institutes.map((institute) => ({
-                                    value: institute.id,
-                                    label: institute.name,
-                                  }))}
+                                  options={loaderData.institutes.map(
+                                    (institute) => ({
+                                      value: institute.id,
+                                      label: institute.name,
+                                    })
+                                  )}
                                 />
                               );
                             }}
@@ -511,10 +545,12 @@ export default function ViewTraineesPage() {
                                 <ReactSelect
                                   {...field}
                                   isMulti={true}
-                                  options={loaderData.departments.map((department) => ({
-                                    value: department.id,
-                                    label: department.name,
-                                  }))}
+                                  options={loaderData.departments.map(
+                                    (department) => ({
+                                      value: department.id,
+                                      label: department.name,
+                                    })
+                                  )}
                                 />
                               );
                             }}
@@ -558,7 +594,9 @@ export default function ViewTraineesPage() {
                             type="checkbox"
                             {...register("includeInactiveTrainees")}
                           />
-                          <div className="ms-2 fw-semibold">Include Inactive Trainees</div>
+                          <div className="ms-2 fw-semibold">
+                            Include Inactive Trainees
+                          </div>
                         </div>
                       </div>
                     </form>
