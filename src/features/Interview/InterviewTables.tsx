@@ -315,10 +315,11 @@ export default function InterviewTables({
         const response = await api.get("api/interview/email-details");
         setEmailDetails(response.data.emailDetails || []);
       } catch (error: any) {
-        const errorMessage =
-          error.response?.data?.message[0] ||
-          error.message ||
-          "An unexpected error occurred while sending the email";
+        const errorMessage = Array.isArray(error.response?.data?.message)
+          ? error.response.data.message[0]
+          : error.response?.data?.message ||
+            error.message ||
+            "An unexpected error occurred while sending the email";
         console.error("Error sending bulk emails:", error);
         Swal.fire({
           icon: "error",
@@ -387,15 +388,17 @@ export default function InterviewTables({
         const response = await api.get("api/interview/email-details");
         setEmailDetails(response.data.emailDetails || []);
       } catch (error: any) {
-        const errorMessage =
-          error.response?.data?.message ||
-          error.message ||
-          "An unexpected error occurred while sending the email";
+        const errorMessage = Array.isArray(error.response?.data?.message)
+          ? error.response.data.message[0]
+          : error.response?.data?.message ||
+            error.message ||
+            "An unexpected error occurred while sending the email";
+
         console.error("Error sending email:", errorMessage);
         Swal.fire({
           icon: "error",
           title: "Email Sending Failed!",
-          text: `${errorMessage[0]}.`,
+          text: errorMessage,
         });
       } finally {
         // Reset processing state for this email
