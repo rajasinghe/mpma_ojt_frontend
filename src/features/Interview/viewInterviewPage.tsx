@@ -305,23 +305,6 @@ export default function ViewInterviewPage() {
                 {/* Summary Data */}
                 {!summaryLoading && summaryData && (
                   <>
-                    {/* Grand Total Card */}
-                    <div className="row mb-4">
-                      <div className="col-12">
-                        <div className="card bg-primary text-white">
-                          <div className="card-body text-center">
-                            <h4 className="card-title">
-                              <i className="bi bi-calendar-week me-2"></i>
-                              {summaryData.grandTotal}
-                            </h4>
-                            <p className="card-text">
-                              Total Interviews (4 Mondays)
-                            </p>
-                          </div>
-                        </div>
-                      </div>
-                    </div>
-
                     {/* 4 Mondays Interview Table */}
                     <div className="table-responsive">
                       <table className="table table-bordered table-sm">

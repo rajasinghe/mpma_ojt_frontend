@@ -295,17 +295,22 @@ export default function InterviewTables({
           ? "api/interview/sendMails"
           : "api/interview/sendDocumentRequirements";
 
-        await api.post(endpoint, {
+        const mailRes = await api.post(endpoint, {
           data: selectedInterviewsData,
         });
+
+        const successMails =
+          mailRes.data.results
+            .filter((result: any) => result.success === true)
+            .map((item: any) => item.to) || [];
 
         setSelectedAllInterviews([]);
 
         // Set 2-minute cooldown for all emails that were sent (disables both login and document buttons)
         const emailType = showLoginDetailsTable ? "login" : "documents";
         const now = Date.now();
-        const newDisabledEmails = selectedInterviewsData.reduce((acc, item) => {
-          acc[item.email] = { timestamp: now, type: emailType };
+        const newDisabledEmails = successMails.reduce((acc: any, item: any) => {
+          acc[item] = { timestamp: now, type: emailType };
           return acc;
         }, {} as { [key: string]: { timestamp: number; type: "login" | "documents" } });
 
