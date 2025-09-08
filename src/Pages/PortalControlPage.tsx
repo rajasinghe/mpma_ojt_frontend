@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useMemo } from "react";
 import { MainContainer } from "../layout/containers/main_container/MainContainer";
 import SubContainer from "../layout/containers/sub_container/SubContainer";
 import { Link } from "react-router-dom";
@@ -83,7 +83,7 @@ export default function PortalControlPage() {
   };
 
   const handleSelectAll = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const traineesWithEmail = traineesWithoutPortalAccounts.filter(
+    const traineesWithEmail = filteredTrainees.filter(
       (t) => t.email
     );
     if (e.target.checked) {
@@ -260,7 +260,19 @@ export default function PortalControlPage() {
     }
   };
 
-  
+  // Filter trainees based on search input
+  const filteredTrainees = useMemo(() => {
+    if (!searchRegistered) return traineesWithoutPortalAccounts;
+    return traineesWithoutPortalAccounts.filter(
+      (t) =>
+        t.NIC_NO?.toLowerCase().includes(searchRegistered.toLowerCase()) ||
+        t.name?.toLowerCase().includes(searchRegistered.toLowerCase()) ||
+        t.email?.toLowerCase().includes(searchRegistered.toLowerCase()) ||
+        t.institute_name?.toLowerCase().includes(searchRegistered.toLowerCase())
+    );
+  }, [traineesWithoutPortalAccounts, searchRegistered]);
+
+
 
   return (
     <MainContainer
@@ -286,14 +298,21 @@ export default function PortalControlPage() {
           ) : (
             <>
               <div className="d-flex justify-content-between align-items-center">
-                <input
-                  type="text"
-                  className="form-control mb-2"
-                  placeholder="Search registered trainees..."
-                  value={searchRegistered}
-                  onChange={(e) => setSearchRegistered(e.target.value)}
-                  style={{ maxWidth: 300 }}
-                />
+                <div className="d-flex align-items-center">
+                  <input
+                    type="text"
+                    className="form-control mb-2"
+                    placeholder="Search by NIC, name, email, or institute..."
+                    value={searchRegistered}
+                    onChange={(e) => setSearchRegistered(e.target.value)}
+                    style={{ maxWidth: 300 }}
+                  />
+                  {searchRegistered && (
+                    <span className="text-muted ms-2 mb-2">
+                      {filteredTrainees.length} result{filteredTrainees.length !== 1 ? 's' : ''} found
+                    </span>
+                  )}
+                </div>
                 <div className="d-flex justify-content-between align-items-center">
                   <div>
                     <div className="mb-3">
@@ -309,8 +328,10 @@ export default function PortalControlPage() {
                 </div>
               </div>
               <div className=" table-responsive rounded-2  table-scrollbar">
-                {traineesWithoutPortalAccounts.length == 0 ? (
-                  <div className="text-black-50 text-center m-3"> </div>
+                {filteredTrainees.length == 0 ? (
+                  <div className="text-black-50 text-center m-3">
+                    {searchRegistered ? "No trainees found matching your search." : "No trainees without portal accounts."}
+                  </div>
                 ) : (
                   <table
                     className="table table-sm table-bordered w-100 table-striped align-middle text-center"
@@ -323,10 +344,10 @@ export default function PortalControlPage() {
                             type="checkbox"
                             checked={
                               selectedTrainees.length ===
-                                traineesWithoutPortalAccounts.filter(
+                                filteredTrainees.filter(
                                   (t) => t.email
                                 ).length &&
-                              traineesWithoutPortalAccounts.filter(
+                              filteredTrainees.filter(
                                 (t) => t.email
                               ).length > 0
                             }
@@ -342,7 +363,7 @@ export default function PortalControlPage() {
                       </tr>
                     </thead>
                     <tbody>
-                      {traineesWithoutPortalAccounts
+                      {filteredTrainees
                         .sort((a, b) => {
                           if (a.email && !b.email) return -1;
                           if (!a.email && b.email) return 1;
