@@ -1,0 +1,614 @@
+import { useState, useEffect } from "react";
+import { MainContainer } from "../layout/containers/main_container/MainContainer";
+import SubContainer from "../layout/containers/sub_container/SubContainer";
+import { Link } from "react-router-dom";
+import MiniLoader from "../Components/ui/Loader/MiniLoader";
+import moment from "moment";
+import api from "../api";
+import { Modal, Button } from "react-bootstrap";
+import { useForm } from "react-hook-form";
+import { zodResolver } from "@hookform/resolvers/zod";
+import { z } from "zod";
+import Swal from "sweetalert2";
+
+// Form validation schema
+const createAccountSchema = z
+  .object({
+    name: z.string().optional(),
+    email: z.string().optional(),
+    nic: z.string().optional(),
+    username: z
+      .string()
+      .min(3, "Username must be at least 3 characters")
+      .max(50, "Username must be at most 50 characters")
+      .regex(
+        /^[a-zA-Z0-9_]+$/,
+        "Username can only contain letters, numbers, and underscores"
+      ),
+    password: z
+      .string()
+      .min(8, "Password must be at least 8 characters")
+      .regex(
+        /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)/,
+        "Password must contain at least one uppercase letter, one lowercase letter, and one number"
+      ),
+    confirmPassword: z.string(),
+  })
+  .refine((data) => data.password === data.confirmPassword, {
+    message: "Passwords don't match",
+    path: ["confirmPassword"],
+  });
+
+type CreateAccountFormData = z.infer<typeof createAccountSchema>;
+
+const TraineesWithoutPortalAccounts = async () => {
+  const [traineesWithoutPortalAccounts] = await Promise.all([
+    api.get("api/portal/without-portal-account"),
+  ]);
+
+  return traineesWithoutPortalAccounts.data;
+};
+
+//console.log("pending trainees");
+
+export default function PortalControlPage() {
+  const [traineesWithoutPortalAccounts, setTraineesWithoutPortalAccounts] =
+    useState<any[]>([]);
+  const [searchRegistered, setSearchRegistered] = useState("");
+  const [loading, setLoading] = useState(false);
+  const [selectedTrainees, setSelectedTrainees] = useState<string[]>([]);
+  
+
+  // Modal state
+  const [showModal, setShowModal] = useState(false);
+  const [selectedTraineeForAccount, setSelectedTraineeForAccount] =
+    useState<any>(null);
+  const [isSubmitting, setIsSubmitting] = useState(false);
+
+  // Form handling
+  const {
+    register,
+    handleSubmit,
+    formState: { errors },
+    reset,
+  } = useForm<CreateAccountFormData>({
+    resolver: zodResolver(createAccountSchema),
+    mode: "onBlur",
+  });
+
+  const handleSelectTrainee = (nic: string) => {
+    setSelectedTrainees((prev) =>
+      prev.includes(nic) ? prev.filter((id) => id !== nic) : [...prev, nic]
+    );
+  };
+
+  const handleSelectAll = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const traineesWithEmail = traineesWithoutPortalAccounts.filter(
+      (t) => t.email
+    );
+    if (e.target.checked) {
+      setSelectedTrainees(traineesWithEmail.map((t) => t.NIC_NO));
+    } else {
+      setSelectedTrainees([]);
+    }
+  };
+
+  const sendBulkEmails = async () => {
+    if (selectedTrainees.length === 0) {
+      Swal.fire({
+        icon: "warning",
+        title: "No Selection",
+        text: "Please select at least one trainee to send emails.",
+      });
+      return;
+    }
+
+    // Create array of email and NIC pairs
+    const selectedTraineesData = traineesWithoutPortalAccounts
+      .filter((t) => selectedTrainees.includes(t.NIC_NO))
+      .map((t) => ({
+        email: t.email,
+        NIC: t.NIC_NO,
+      }));
+
+    const confirm = await Swal.fire({
+      title: "Send Bulk Emails?",
+      text: `Send login details to ${selectedTraineesData.length} trainees?`,
+      icon: "question",
+      showCancelButton: true,
+      confirmButtonText: "Yes, send all",
+      cancelButtonText: "Cancel",
+    });
+
+    if (confirm.isConfirmed) {
+      try {
+        const response = await api.post("api/trainee/sendMails", {
+          data: selectedTraineesData,
+        });
+
+        setSelectedTrainees([]);
+
+        Swal.fire({
+          icon: "success",
+          title: "Bulk Emails Sent!",
+          text: `Emails successfully sent to ${selectedTraineesData.length} trainees`,
+          timer: 2000,
+          showConfirmButton: false,
+        });
+      } catch (error) {
+        console.error("Error sending bulk emails:", error);
+        Swal.fire({
+          icon: "error",
+          title: "Failed!",
+          text: "Could not send bulk emails.",
+        });
+      }
+    }
+  };
+
+  const openCreateAccountModal = (trainee: any) => {
+    setSelectedTraineeForAccount(trainee);
+    setShowModal(true);
+    reset(); // Reset form when opening modal
+  };
+
+  const closeModal = () => {
+    setShowModal(false);
+    setSelectedTraineeForAccount(null);
+    reset();
+  };
+
+  const onSubmitCreateAccount = async (data: CreateAccountFormData) => {
+    setIsSubmitting(true);
+    try {
+      let requestData;
+
+      if (selectedTraineeForAccount) {
+        // Creating account for existing trainee
+        requestData = {
+          nic: selectedTraineeForAccount.NIC_NO,
+          email: selectedTraineeForAccount.email,
+          name: selectedTraineeForAccount.name,
+          username: data.username,
+          password: data.password,
+        };
+      } else {
+        // Creating completely new user account
+        if (!data.name || !data.email || !data.nic) {
+          await Swal.fire({
+            title: "Missing Information!",
+            text: "Please fill in all required fields (Name, Email, NIC)",
+            icon: "warning",
+            confirmButtonText: "OK",
+          });
+          setIsSubmitting(false);
+          return;
+        }
+
+        requestData = {
+          nic: data.nic,
+          email: data.email,
+          name: data.name,
+          username: data.username,
+          password: data.password,
+        };
+      }
+
+      const response = await api.post("api/portal/create-account", requestData);
+
+      console.log(response.data.message);
+
+      // Show success message
+      await Swal.fire({
+        title: "Success!",
+        text: response.data.message,
+        icon: "success",
+        confirmButtonText: "OK",
+      });
+
+      // Close modal and refresh data
+      closeModal();
+
+      // Refresh the trainees list
+      const updatedTrainees = await TraineesWithoutPortalAccounts();
+      setTraineesWithoutPortalAccounts(
+        Array.isArray(updatedTrainees) ? updatedTrainees : []
+      );
+    } catch (error: any) {
+      console.error(error);
+
+      // Show error message
+      await Swal.fire({
+        title: "Error!",
+        text:
+          error.response?.data?.message || "Failed to create portal account",
+        icon: "error",
+        confirmButtonText: "OK",
+      });
+    } finally {
+      setIsSubmitting(false);
+    }
+  };
+
+  // Edit trainee functionality - moved to PortalAccounts page
+
+  useEffect(() => {
+    setLoading(true);
+    TraineesWithoutPortalAccounts()
+      .then((traineesResult) => {
+        if (!Array.isArray(traineesResult)) {
+          setTraineesWithoutPortalAccounts([]);
+        } else {
+          setTraineesWithoutPortalAccounts(traineesResult);
+        }
+        setLoading(false);
+      })
+      .catch((error) => {
+        console.error("Error loading data:", error);
+        setLoading(false);
+      });
+  }, []);
+
+  const validateUsername = async (username: string) => {
+    if (!username || username.length < 3) return true; // Let Zod handle basic validation
+
+    try {
+      const response = await api.get(`api/portal/username/${username}`);
+      return !response.data.exists || "Username already exists";
+    } catch (error) {
+      return "Error checking username availability";
+    }
+  };
+
+  
+
+  return (
+    <MainContainer
+      title="Create Account"
+      breadCrumbs={["Home", "Trainees", "Create Account"]}
+    >
+      <SubContainer>
+        <div className="container-fluid border border-dark rounded-2 my-2 py-2">
+          <div className="card shadow-sm mb-3">
+            <div className="card-body d-flex align-items-center">
+              <i className="bi bi-person-plus-fill me-2"></i>
+              <h5 className="card-title mb-0">Create Portal Account</h5>
+              <button
+                className="btn btn-success mx-2 ms-auto"
+                onClick={() => openCreateAccountModal(null)}
+              >
+                Create New
+              </button>
+            </div>
+          </div>
+          {loading ? (
+            <MiniLoader />
+          ) : (
+            <>
+              <div className="d-flex justify-content-between align-items-center">
+                <input
+                  type="text"
+                  className="form-control mb-2"
+                  placeholder="Search registered trainees..."
+                  value={searchRegistered}
+                  onChange={(e) => setSearchRegistered(e.target.value)}
+                  style={{ maxWidth: 300 }}
+                />
+                <div className="d-flex justify-content-between align-items-center">
+                  <div>
+                    <div className="mb-3">
+                      <button
+                        className="btn btn-primary me-2"
+                        onClick={sendBulkEmails}
+                        disabled={selectedTrainees.length === 0}
+                      >
+                        Send Bulk Emails ({selectedTrainees.length})
+                      </button>
+                    </div>
+                  </div>
+                </div>
+              </div>
+              <div className=" table-responsive rounded-2  table-scrollbar">
+                {traineesWithoutPortalAccounts.length == 0 ? (
+                  <div className="text-black-50 text-center m-3"> </div>
+                ) : (
+                  <table
+                    className="table table-sm table-bordered w-100 table-striped align-middle text-center"
+                    style={{ fontSize: "0.875rem" }}
+                  >
+                    <thead className="table-dark position-sticky top-0">
+                      <tr>
+                        <th>
+                          <input
+                            type="checkbox"
+                            checked={
+                              selectedTrainees.length ===
+                                traineesWithoutPortalAccounts.filter(
+                                  (t) => t.email
+                                ).length &&
+                              traineesWithoutPortalAccounts.filter(
+                                (t) => t.email
+                              ).length > 0
+                            }
+                            onChange={handleSelectAll}
+                          />
+                        </th>
+                        <th>NIC</th>
+                        <th>Name</th>
+                        <th>Email</th>
+                        <th>Institute</th>
+                        <th>Start Date</th>
+                        <th>Actions</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      {traineesWithoutPortalAccounts
+                        .sort((a, b) => {
+                          if (a.email && !b.email) return -1;
+                          if (!a.email && b.email) return 1;
+                          return 0;
+                        })
+                        .map((trainee, idx) => (
+                          <tr key={idx}>
+                            <td>
+                              {trainee.email ? (
+                                <input
+                                  type="checkbox"
+                                  checked={selectedTrainees.includes(
+                                    trainee.NIC_NO
+                                  )}
+                                  onChange={() =>
+                                    handleSelectTrainee(trainee.NIC_NO)
+                                  }
+                                />
+                              ) : null}
+                            </td>
+                            <td>{trainee.NIC_NO}</td>
+                            <td>{trainee.name}</td>
+                            <td
+                              style={{
+                                maxWidth:
+                                  window.innerWidth >= 1200 ? "200px" : "auto",
+                                overflow:
+                                  window.innerWidth >= 1200
+                                    ? "hidden"
+                                    : "visible",
+                                textOverflow:
+                                  window.innerWidth >= 1200
+                                    ? "ellipsis"
+                                    : "initial",
+                                whiteSpace:
+                                  window.innerWidth >= 1200
+                                    ? "nowrap"
+                                    : "normal",
+                              }}
+                            >
+                              {trainee?.email || "No email"}
+                            </td>
+                            <td
+                              style={{
+                                maxWidth:
+                                  window.innerWidth >= 1200 ? "200px" : "auto",
+                                overflow:
+                                  window.innerWidth >= 1200
+                                    ? "hidden"
+                                    : "visible",
+                                textOverflow:
+                                  window.innerWidth >= 1200
+                                    ? "ellipsis"
+                                    : "initial",
+                                whiteSpace:
+                                  window.innerWidth >= 1200
+                                    ? "nowrap"
+                                    : "normal",
+                              }}
+                            >
+                              {trainee.institute_name}
+                            </td>
+                            <td>
+                              {moment(trainee.start_date).format("YYYY-MM-DD")}
+                            </td>
+                            <td>
+                              <button
+                                className="btn btn-sm btn-primary me-1 m-1"
+                                onClick={() => openCreateAccountModal(trainee)}
+                              >
+                                Create
+                              </button>
+                              <Link
+                                className={"btn btn-sm btn-warning"}
+                                to={`/OJT/trainees/${trainee.id}/profile`}
+                                style={{ width: "57px" }}
+                              >
+                                Profile
+                              </Link>
+                            </td>
+                          </tr>
+                        ))}
+                    </tbody>
+                  </table>
+                )}
+              </div>
+            </>
+          )}
+        </div>
+
+        {/* Other sections moved to Portal Accounts page */}
+      </SubContainer>
+
+      {/* Create Account Modal */}
+      <Modal show={showModal} onHide={closeModal} centered>
+        <Modal.Header closeButton>
+          <Modal.Title>
+            {selectedTraineeForAccount
+              ? "Create Portal Account"
+              : "Create New User Account"}
+          </Modal.Title>
+        </Modal.Header>
+        <form onSubmit={handleSubmit(onSubmitCreateAccount)}>
+          <Modal.Body>
+            {selectedTraineeForAccount ? (
+              <div className="mb-3">
+                <h6>Creating account for:</h6>
+                <p className="text-muted">
+                  <strong>Name:</strong> {selectedTraineeForAccount.name}
+                  <br />
+                  <strong>NIC:</strong> {selectedTraineeForAccount.NIC_NO}
+                  <br />
+                  <strong>Email:</strong> {selectedTraineeForAccount.email}
+                </p>
+              </div>
+            ) : (
+              <>
+                <div className="mb-3">
+                  <label htmlFor="name" className="form-label">
+                    Full Name <span className="text-danger">*</span>
+                  </label>
+                  <input
+                    type="text"
+                    className={`form-control ${
+                      errors.name ? "is-invalid" : ""
+                    }`}
+                    id="name"
+                    placeholder="Enter full name"
+                    {...register("name")}
+                  />
+                  {errors.name && (
+                    <div className="invalid-feedback">
+                      {errors.name.message}
+                    </div>
+                  )}
+                </div>
+
+                <div className="mb-3">
+                  <label htmlFor="email" className="form-label">
+                    Email Address <span className="text-danger">*</span>
+                  </label>
+                  <input
+                    type="email"
+                    className={`form-control ${
+                      errors.email ? "is-invalid" : ""
+                    }`}
+                    id="email"
+                    placeholder="Enter email address"
+                    {...register("email")}
+                  />
+                  {errors.email && (
+                    <div className="invalid-feedback">
+                      {errors.email.message}
+                    </div>
+                  )}
+                </div>
+
+                <div className="mb-3">
+                  <label htmlFor="nic" className="form-label">
+                    NIC Number <span className="text-danger">*</span>
+                  </label>
+                  <input
+                    type="text"
+                    className={`form-control ${errors.nic ? "is-invalid" : ""}`}
+                    id="nic"
+                    placeholder="Enter NIC number"
+                    {...register("nic")}
+                  />
+                  {errors.nic && (
+                    <div className="invalid-feedback">{errors.nic.message}</div>
+                  )}
+                </div>
+              </>
+            )}
+
+            <div className="mb-3">
+              <label htmlFor="username" className="form-label">
+                Username <span className="text-danger">*</span>
+              </label>
+              <input
+                type="text"
+                className={`form-control ${
+                  errors.username ? "is-invalid" : ""
+                }`}
+                id="username"
+                placeholder="Enter username"
+                {...register("username", {
+                  validate: validateUsername,
+                })}
+              />
+              {errors.username && (
+                <div className="invalid-feedback">
+                  {errors.username.message}
+                </div>
+              )}
+            </div>
+
+            <div className="mb-3">
+              <label htmlFor="password" className="form-label">
+                Password <span className="text-danger">*</span>
+              </label>
+              <input
+                type="password"
+                className={`form-control ${
+                  errors.password ? "is-invalid" : ""
+                }`}
+                id="password"
+                placeholder="Enter password"
+                {...register("password")}
+              />
+              {errors.password && (
+                <div className="invalid-feedback">
+                  {errors.password.message}
+                </div>
+              )}
+              <div className="form-text">
+                Password must be at least 8 characters with uppercase,
+                lowercase, and number.
+              </div>
+            </div>
+
+            <div className="mb-3">
+              <label htmlFor="confirmPassword" className="form-label">
+                Confirm Password <span className="text-danger">*</span>
+              </label>
+              <input
+                type="password"
+                className={`form-control ${
+                  errors.confirmPassword ? "is-invalid" : ""
+                }`}
+                id="confirmPassword"
+                placeholder="Confirm password"
+                {...register("confirmPassword")}
+              />
+              {errors.confirmPassword && (
+                <div className="invalid-feedback">
+                  {errors.confirmPassword.message}
+                </div>
+              )}
+            </div>
+          </Modal.Body>
+          <Modal.Footer>
+            <Button
+              variant="secondary"
+              onClick={closeModal}
+              disabled={isSubmitting}
+            >
+              Cancel
+            </Button>
+            <Button variant="primary" type="submit" disabled={isSubmitting}>
+              {isSubmitting ? (
+                <>
+                  <span
+                    className="spinner-border spinner-border-sm me-2"
+                    role="status"
+                    aria-hidden="true"
+                  ></span>
+                  Creating...
+                </>
+              ) : (
+                "Create Account"
+              )}
+            </Button>
+          </Modal.Footer>
+        </form>
+      </Modal>
+    </MainContainer>
+  );
+}
