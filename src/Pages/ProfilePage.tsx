@@ -1,9 +1,199 @@
-import { useEffect } from "react";
-import { Link, useLoaderData } from "react-router-dom";
+import { useEffect, useState } from "react";
+import { Link, useLoaderData, useNavigate } from "react-router-dom";
 import { formatDate, getMonthName } from "../helpers";
 import { MainContainer } from "../layout/containers/main_container/MainContainer";
 import SubContainer from "../layout/containers/sub_container/SubContainer";
 import { getDateDifferenceFormatted } from "../helpers";
+import api from "../api";
+import { Button, Spinner, Alert } from "react-bootstrap";
+import DocumentViewer from "../Components/DocumentViewer";
+
+// TraineeUploads Component
+const TraineeUploads = ({ nic }: { nic: string }) => {
+  const navigate = useNavigate();
+  const [traineeDetails, setTraineeDetails] = useState<any>(null);
+  const [documents, setDocuments] = useState<any>(null);
+  const [loading, setLoading] = useState(true);
+  const [documentsLoading, setDocumentsLoading] = useState(false);
+  const [showDocuments, setShowDocuments] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+
+  // Fetch trainee details on component mount
+  useEffect(() => {
+    const fetchTraineeDetails = async () => {
+      try {
+        setLoading(true);
+        setError(null);
+        const response = await api.get(`api/portal/trainee_details/${nic}`);
+        setTraineeDetails(response.data);
+      } catch (error: any) {
+        console.error("Error fetching trainee details:", error);
+        if (error.response?.status === 404) {
+          // If trainee details not found, don't show error, just don't render the section
+          setTraineeDetails(null);
+        } else {
+          setError("Failed to load trainee details");
+        }
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    if (nic) {
+      fetchTraineeDetails();
+    }
+  }, [nic]);
+
+  // Fetch documents when "See More" is clicked
+  const handleSeeMore = async () => {
+    try {
+      setDocumentsLoading(true);
+      const response = await api.get(`api/portal/document/${nic}`);
+      setDocuments(response.data);
+      setShowDocuments(true);
+    } catch (error: any) {
+      console.error("Error fetching documents:", error);
+      setError("Failed to load documents");
+    } finally {
+      setDocumentsLoading(false);
+    }
+  };
+
+  // Don't render if loading initially
+  if (loading) {
+    return (
+      <div className="container-fluid border border-dark rounded-2 my-2 py-3">
+        <div className="d-flex justify-content-center align-items-center">
+          <Spinner animation="border" size="sm" className="me-2" />
+          <span>Loading trainee uploads...</span>
+        </div>
+      </div>
+    );
+  }
+
+  // Don't render the section if no trainee details found
+  if (!traineeDetails) {
+    return null;
+  }
+
+  return (
+    <>
+      <div className="container-fluid border border-dark rounded-2 my-2 py-2">
+        <div className="fs-5 fw-bolder mb-3">Trainee Uploads</div>
+
+        {error && (
+          <Alert variant="danger" dismissible onClose={() => setError(null)}>
+            {error}
+          </Alert>
+        )}
+
+        {/* Personal Information */}
+        {traineeDetails.personal_info && (
+          <div className="mb-4">
+            <h6 className="fw-bold text-primary mb-2">Personal Information</h6>
+            <div className="row">
+              <div className="col-md-6">
+                {traineeDetails.personal_info.Name && (
+                  <div className="fw-semibold">Name: {traineeDetails.personal_info.Name}</div>
+                )}
+                {traineeDetails.personal_info.fullName && (
+                  <div className="fw-semibold">Full Name: {traineeDetails.personal_info.fullName}</div>
+                )}
+                {traineeDetails.personal_info.NIC && (
+                  <div className="fw-semibold">NIC: {traineeDetails.personal_info.NIC}</div>
+                )}
+                {traineeDetails.personal_info.email && (
+                  <div className="fw-semibold">Email: {traineeDetails.personal_info.email}</div>
+                )}
+                {traineeDetails.personal_info.Mobile_No && (
+                  <div className="fw-semibold">Mobile: {traineeDetails.personal_info.Mobile_No}</div>
+                )}
+                {traineeDetails.personal_info.Resident_No && (
+                  <div className="fw-semibold">Resident: {traineeDetails.personal_info.Resident_No}</div>
+                )}
+              </div>
+              <div className="col-md-6">
+                {traineeDetails.personal_info.Training_institute && (
+                  <div className="fw-semibold">Training Institute: {traineeDetails.personal_info.Training_institute}</div>
+                )}
+                {traineeDetails.personal_info.training_period && (
+                  <div className="fw-semibold">Training Period: {traineeDetails.personal_info.training_period}</div>
+                )}
+                {traineeDetails.personal_info.course && (
+                  <div className="fw-semibold">Course: {traineeDetails.personal_info.course}</div>
+                )}
+                {traineeDetails.personal_info.start_date && (
+                  <div className="fw-semibold">Start Date: {formatDate(traineeDetails.personal_info.start_date)}</div>
+                )}
+                {traineeDetails.personal_info.address && (
+                  <div className="fw-semibold">Address: {traineeDetails.personal_info.address}</div>
+                )}
+              </div>
+            </div>
+          </div>
+        )}
+
+        {/* Emergency Contact */}
+        {traineeDetails.Emegency_contact && (
+          <div className="mb-4">
+            <h6 className="fw-bold text-primary mb-2">Emergency Contact</h6>
+            <div className="row">
+              <div className="col-md-6">
+                {traineeDetails.Emegency_contact.name && (
+                  <div className="fw-semibold">Name: {traineeDetails.Emegency_contact.name}</div>
+                )}
+                {traineeDetails.Emegency_contact.relationship && (
+                  <div className="fw-semibold">Relationship: {traineeDetails.Emegency_contact.relationship}</div>
+                )}
+                {traineeDetails.Emegency_contact.telephone && (
+                  <div className="fw-semibold">Telephone: {traineeDetails.Emegency_contact.telephone}</div>
+                )}
+              </div>
+            </div>
+          </div>
+        )}
+
+        {/* Action Buttons */}
+        <div className="d-flex gap-2">
+          <Button
+            variant="info"
+            size="sm"
+            onClick={handleSeeMore}
+            disabled={documentsLoading}
+          >
+            {documentsLoading ? (
+              <>
+                <Spinner animation="border" size="sm" className="me-2" />
+                Loading...
+              </>
+            ) : (
+              <>
+                <i className="bi bi-eye me-1"></i>
+                View Documents
+              </>
+            )}
+          </Button>
+          <Button
+            variant="primary"
+            size="sm"
+            onClick={() => navigate(`/OJT/trainee/update-uploads/${nic}`)}
+          >
+            <i className="bi bi-pencil-square me-1"></i>
+            Update Details
+          </Button>
+        </div>
+      </div>
+
+      {/* Document Viewer */}
+      <DocumentViewer
+        show={showDocuments}
+        onHide={() => setShowDocuments(false)}
+        documents={documents}
+        loading={documentsLoading}
+      />
+    </>
+  );
+};
 
 export default function ProfilePage() {
   const { trainee, departments, /*periods,*/ programs, institutes } =
@@ -214,6 +404,8 @@ export default function ProfilePage() {
             </div>
           )}
         </div>
+        {/* Trainee Uploads Section */}
+        <TraineeUploads nic={trainee.NIC_NO} />
       </SubContainer>
     </MainContainer>
   );
