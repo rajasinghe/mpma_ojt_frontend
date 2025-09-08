@@ -63,12 +63,17 @@ const styles = {
   }
 };
 
-// Form validation schema (same as before)
-const createAccountSchema = z
+// Dynamic form validation schema based on account creation mode
+const createAccountSchemaWithEmail = z.object({
+  name: z.string().min(1, "Name is required"),
+  email: z.string().email("Valid email is required"),
+  nic: z.string().min(1, "NIC is required"),
+});
+
+const createAccountSchemaWithoutEmail = z
   .object({
-    name: z.string().optional(),
-    email: z.string().optional(),
-    nic: z.string().optional(),
+    name: z.string().min(1, "Name is required"),
+    nic: z.string().min(1, "NIC is required"),
     username: z
       .string()
       .min(3, "Username must be at least 3 characters")
@@ -91,7 +96,9 @@ const createAccountSchema = z
     path: ["confirmPassword"],
   });
 
-type CreateAccountFormData = z.infer<typeof createAccountSchema>;
+// Combined type for form data
+type CreateAccountFormData = z.infer<typeof createAccountSchemaWithEmail> &
+  z.infer<typeof createAccountSchemaWithoutEmail>;
 
 // Enhanced Loading Component
 const TableSkeleton = () => (
@@ -156,15 +163,17 @@ export default function PortalControlPage() {
   const [showModal, setShowModal] = useState(false);
   const [selectedTraineeForAccount, setSelectedTraineeForAccount] = useState<any>(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [createWithEmail, setCreateWithEmail] = useState(true); // Toggle state for account creation mode
 
-  // Form handling
+  // Form handling with dynamic schema
+  const currentSchema = createWithEmail ? createAccountSchemaWithEmail : createAccountSchemaWithoutEmail;
   const {
     register,
     handleSubmit,
     formState: { errors },
     reset,
   } = useForm<CreateAccountFormData>({
-    resolver: zodResolver(createAccountSchema),
+    resolver: zodResolver(currentSchema),
     mode: "onBlur",
   });
 
@@ -289,12 +298,15 @@ export default function PortalControlPage() {
   const openCreateAccountModal = (trainee: any) => {
     setSelectedTraineeForAccount(trainee);
     setShowModal(true);
+    // Set default mode based on whether trainee has email
+    setCreateWithEmail(trainee ? !!trainee.email : true);
     reset();
   };
 
   const closeModal = () => {
     setShowModal(false);
     setSelectedTraineeForAccount(null);
+    setCreateWithEmail(true); // Reset to default mode
     reset();
   };
 
@@ -304,35 +316,48 @@ export default function PortalControlPage() {
       let requestData;
 
       if (selectedTraineeForAccount) {
-        requestData = {
-          nic: selectedTraineeForAccount.NIC_NO,
-          email: selectedTraineeForAccount.email,
-          name: selectedTraineeForAccount.name,
-          username: data.username,
-          password: data.password,
-        };
-      } else {
-        if (!data.name || !data.email || !data.nic) {
-          await Swal.fire({
-            title: "Missing Information!",
-            text: "Please fill in all required fields (Name, Email, NIC)",
-            icon: "warning",
-            confirmButtonText: "OK",
-          });
-          setIsSubmitting(false);
-          return;
+        // Creating account for existing trainee
+        if (createWithEmail) {
+          // Email mode - send email with login details (for sendMails endpoint)
+          requestData = {
+            data: [{
+              email: selectedTraineeForAccount.email,
+              NIC: selectedTraineeForAccount.NIC_NO
+            }]
+          };
+        } else {
+          // Manual mode - create with username/password (for create-account endpoint)
+          requestData = {
+            nic: selectedTraineeForAccount.NIC_NO,
+            name: selectedTraineeForAccount.name,
+            username: data.username,
+            password: data.password
+          };
         }
-
-        requestData = {
-          nic: data.nic,
-          email: data.email,
-          name: data.name,
-          username: data.username,
-          password: data.password,
-        };
+      } else {
+        // Creating completely new user account
+        if (createWithEmail) {
+          // Email mode (for sendMails endpoint)
+          requestData = {
+            data: [{
+              email: data.email,
+              NIC: data.nic
+            }]
+          };
+        } else {
+          // Manual mode (for create-account endpoint)
+          requestData = {
+            nic: data.nic,
+            name: data.name,
+            username: data.username,
+            password: data.password
+          };
+        }
       }
 
-      const response = await api.post("api/portal/create-account", requestData);
+      // Use different endpoints based on creation mode
+      const endpoint = createWithEmail ? "api/portal/sendMails" : "api/portal/create-account";
+      const response = await api.post(endpoint, requestData);
 
       await Swal.fire({
         title: "Success!",
@@ -605,6 +630,236 @@ export default function PortalControlPage() {
           )}
         </Card>
       </SubContainer>
+
+      {/* Create Account Modal */}
+      <Modal show={showModal} onHide={closeModal} centered size="lg">
+        <Modal.Header closeButton className="border-0 pb-0">
+          <div className="d-flex align-items-center">
+            <div className="bg-primary text-white rounded-circle d-flex align-items-center justify-content-center me-3"
+                 style={{ width: '48px', height: '48px' }}>
+              <i className="bi bi-person-plus" style={{ fontSize: '24px' }}></i>
+            </div>
+            <div>
+              <Modal.Title className="mb-1">
+                {selectedTraineeForAccount ? "Create Portal Account" : "Create New User Account"}
+              </Modal.Title>
+              <p className="text-muted mb-0 small">
+                {selectedTraineeForAccount
+                  ? "Create login credentials for existing trainee"
+                  : "Add a new user with portal access"
+                }
+              </p>
+            </div>
+          </div>
+        </Modal.Header>
+
+        <form onSubmit={handleSubmit(onSubmitCreateAccount)}>
+          <Modal.Body className="pt-3">
+            {/* Account Creation Mode Toggle */}
+            <div className="mb-4">
+              <div className="d-flex align-items-center justify-content-between p-3 bg-light rounded">
+                <div>
+                  <h6 className="mb-1">Account Creation Mode</h6>
+                  <small className="text-muted">
+                    {createWithEmail
+                      ? "Send login details via email (auto-generated credentials)"
+                      : "Create account with manual credentials"
+                    }
+                  </small>
+                </div>
+                <div className="form-check form-switch">
+                  <input
+                    className="form-check-input"
+                    type="checkbox"
+                    id="createModeToggle"
+                    checked={createWithEmail}
+                    onChange={(e) => setCreateWithEmail(e.target.checked)}
+                  />
+                  <label className="form-check-label" htmlFor="createModeToggle">
+                    {createWithEmail ? "With Email" : "Manual Setup"}
+                  </label>
+                </div>
+              </div>
+            </div>
+
+            {/* Existing Trainee Info Display */}
+            {selectedTraineeForAccount && (
+              <div className="mb-4 p-3 bg-info bg-opacity-10 rounded">
+                <h6 className="text-info mb-2">
+                  <i className="bi bi-info-circle me-2"></i>
+                  Creating account for:
+                </h6>
+                <div className="row">
+                  <div className="col-md-6">
+                    <strong>Name:</strong> {selectedTraineeForAccount.name}
+                  </div>
+                  <div className="col-md-6">
+                    <strong>NIC:</strong> {selectedTraineeForAccount.NIC_NO}
+                  </div>
+                  {selectedTraineeForAccount.email && (
+                    <div className="col-12 mt-2">
+                      <strong>Email:</strong> {selectedTraineeForAccount.email}
+                    </div>
+                  )}
+                </div>
+              </div>
+            )}
+
+            {/* Form Fields Based on Mode */}
+            {!selectedTraineeForAccount && (
+              <>
+                {/* Name Field */}
+                <div className="mb-3">
+                  <label htmlFor="name" className="form-label">
+                    Full Name <span className="text-danger">*</span>
+                  </label>
+                  <input
+                    type="text"
+                    className={`form-control ${errors.name ? "is-invalid" : ""}`}
+                    id="name"
+                    placeholder="Enter full name"
+                    {...register("name")}
+                  />
+                  {errors.name && (
+                    <div className="invalid-feedback">{errors.name.message}</div>
+                  )}
+                </div>
+
+                {/* Email Field - Only show in email mode */}
+                {createWithEmail && (
+                  <div className="mb-3">
+                    <label htmlFor="email" className="form-label">
+                      Email Address <span className="text-danger">*</span>
+                    </label>
+                    <input
+                      type="email"
+                      className={`form-control ${errors.email ? "is-invalid" : ""}`}
+                      id="email"
+                      placeholder="Enter email address"
+                      {...register("email")}
+                    />
+                    {errors.email && (
+                      <div className="invalid-feedback">{errors.email.message}</div>
+                    )}
+                  </div>
+                )}
+
+                {/* NIC Field */}
+                <div className="mb-3">
+                  <label htmlFor="nic" className="form-label">
+                    NIC Number <span className="text-danger">*</span>
+                  </label>
+                  <input
+                    type="text"
+                    className={`form-control ${errors.nic ? "is-invalid" : ""}`}
+                    id="nic"
+                    placeholder="Enter NIC number"
+                    {...register("nic")}
+                  />
+                  {errors.nic && (
+                    <div className="invalid-feedback">{errors.nic.message}</div>
+                  )}
+                </div>
+              </>
+            )}
+
+            {/* Username and Password Fields - Only show in manual mode */}
+            {!createWithEmail && (
+              <>
+                <div className="mb-3">
+                  <label htmlFor="username" className="form-label">
+                    Username <span className="text-danger">*</span>
+                  </label>
+                  <input
+                    type="text"
+                    className={`form-control ${errors.username ? "is-invalid" : ""}`}
+                    id="username"
+                    placeholder="Enter username"
+                    {...register("username", {
+                      validate: validateUsername,
+                    })}
+                  />
+                  {errors.username && (
+                    <div className="invalid-feedback">{errors.username.message}</div>
+                  )}
+                </div>
+
+                <div className="mb-3">
+                  <label htmlFor="password" className="form-label">
+                    Password <span className="text-danger">*</span>
+                  </label>
+                  <input
+                    type="password"
+                    className={`form-control ${errors.password ? "is-invalid" : ""}`}
+                    id="password"
+                    placeholder="Enter password"
+                    {...register("password")}
+                  />
+                  {errors.password && (
+                    <div className="invalid-feedback">{errors.password.message}</div>
+                  )}
+                  <div className="form-text">
+                    Password must be at least 8 characters with uppercase, lowercase, and number.
+                  </div>
+                </div>
+
+                <div className="mb-3">
+                  <label htmlFor="confirmPassword" className="form-label">
+                    Confirm Password <span className="text-danger">*</span>
+                  </label>
+                  <input
+                    type="password"
+                    className={`form-control ${errors.confirmPassword ? "is-invalid" : ""}`}
+                    id="confirmPassword"
+                    placeholder="Confirm password"
+                    {...register("confirmPassword")}
+                  />
+                  {errors.confirmPassword && (
+                    <div className="invalid-feedback">{errors.confirmPassword.message}</div>
+                  )}
+                </div>
+              </>
+            )}
+
+            {/* Mode-specific Information */}
+            <div className="alert alert-info">
+              <i className="bi bi-info-circle me-2"></i>
+              {createWithEmail ? (
+                <span>
+                  <strong>Email Mode:</strong> Login credentials will be automatically generated and sent to the provided email address.
+                </span>
+              ) : (
+                <span>
+                  <strong>Manual Mode:</strong> You will need to provide the username and password to the user manually.
+                </span>
+              )}
+            </div>
+          </Modal.Body>
+
+          <Modal.Footer className="border-0 pt-0">
+            <Button variant="secondary" onClick={closeModal} disabled={isSubmitting}>
+              Cancel
+            </Button>
+            <Button variant="primary" type="submit" disabled={isSubmitting}>
+              {isSubmitting ? (
+                <>
+                  <span
+                    className="spinner-border spinner-border-sm me-2"
+                    role="status"
+                    aria-hidden="true"
+                  ></span>
+                  Creating...
+                </>
+              ) : (
+                <>
+                  <i className="bi bi-person-plus me-2"></i>
+                  Create Account
+                </>
+              )}
+            </Button>
+          </Modal.Footer>
+        </form>
+      </Modal>
     </MainContainer>
   );
 }
