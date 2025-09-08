@@ -22,16 +22,21 @@ const TraineeUploads = ({ nic }: { nic: string }) => {
   useEffect(() => {
     const fetchTraineeDetails = async () => {
       try {
+        console.log("🔍 TraineeUploads: Fetching details for NIC:", nic);
         setLoading(true);
         setError(null);
         const response = await api.get(`api/portal/trainee_details/${nic}`);
+        console.log("✅ TraineeUploads: API Response:", response.data);
         setTraineeDetails(response.data);
       } catch (error: any) {
-        console.error("Error fetching trainee details:", error);
+        console.error("❌ TraineeUploads: Error fetching trainee details:", error);
+        console.error("❌ TraineeUploads: Error response:", error.response);
         if (error.response?.status === 404) {
+          console.log("⚠️ TraineeUploads: 404 - Trainee details not found for NIC:", nic);
           // If trainee details not found, don't show error, just don't render the section
           setTraineeDetails(null);
         } else {
+          console.error("❌ TraineeUploads: Non-404 error:", error.response?.status, error.message);
           setError("Failed to load trainee details");
         }
       } finally {
@@ -40,7 +45,10 @@ const TraineeUploads = ({ nic }: { nic: string }) => {
     };
 
     if (nic) {
+      console.log("🚀 TraineeUploads: Component mounted with NIC:", nic);
       fetchTraineeDetails();
+    } else {
+      console.warn("⚠️ TraineeUploads: No NIC provided to component");
     }
   }, [nic]);
 
@@ -73,7 +81,24 @@ const TraineeUploads = ({ nic }: { nic: string }) => {
 
   // Don't render the section if no trainee details found
   if (!traineeDetails) {
-    return null;
+    return (
+      <div className="container-fluid border border-dark rounded-2 my-2 py-3">
+        <div className="fs-5 fw-bolder mb-3">Trainee Uploads</div>
+        <div className="alert alert-info">
+          <i className="bi bi-info-circle me-2"></i>
+          <strong>No Portal Account Found</strong>
+          <p className="mb-2">This trainee doesn't have a portal account yet. Portal accounts are needed to store personal information, emergency contacts, and documents.</p>
+          <Button
+            variant="primary"
+            size="sm"
+            onClick={() => navigate('/OJT/portal_controls')}
+          >
+            <i className="bi bi-plus-circle me-1"></i>
+            Create Portal Account
+          </Button>
+        </div>
+      </div>
+    );
   }
 
   return (
@@ -88,7 +113,7 @@ const TraineeUploads = ({ nic }: { nic: string }) => {
         )}
 
         {/* Personal Information */}
-        {traineeDetails.personal_info && (
+        {traineeDetails.personal_info ? (
           <div className="mb-4">
             <h6 className="fw-bold text-primary mb-2">Personal Information</h6>
             <div className="row">
@@ -131,10 +156,18 @@ const TraineeUploads = ({ nic }: { nic: string }) => {
               </div>
             </div>
           </div>
+        ) : (
+          <div className="mb-4">
+            <h6 className="fw-bold text-primary mb-2">Personal Information</h6>
+            <div className="alert alert-warning">
+              <i className="bi bi-exclamation-triangle me-2"></i>
+              No personal information has been added yet.
+            </div>
+          </div>
         )}
 
         {/* Emergency Contact */}
-        {traineeDetails.Emegency_contact && (
+        {traineeDetails.Emegency_contact ? (
           <div className="mb-4">
             <h6 className="fw-bold text-primary mb-2">Emergency Contact</h6>
             <div className="row">
@@ -149,6 +182,14 @@ const TraineeUploads = ({ nic }: { nic: string }) => {
                   <div className="fw-semibold">Telephone: {traineeDetails.Emegency_contact.telephone}</div>
                 )}
               </div>
+            </div>
+          </div>
+        ) : (
+          <div className="mb-4">
+            <h6 className="fw-bold text-primary mb-2">Emergency Contact</h6>
+            <div className="alert alert-warning">
+              <i className="bi bi-exclamation-triangle me-2"></i>
+              No emergency contact has been added yet.
             </div>
           </div>
         )}
@@ -199,6 +240,9 @@ export default function ProfilePage() {
   const { trainee, departments, /*periods,*/ programs, institutes } =
     useLoaderData() as any;
   useEffect(() => {
+    console.log("🔍 ProfilePage: Trainee object:", trainee);
+    console.log("🔍 ProfilePage: Trainee NIC_NO:", trainee.NIC_NO);
+    console.log("🔍 ProfilePage: All trainee keys:", Object.keys(trainee));
     console.log(institutes);
   }, []);
   return (
