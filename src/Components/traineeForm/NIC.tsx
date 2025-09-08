@@ -9,6 +9,7 @@ interface NicProps {
   nicDisableState: [boolean, React.Dispatch<React.SetStateAction<boolean>>];
   setNIC_NO: (value: React.SetStateAction<string | null>) => void;
   nic?: string;
+  onNicValidated?: (nicNumber: string) => Promise<boolean>;
 }
 
 const schema = z.object({
@@ -22,7 +23,7 @@ const schema = z.object({
 
 type formType = z.infer<typeof schema>;
 
-export default function NIC({ nicDisableState, className, setNIC_NO, nic }: NicProps) {
+export default function NIC({ nicDisableState, className, setNIC_NO, nic, onNicValidated }: NicProps) {
   const [disabled, disable] = nicDisableState;
   let defaultValue = {};
   if (nic) {
@@ -68,6 +69,16 @@ export default function NIC({ nicDisableState, className, setNIC_NO, nic }: NicP
           } else {
             setNIC_NO(response.data.nic);
             disable(true);
+
+            // After successful NIC validation, attempt to fetch and populate trainee details
+            if (onNicValidated) {
+              try {
+                await onNicValidated(response.data.nic);
+              } catch (error) {
+                console.log("Auto-population failed, but NIC validation succeeded:", error);
+                // Don't show error to user as this is optional functionality
+              }
+            }
           }
         }
       }

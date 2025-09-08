@@ -9,6 +9,37 @@ import NIC from "./NIC.tsx";
 import RegNumbers from "./RegNumbers.tsx";
 import AddPeriodModal from "./AddPeriodModal.tsx";
 import { useNavigate } from "react-router-dom";
+
+// Interface for trainee details from API
+interface TraineeDetails {
+  id: number;
+  nickname?: string;
+  NIC: string;
+  email?: string;
+  username: string;
+  status: string;
+  personal_info?: {
+    id: number;
+    Name?: string;
+    fullName?: string;
+    NIC?: string;
+    Training_institute?: string;
+    training_period?: string;
+    start_date?: string;
+    course?: string;
+    address?: string;
+    Mobile_No?: string;
+    Resident_No?: string;
+    email?: string;
+  };
+  Emegency_contact?: {
+    id: number;
+    name?: string;
+    relationship?: string;
+    telephone?: string;
+  };
+}
+
 // Define the validation schema
 const schema = z.object({
   name: z.string().min(1, "Enter the user name"),
@@ -58,16 +89,151 @@ export default function TraineeForm({
   const [selectedPeriod, setSelectedPeriod] = useState<number | null>(null);
   const [endDate, setEndDate] = useState<Date | null>(null);
   const [periodsDisable, setPeriodsDisable] = useState<boolean>(false);
+
+  // State for trainee details and auto-population
+  const [traineeDetails, setTraineeDetails] = useState<TraineeDetails | null>(null);
+  const [isAutoPopulating, setIsAutoPopulating] = useState<boolean>(false);
   const {
     control,
     handleSubmit,
     register,
     reset,
     setError,
+    setValue,
     formState: { errors, isSubmitting },
   } = useForm<TraineeFormValues>({
     resolver: zodResolver(schema),
   });
+
+  // Function to fetch trainee details by NIC and auto-populate form
+  const fetchAndPopulateTraineeDetails = async (nicNumber: string): Promise<boolean> => {
+    try {
+      setIsAutoPopulating(true);
+      console.log(`🔍 Fetching trainee details for NIC: ${nicNumber}`);
+
+      const response = await api.get(`/api/portal/trainee_details/${nicNumber}`);
+
+      if (response.status === 200 && response.data) {
+        const details: TraineeDetails = response.data;
+        setTraineeDetails(details);
+
+        console.log(`✅ Trainee details found:`, details);
+
+        // Auto-populate form fields progressively with visual feedback
+        await populateFormFields(details);
+
+        return true;
+      }
+    } catch (error: any) {
+      console.log(`❌ No trainee details found for NIC: ${nicNumber}`, error);
+
+      // Handle 404 gracefully - user can continue with manual entry
+      if (error.response?.status === 404) {
+        console.log("No existing trainee data found - continuing with manual entry");
+        return false;
+      }
+
+      // For other errors, show a warning but allow manual entry
+      console.warn("Error fetching trainee details:", error);
+      Swal.fire({
+        icon: "warning",
+        title: "Unable to fetch existing data",
+        text: "You can continue with manual form entry.",
+        timer: 3000,
+        showConfirmButton: false,
+      });
+      return false;
+    } finally {
+      setIsAutoPopulating(false);
+    }
+
+    return false; // Default return if no other path is taken
+  };
+
+  // Function to populate form fields progressively
+  const populateFormFields = async (details: TraineeDetails) => {
+    const delay = (ms: number) => new Promise(resolve => setTimeout(resolve, ms));
+
+    // Show loading indicator
+    Swal.fire({
+      title: "Auto-populating form...",
+      text: "Filling available details from existing records",
+      allowOutsideClick: false,
+      didOpen: () => {
+        Swal.showLoading();
+      },
+    });
+
+    try {
+      // Populate name field
+      if (details.personal_info?.Name) {
+        await delay(300);
+        setValue("name", details.personal_info.Name);
+        console.log(`📝 Populated name: ${details.personal_info.Name}`);
+      }
+
+      // Populate phone number (clean the format to match validation)
+      if (details.personal_info?.Mobile_No) {
+        await delay(300);
+        // Clean phone number to remove any formatting and ensure it matches validation
+        const cleanPhone = details.personal_info.Mobile_No.replace(/[^\d]/g, '');
+        if (cleanPhone.length >= 9 && cleanPhone.length <= 10) {
+          setValue("TEL_NO", cleanPhone);
+          console.log(`📞 Populated phone: ${cleanPhone}`);
+        }
+      }
+
+      // Populate email
+      if (details.personal_info?.email || details.email) {
+        await delay(300);
+        const email = details.personal_info?.email || details.email;
+        setValue("email", email);
+        console.log(`📧 Populated email: ${email}`);
+      }
+
+      Swal.close();
+
+      // Show success message
+      Swal.fire({
+        icon: "success",
+        title: "Form Auto-populated!",
+        text: "Available details have been filled. You can modify them if needed.",
+        timer: 2000,
+        showConfirmButton: false,
+      });
+
+    } catch (error) {
+      console.error("Error during form population:", error);
+      Swal.close();
+    }
+  };
+
+  // Function to populate remaining fields after registration numbers are generated
+  const populateRemainingFields = async () => {
+    if (!traineeDetails) return;
+
+    console.log("🔄 Populating remaining fields after registration generation");
+
+    try {
+      const delay = (ms: number) => new Promise(resolve => setTimeout(resolve, ms));
+
+      // Check if there are any additional fields that weren't populated initially
+      // and populate them now that registration is complete
+
+      // Re-populate any fields that might have been missed or need updating
+      if (traineeDetails.personal_info?.start_date && !document.querySelector('input[type="date"]')?.getAttribute('value')) {
+        await delay(200);
+        const startDate = new Date(traineeDetails.personal_info.start_date).toISOString().split('T')[0];
+        setValue("Jstart_date", startDate);
+        console.log(`📅 Populated start date: ${startDate}`);
+      }
+
+      console.log("✅ Remaining fields populated successfully");
+
+    } catch (error) {
+      console.error("Error populating remaining fields:", error);
+    }
+  };
 
   useEffect(() => {
     if (nic == null) {
@@ -81,6 +247,14 @@ export default function TraineeForm({
     console.log(periods);
     console.log(periodsList);
   }, [periodsList]);
+
+  // Effect to populate remaining fields after registration numbers are generated
+  useEffect(() => {
+    if (regNo && attNo && traineeDetails) {
+      console.log("🎯 Registration numbers generated, populating remaining fields");
+      populateRemainingFields();
+    }
+  }, [regNo, attNo, traineeDetails]);
 
   const onSubmit = async (data: any) => {
     console.log(data);
@@ -185,7 +359,12 @@ export default function TraineeForm({
       >
         tester
       </button> */}
-      <NIC nicDisableState={nicDisable} className="mb-3 " setNIC_NO={setNic} />
+      <NIC
+        nicDisableState={nicDisable}
+        className="mb-3 "
+        setNIC_NO={setNic}
+        onNicValidated={fetchAndPopulateTraineeDetails}
+      />
 
       <RegNumbers
         setInstitute={setInstitute}
@@ -197,7 +376,7 @@ export default function TraineeForm({
         initialPrograms={programs}
       />
       {/* disabled={regNo == null && attNo == null} */}
-      <fieldset disabled={regNo == null && attNo == null}>
+      <fieldset disabled={regNo == null && attNo == null || isAutoPopulating}>
         <div className="border border-dark p-2 rounded-2 mt-3">
           <div className="fs-5 fw-semibold mb-2">
             Trainee Personal Information
