@@ -15,6 +15,7 @@ import { MainContainer } from "../layout/containers/main_container/MainContainer
 import SubContainer from "../layout/containers/sub_container/SubContainer";
 import { Accordion } from "react-bootstrap";
 import "./GeneratePaymentSlip.css";
+import { useSession } from "../contexts/SessionContext";
 
 interface Trainee {
   trainee_id: number;
@@ -52,6 +53,7 @@ const filterSchema = z.object({
 type filterFormValues = z.infer<typeof filterSchema>;
 
 export default function PaymentsPage() {
+  const { user } = useSession();
   const loaderData = useLoaderData() as loaderProps;
   /* here the trainees means a object which has the attendences related to each trainee */
   const [trainees, setTrainees] = useState<Trainee[]>(
@@ -1054,6 +1056,7 @@ export default function PaymentsPage() {
                 <div className=" fw-bold  w-100 ">Change Payment List</div>
               </Modal.Header>
               <Modal.Body>
+                {user?.type === "SUPERADMIN" && (
                 <form className="d-flex flex-column gap-1">
                   <div className="row g-2">
                     <div className="col-md-6">
@@ -1107,6 +1110,7 @@ export default function PaymentsPage() {
                     />
                   </div>
                 </form>
+                )}
                 {/* Add space between form and table */}
                 <div style={{ height: "10px" }} />
                 <div

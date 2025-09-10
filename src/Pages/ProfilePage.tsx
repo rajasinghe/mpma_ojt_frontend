@@ -15,14 +15,22 @@ export default function ProfilePage() {
     console.log(institutes);
   }, []);
 
-  const handleSendLoginDetails = async (traineeId: number) => {
+  const handleSendLoginDetails = async (email: string, NIC: string, name: string) => {
     if (!confirm("Are you sure you want to send login details to this trainee?")) {
       return;
     }
 
     setIsSending(true);
     try {
-      await api.post(`/api/trainee/${traineeId}/sendLoginDetails`);
+      await api.post(`/api/trainee/sendMails`, {
+        data: [
+          {
+            email: email,
+            NIC: NIC,
+            name: name,
+          },
+        ],
+      });
       alert("Login details sent successfully!");
     } catch (error: any) {
       console.error('Error sending login details:', error);
@@ -70,7 +78,7 @@ export default function ProfilePage() {
               Email - {trainee.email}
               <button
                 className="btn btn-sm btn-outline-success ms-2"
-                onClick={() => handleSendLoginDetails(trainee.id)}
+                onClick={() => handleSendLoginDetails(trainee.email, trainee.NIC_NO, trainee.name)}
                 disabled={isSending}
               >
                 <i className="bi bi-envelope"></i>{" "}
