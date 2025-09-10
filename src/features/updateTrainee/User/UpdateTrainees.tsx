@@ -11,6 +11,7 @@ import RegNumbers from "../../../Components/traineeForm/RegNumbers";
 const schema = z.object({
   name: z.string().min(1, "Enter the user name"),
   TEL_NO: z.string().regex(/^\d{9,10}$/, "Invalid Format, e.g., 0771231231"),
+  email: z.string().email("Invalid email format").optional().nullable(),
 });
 
 // Infer the types.
@@ -63,6 +64,7 @@ export default function UpdateTrainees() {
     defaultValues: {
       name: loaderData.trainee.name,
       TEL_NO: loaderData.trainee.contact_no + "",
+      email: loaderData.trainee.email || "",
     },
   });
 
@@ -178,6 +180,12 @@ export default function UpdateTrainees() {
               <label className="form-label">Tel No</label>
               <input type="text" className="form-control" {...register("TEL_NO")} />
               {errors.TEL_NO && <p className="text-danger">{errors.TEL_NO.message}</p>}
+            </div>
+
+            <div className="mb-3">
+              <label className="form-label">Email</label>
+              <input type="email" className="form-control" {...register("email")} />
+              {errors.email && <p className="text-danger">{errors.email.message}</p>}
             </div>
           </div>
         <div className="d-flex mt-2">
