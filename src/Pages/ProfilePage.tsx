@@ -1,16 +1,44 @@
-import { useEffect } from "react";
+import { useEffect, useState } from "react";
 import { Link, useLoaderData } from "react-router-dom";
 import { formatDate, getMonthName } from "../helpers";
 import { MainContainer } from "../layout/containers/main_container/MainContainer";
 import SubContainer from "../layout/containers/sub_container/SubContainer";
 import { getDateDifferenceFormatted } from "../helpers";
+import api from "../api";
 
 export default function ProfilePage() {
   const { trainee, departments, /*periods,*/ programs, institutes } =
     useLoaderData() as any;
+  const [isSending, setIsSending] = useState(false);
+
   useEffect(() => {
     console.log(institutes);
   }, []);
+
+  const handleSendLoginDetails = async (email: string, NIC: string, name: string) => {
+    if (!confirm("Are you sure you want to send login details to this trainee?")) {
+      return;
+    }
+
+    setIsSending(true);
+    try {
+      await api.post(`/api/trainee/sendMails`, {
+        data: [
+          {
+            email: email,
+            NIC: NIC,
+            name: name,
+          },
+        ],
+      });
+      alert("Login details sent successfully!");
+    } catch (error: any) {
+      console.error('Error sending login details:', error);
+      alert(`Error: ${error.response?.data?.message || 'Failed to send login details'}`);
+    } finally {
+      setIsSending(false);
+    }
+  };
   return (
     <MainContainer
       title="Trainee Profile"
@@ -46,8 +74,28 @@ export default function ProfilePage() {
             Contact Number - {trainee.contact_no}
           </div>
           {trainee.email ? (
-            <div className="  fw-semibold">Email - {trainee.email}</div>
-          ) : null}
+            <div className="  fw-semibold">
+              Email - {trainee.email}
+              <button
+                className="btn btn-sm btn-outline-success ms-2"
+                onClick={() => handleSendLoginDetails(trainee.email, trainee.NIC_NO, trainee.name)}
+                disabled={isSending}
+              >
+                <i className="bi bi-envelope"></i>{" "}
+                {isSending ? "Sending..." : "Send Login Details"}
+              </button>
+            </div>
+          ) : (
+            <div className="mb-2">
+              <span className="text-muted">No email provided</span>
+              <Link
+                to={`/OJT/Trainees/${trainee.id}/update`}
+                className="btn btn-sm btn-outline-primary ms-2"
+              >
+                <i className="bi bi-envelope"></i> Add Email
+              </Link>
+            </div>
+          )}
           <div>
             <Link
               to={`/OJT/Trainees/${trainee.id}/update`}
@@ -218,3 +266,4 @@ export default function ProfilePage() {
     </MainContainer>
   );
 }
+

@@ -49,7 +49,7 @@ export default function MultipleAttendanceForm() {
 
   const { fields, append, remove } = useFieldArray({
     control,
-    name: "interviews",
+    name: "interviews", 
   });
 
   const numberOfInterviews = watch("numberOfInterviews");
