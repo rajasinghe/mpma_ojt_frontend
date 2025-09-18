@@ -1,10 +1,10 @@
 import { zodResolver } from "@hookform/resolvers/zod";
-import Select from "react-select";
 import { Controller, useForm } from "react-hook-form";
 import { z } from "zod";
 import Swal from "sweetalert2";
 import api from "../../../api";
 import { useNavigate } from "react-router-dom";
+import "./user-form.css";
 
 interface User {
   id: number;
@@ -106,62 +106,148 @@ export default function UserForm({ user, defaultLevels, className }: Props) {
   };
 
   return (
-    <form className={className} onSubmit={handleSubmit(onSubmit)}>
-      <div className="mb-2">
-        <label>Name</label>
-        <input className="form-control" type="text" {...register("name")} />
-        {errors.name && <p className="text-danger">{errors.name.message}</p>}
-      </div>
+    <div className={`container-fluid ${className}`}>
+      <div className="row justify-content-center">
+        <div className="col-lg-8 col-md-10">
+          <div className="card shadow-lg border-0 rounded-4">
+            <div className="card-header bg-gradient-primary text-white text-center py-4">
+              <h4 className="mb-0">
+                <i className="fas fa-user-edit me-2"></i>
+                Update User Information
+              </h4>
+            </div>
+            <div className="card-body p-4">
+              <div className="row">
+                <div className="col-md-6 mb-4">
+                  <div className="form-floating">
+                    <input
+                      className={`form-control ${errors.name ? 'is-invalid' : ''}`}
+                      type="text"
+                      id="name"
+                      placeholder="Enter full name"
+                      {...register("name")}
+                    />
+                    <label htmlFor="name">
+                      <i className="fas fa-user me-2"></i>Full Name
+                    </label>
+                    {errors.name && <div className="invalid-feedback">{errors.name.message}</div>}
+                  </div>
+                </div>
 
-      <div className="mb-2">
-        <label>User Name</label>
-        <input className="form-control" type="text" {...register("username")} />
-        {errors.username && (
-          <p className="text-danger">{errors.username.message}</p>
-        )}
-      </div>
+                <div className="col-md-6 mb-4">
+                  <div className="form-floating">
+                    <input
+                      className={`form-control ${errors.username ? 'is-invalid' : ''}`}
+                      type="text"
+                      id="username"
+                      placeholder="Enter username"
+                      {...register("username")}
+                    />
+                    <label htmlFor="username">
+                      <i className="fas fa-at me-2"></i>Username
+                    </label>
+                    {errors.username && <div className="invalid-feedback">{errors.username.message}</div>}
+                  </div>
+                </div>
+              </div>
 
-      <div className="mb-2">
-        <label>New Password</label>
-        <input
-          className="form-control"
-          placeholder="Leave a blank to not change password..."
-          type="text"
-          {...register("password")}
-        />
-        {errors.password && (
-          <p className="text-danger">{errors.password.message}</p>
-        )}
-      </div>
+              <div className="mb-4">
+                <div className="form-floating">
+                  <input
+                    className={`form-control ${errors.password ? 'is-invalid' : ''}`}
+                    placeholder="Leave blank to keep current password"
+                    type="password"
+                    id="password"
+                    {...register("password")}
+                  />
+                  <label htmlFor="password">
+                    <i className="fas fa-lock me-2"></i>New Password (Optional)
+                  </label>
+                  {errors.password && <div className="invalid-feedback">{errors.password.message}</div>}
+                </div>
+                <small className="text-muted mt-1">
+                  <i className="fas fa-info-circle me-1"></i>
+                  Leave blank if you don't want to change the password
+                </small>
+              </div>
 
-      <div className="mb-2">
-        <label htmlFor="">Access Levels</label>
-        <Controller
-          name="accessLevels"
-          control={control}
-          render={({ field }) => {
-            return (
-              <Select
-                {...field}
-                isMulti={true}
-                options={Object.entries(defaultLevels).map(([key, value]) => {
-                  return {
-                    label: key + "",
-                    value: value + "",
-                  };
-                })}
-              />
-            );
-          }}
-        />
-        {errors.accessLevels && (
-          <p className="text-danger">{errors.accessLevels.message}</p>
-        )}
-      </div>
+              <div className="mb-4">
+                <label className="form-label fw-bold mb-3">
+                  <i className="fas fa-shield-alt me-2"></i>Access Levels
+                </label>
+                <div className="border rounded-3 p-3 bg-light">
+                  <Controller
+                    name="accessLevels"
+                    control={control}
+                    render={({ field }) => {
+                      const selectedValues = field.value?.map((item: any) => item.value) || [];
+                      return (
+                        <div className="row">
+                          {Object.entries(defaultLevels).map(([key, value]) => {
+                            const isChecked = selectedValues.includes(value + "");
+                            return (
+                              <div key={key} className="col-md-6 mb-2">
+                                <div className="form-check form-check-inline w-100">
+                                  <input
+                                    className="form-check-input"
+                                    type="checkbox"
+                                    id={`access-${key}`}
+                                    checked={isChecked}
+                                    onChange={(e) => {
+                                      const newValue = value + "";
+                                      let newSelected;
+                                      if (e.target.checked) {
+                                        newSelected = [...selectedValues, newValue];
+                                      } else {
+                                        newSelected = selectedValues.filter((v: string) => v !== newValue);
+                                      }
+                                      field.onChange(newSelected.map((v) => ({ label: key, value: v })));
+                                    }}
+                                  />
+                                  <label className="form-check-label fw-medium" htmlFor={`access-${key}`}>
+                                    <i className="fas fa-check-circle me-2 text-success"></i>
+                                    {key}
+                                  </label>
+                                </div>
+                              </div>
+                            );
+                          })}
+                        </div>
+                      );
+                    }}
+                  />
+                </div>
+                {errors.accessLevels && (
+                  <div className="text-danger mt-2">
+                    <i className="fas fa-exclamation-triangle me-1"></i>
+                    {errors.accessLevels.message}
+                  </div>
+                )}
+              </div>
 
-      <button className="btn btn-primary" disabled={isSubmitting} type="submit">
-        {isSubmitting ? "Submitting" : "Submit"}
-      </button>
-    </form>
+              <div className="d-grid gap-2 d-md-flex justify-content-md-end">
+                <button
+                  className="btn btn-primary btn-lg px-5"
+                  disabled={isSubmitting}
+                  onClick={handleSubmit(onSubmit)}
+                >
+                  {isSubmitting ? (
+                    <>
+                      <span className="spinner-border spinner-border-sm me-2" role="status" aria-hidden="true"></span>
+                      Updating...
+                    </>
+                  ) : (
+                    <>
+                      <i className="fas fa-save me-2"></i>
+                      Update User
+                    </>
+                  )}
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
   );
 }

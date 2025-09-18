@@ -144,31 +144,22 @@ const Sidebar = ({ user }: Props) => {
             (accessLevel: any) => accessLevel.access == "interview:modify"
           )
         ) {
-          updatedLinks.push(
-            {
-              name: "Interview",
-              regex: /^\/OJT\/Interview/i,
-              route: "/OJT/interview",
-              active_icon: "bi-diagram-3-fill",
-              inactive_icon: "bi-diagram-3",
-              subLinks: [
-                {
-                  name: "New Interview",
-                  regex: /^\/OJT\/interview\/new/i,
-                  route: "/OJT/interview/new",
-                  active_icon: " bi-file-earmark-arrow-up-fill",
-                  inactive_icon: "bi-file-earmark-arrow-up",
-                },
-              ],
-            },
-            {
-              name: "Departments",
-              regex: /^\/OJT\/departments/i,
-              route: "/OJT/departments",
-              active_icon: "bi-diagram-3-fill",
-              inactive_icon: "bi-diagram-3",
-            }
-          );
+          updatedLinks.push({
+            name: "Interview",
+            regex: /^\/OJT\/Interview/i,
+            route: "/OJT/interview",
+            active_icon: "bi-diagram-3-fill",
+            inactive_icon: "bi-diagram-3",
+            subLinks: [
+              {
+                name: "New Interview",
+                regex: /^\/OJT\/interview\/new/i,
+                route: "/OJT/interview/new",
+                active_icon: " bi-file-earmark-arrow-up-fill",
+                inactive_icon: "bi-file-earmark-arrow-up",
+              },
+            ],
+          });
         }
         if (
           user.accessLevels.find(
